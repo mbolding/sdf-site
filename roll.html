@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Role-Playing Game Dice Roller</title>
+  <style>
+    /* Add CSS styles here */
+      body {
+          font-family: Arial, sans-serif;
+          margin: 20px;
+        }
+
+        div {
+          margin-bottom: 10px;
+        }
+
+        button {
+          background-color: #4CAF50;
+          border: none;
+          color: white;
+          padding: 10px 20px;
+          text-align: center;
+          text-decoration: none;
+          display: inline-block;
+          font-size: 16px;
+          margin: 10px 2px;
+          cursor: pointer;
+        }
+
+  </style>
+</head>
+<body>
+  <h1>Role-Playing Game Dice Roller</h1>
+  <div>
+    <label for="diceCount">Number of dice:</label>
+    <input type="number" id="diceCount" value="1" min="1">
+  </div>
+  <div>
+    <label for="diceSides">Number of sides:</label>
+    <input type="number" id="diceSides" value="6" min="2">
+  </div>
+  <button id="rollButton">Roll the dice!</button>
+  <h2>Result:</h2>
+  <div id="result"></div>
+
+  <script>
+            function rollDice(diceCount, diceSides) {
+              let total = 0;
+              for (let i = 0; i < diceCount; i++) {
+                total += Math.floor(Math.random() * diceSides) + 1;
+              }
+              return total;
+            }
+
+            document.getElementById("rollButton").addEventListener("click", function () {
+              const diceCount = parseInt(document.getElementById("diceCount").value);
+              const diceSides = parseInt(document.getElementById("diceSides").value);
+              const result = rollDice(diceCount, diceSides);
+              document.getElementById("result").textContent = result;
+            });
+  </script>
+</body>
+</html>
+
