@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extensive Vim Cheatsheet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        h2 {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        .category {
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Extensive Vim Cheatsheet</h1>
+
+    <div class="category">
+        <h2>Basic Navigation</h2>
+        <table>
+            <tr>
+                <th>Command</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>h, j, k, l</td>
+                <td>Move left, down, up, right</td>
+            </tr>
+            <tr>
+                <td>w</td>
+                <td>Move to the beginning of the next word</td>
+            </tr>
+            <tr>
+                <td>b</td>
+                <td>Move to the beginning of the previous word</td>
+            </tr>
+            <tr>
+                <td>e</td>
+                <td>Move to the end of the current word</td>
+            </tr>
+            <tr>
+                <td>0</td>
+                <td>Move to the beginning of the line</td>
+            </tr>
+            <tr>
+                <td>$</td>
+                <td>Move to the end of the line</td>
+            </tr>
+            <tr>
+                <td>gg</td>
+                <td>Move to the first line of the document</td>
+            </tr>
+            <tr>
+                <td>G</td>
+                <td>Move to the last line of the document</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="category">
+        <h2>Editing</h2>
+        <table>
+            <tr>
+                <th>Command</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>i</td>
+                <td>Insert mode (before cursor)</td>
+            </tr>
+            <tr>
+                <td>a</td>
+                <td>Insert mode (after cursor)</td>
+            </tr>
+            <tr>
+                <td>o</td>
+                <td>Insert mode (new line below)</td>
+            </tr>
+            <tr>
+                <td>O</td>
+                <td>Insert mode (new line above)</td>
+            </tr>
+            <tr>
+                <td>x</td>
+                <td>Delete character under cursor</td>
+            </tr>
+            <tr>
+                <td>dd</td>
+                <td>Delete entire line</td>
+            </tr>
+            <tr>
+                <td>yy</td>
+                <td>Yank (copy) entire line</td>
+            </tr>
+            <tr>
+                <td>p</td>
+                <td>Paste after cursor</td>
+            </tr>
+            <tr>
+                <td>u</td>
+                <td>Undo</td>
+            </tr>
+            <tr>
+                <td>Ctrl + r</td>
+                <td>Redo</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="category">
+        <h2>Searching and Replacing</h2>
+        <table>
+            <tr>
+                <th>Command</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>/pattern</td>
+                <td>Search forward for pattern</td>
+            </tr>
+            <tr>
+                <td>?pattern</td>
+                <td>Search backward for pattern</td>
+            </tr>
+            <tr>
+                <td>n</td>
+                <td>Repeat search in same direction</td>
+            </tr>
+            <tr>
+                <td>N</td>
+                <td>Repeat search in opposite direction</td>
+            </tr>
+            <tr>
+                <td>:%s/old/new/g</td>
+                <td>Replace all occurrences of 'old' with 'new' in the file</td>
+            </tr>
+            <tr>
+                <td>:s/old/new/g</td>
+                <td>Replace all occurrences of 'old' with 'new' in the current line</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="category">
+        <h2>Visual Mode</h2>
+        <table>
+            <tr>
+                <th>Command</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>v</td>
+                <td>Start visual mode (character-wise)</td>
+            </tr>
+            <tr>
+                <td>V</td>
+                <td>Start visual mode (line-wise)</td>
+            </tr>
+            <tr>
+                <td>Ctrl + v</td>
+                <td>Start visual block mode</td>
+            </tr>
+            <tr>
+                <td>y</td>
+                <td>Yank (copy) selected text</td>
+            </tr>
+            <tr>
+                <td>d</td>
+                <td>Delete selected text</td>
+            </tr>
+            <tr>
+                <td>></td>
+                <td>Indent selected text</td>
+            </tr>
+            <tr>
+                <td><</td>
+                <td>Outdent selected text</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="category">
+        <h2>File Operations</h2>
+        <table>
+            <tr>
+                <th>Command</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>:w</td>
+                <td>Save file</td>
+            </tr>
+            <tr>
+                <td>:w filename</td>
+                <td>Save file as filename</td>
+            </tr>
+            <tr>
+                <td>:q</td>
+                <td>Quit (fails if unsaved changes)</td>
+            </tr>
+            <tr>
+                <td>:q!</td>
+                <td>Quit without saving (discard changes)</td>
+            </tr>
+            <tr>
+                <td>:wq</td>
+                <td>Save and quit</td>
+            </tr>
+            <tr>
+                <td>:e filename</td>
+                <td>Edit a file in a new buffer</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="category">
+        <h2>Macros</h2>
+        <table>
+            <tr>
+                <th>Command</th>
+                <th>Description</th>
+            </tr>
+            <tr>
+                <td>qa</td>
+                <td>Record macro a</td>
+            </tr>
+            <tr>
+                <td>q</td>
+                <td>Stop recording macro</td>
+            </tr>
+            <tr>
+                <td>@a</td>
+                <td>Run macro a</td>
+            </tr>
+            <tr>
+                <td>@@</td>
+                <td>Rerun last run macro</td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>

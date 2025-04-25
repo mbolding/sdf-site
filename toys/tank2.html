@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tank Driving Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        #gameArea {
+            width: 300px;
+            height: 300px;
+            background-color: #8bc34a;
+            position: relative;
+            overflow: hidden;
+        }
+        #tank {
+            width: 40px;
+            height: 40px;
+            background-color: #4a4a4a;
+            position: absolute;
+            transition: transform 0.1s;
+        }
+        #tank:before {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 8px;
+            background-color: #2a2a2a;
+            top: 16px;
+            left: 40px;
+        }
+        #instructions {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameArea">
+        <div id="tank"></div>
+        <div id="instructions">W/S: Move forward/backward<br>A/D: Turn left/right</div>
+    </div>
+
+    <script>
+        const tank = document.getElementById('tank');
+        const gameArea = document.getElementById('gameArea');
+        let x = 130;
+        let y = 130;
+        let angle = 0;
+
+        function updateTankPosition() {
+            tank.style.left = `${x}px`;
+            tank.style.top = `${y}px`;
+            tank.style.transform = `rotate(${angle}deg)`;
+        }
+
+        function moveTank(direction) {
+            const speed = 5;
+            const rotationSpeed = 5;
+            
+            switch (direction) {
+                case 'w':
+                    x += speed * Math.sin(angle * Math.PI / 180);
+                    y -= speed * Math.cos(angle * Math.PI / 180);
+                    break;
+                case 's':
+                    x -= speed * Math.sin(angle * Math.PI / 180);
+                    y += speed * Math.cos(angle * Math.PI / 180);
+                    break;
+                case 'a':
+                    angle -= rotationSpeed;
+                    break;
+                case 'd':
+                    angle += rotationSpeed;
+                    break;
+            }
+
+            // Keep the tank within the game area
+            x = Math.max(0, Math.min(gameArea.clientWidth - tank.clientWidth, x));
+            y = Math.max(0, Math.min(gameArea.clientHeight - tank.clientHeight, y));
+
+            updateTankPosition();
+        }
+
+        document.addEventListener('keydown', (event) => {
+            const key = event.key.toLowerCase();
+            if (['w', 'a', 's', 'd'].includes(key)) {
+                moveTank(key);
+                event.preventDefault();
+            }
+        });
+
+        updateTankPosition();
+    </script>
+</body>
+</html>
+

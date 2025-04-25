@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lunar Lander Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #000;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #gameCanvas {
+            border: 1px solid #fff;
+        }
+        #gameInfo {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            color: #fff;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameInfo">
+        Fuel: <span id="fuel">1000</span><br>
+        Velocity: <span id="velocity">0</span><br>
+        Use WASD keys to control the lander:<br>
+        W: Thrust, A: Left, D: Right
+    </div>
+    <canvas id="gameCanvas" width="300" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const fuelDisplay = document.getElementById('fuel');
+        const velocityDisplay = document.getElementById('velocity');
+
+        let lander = {
+            x: canvas.width / 2,
+            y: 50,
+            width: 20,
+            height: 20,
+            velocity: 0,
+            fuel: 1000
+        };
+
+        let ground = {
+            y: canvas.height - 30,
+            width: canvas.width,
+            height: 30
+        };
+
+        let gameLoop;
+        let gameOver = false;
+        let keys = {};
+
+        function draw() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = '#fff';
+            for (let i = 0; i < 50; i++) {
+                ctx.fillRect(
+                    Math.random() * canvas.width,
+                    Math.random() * canvas.height,
+                    1,
+                    1
+                );
+            }
+
+            ctx.fillStyle = '#888';
+            ctx.fillRect(0, ground.y, ground.width, ground.height);
+
+            ctx.fillStyle = '#0f0';
+            ctx.fillRect(lander.x, lander.y, lander.width, lander.height);
+
+            fuelDisplay.textContent = Math.max(0, Math.floor(lander.fuel));
+            velocityDisplay.textContent = lander.velocity.toFixed(2);
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            lander.velocity += 0.05; // Gravity
+            lander.y += lander.velocity;
+
+            if (keys.KeyW && lander.fuel > 0) {
+                lander.velocity -= 0.2;
+                lander.fuel -= 5;
+            }
+            if (keys.KeyA && lander.fuel > 0) {
+                lander.x -= 5;
+                lander.fuel -= 1;
+            }
+            if (keys.KeyD && lander.fuel > 0) {
+                lander.x += 5;
+                lander.fuel -= 1;
+            }
+
+            lander.x = Math.max(0, Math.min(canvas.width - lander.width, lander.x));
+
+            if (lander.y + lander.height > ground.y) {
+                lander.y = ground.y - lander.height;
+                gameOver = true;
+                clearInterval(gameLoop);
+                
+                setTimeout(() => {
+                    if (lander.velocity > 2) {
+                        alert('Game Over! You crashed.');
+                    } else {
+                        alert('Congratulations! Safe landing.');
+                    }
+                }, 50);
+            }
+        }
+
+        function gameLoopFunction() {
+            update();
+            draw();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (['KeyW', 'KeyA', 'KeyS', 'KeyD'].includes(e.code)) {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        gameLoop = setInterval(gameLoopFunction, 1000 / 60); // 60 FPS
+    </script>
+</body>
+</html>
+

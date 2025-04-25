@@ -1,0 +1,480 @@
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SFTP Command Cheat Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+        }
+        
+        .subtitle {
+            color: #ecf0f1;
+            font-size: 1rem;
+            font-weight: normal;
+        }
+        
+        main {
+            padding: 20px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .command-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .command-table th, .command-table td {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        
+        .command-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        .command-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .command-table tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        code {
+            background-color: #f7f7f7;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+            color: #e74c3c;
+        }
+        
+        .tip {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .warning {
+            background-color: #fdf1e5;
+            border-left: 4px solid #e67e22;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.9rem;
+        }
+        
+        @media screen and (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .command-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .command-table th, .command-table td {
+                padding: 8px 10px;
+            }
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+        }
+        
+        #searchInput {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        #backToTop {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 20px;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        #backToTop:hover {
+            background: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SFTP Command Cheat Sheet</h1>
+            <p class="subtitle">Secure File Transfer Protocol Reference Guide</p>
+        </header>
+        
+        <main>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search for commands...">
+            </div>
+            
+            <div class="section">
+                <h2>What is SFTP?</h2>
+                <p>SFTP (SSH File Transfer Protocol) is a secure file transfer protocol that uses SSH encryption to transfer files. Unlike regular FTP, SFTP encrypts both commands and data, providing a higher level of security.</p>
+            </div>
+
+            <div class="section">
+                <h2>Connection Commands</h2>
+                <table class="command-table">
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>sftp user@hostname</code></td>
+                            <td>Connect to an SFTP server</td>
+                            <td><code>sftp user@example.com</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>sftp -P port user@hostname</code></td>
+                            <td>Connect to an SFTP server with a specific port</td>
+                            <td><code>sftp -P 2222 user@example.com</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>sftp -i keyfile user@hostname</code></td>
+                            <td>Connect using a private key file</td>
+                            <td><code>sftp -i ~/.ssh/id_rsa user@example.com</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>exit</code> or <code>bye</code> or <code>quit</code></td>
+                            <td>End your SFTP session</td>
+                            <td><code>exit</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h2>Navigation Commands</h2>
+                <table class="command-table">
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>pwd</code></td>
+                            <td>Display current remote directory</td>
+                            <td><code>pwd</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>lpwd</code></td>
+                            <td>Display current local directory</td>
+                            <td><code>lpwd</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>cd directory</code></td>
+                            <td>Change remote directory</td>
+                            <td><code>cd /var/www/html</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>lcd directory</code></td>
+                            <td>Change local directory</td>
+                            <td><code>lcd ~/Documents</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>ls</code></td>
+                            <td>List contents of remote directory</td>
+                            <td><code>ls -la</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>lls</code></td>
+                            <td>List contents of local directory</td>
+                            <td><code>lls -la</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h2>File Transfer Commands</h2>
+                <table class="command-table">
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>get remotefile [localfile]</code></td>
+                            <td>Download a file from remote to local</td>
+                            <td><code>get data.txt ~/Downloads/data.txt</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>get -r remotedir [localdir]</code></td>
+                            <td>Download a directory recursively</td>
+                            <td><code>get -r /var/www/images ~/backup</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>put localfile [remotefile]</code></td>
+                            <td>Upload a file from local to remote</td>
+                            <td><code>put report.pdf /home/user/docs/</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>put -r localdir [remotedir]</code></td>
+                            <td>Upload a directory recursively</td>
+                            <td><code>put -r ~/project /var/www/</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>mget *.txt</code></td>
+                            <td>Download multiple files using wildcards</td>
+                            <td><code>mget *.jpg</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>mput *.txt</code></td>
+                            <td>Upload multiple files using wildcards</td>
+                            <td><code>mput *.html</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="tip">
+                    <strong>Tip:</strong> Use the <code>-r</code> flag with <code>get</code> and <code>put</code> to transfer directories recursively.
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>File Management Commands</h2>
+                <table class="command-table">
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>mkdir directory</code></td>
+                            <td>Create a directory on the remote server</td>
+                            <td><code>mkdir /home/user/newdir</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>lmkdir directory</code></td>
+                            <td>Create a directory on the local machine</td>
+                            <td><code>lmkdir ~/newdir</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>rm file</code></td>
+                            <td>Delete a file on the remote server</td>
+                            <td><code>rm /home/user/oldfile.txt</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>rmdir directory</code></td>
+                            <td>Delete an empty directory on the remote server</td>
+                            <td><code>rmdir /home/user/emptydir</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>rename oldname newname</code></td>
+                            <td>Rename a file on the remote server</td>
+                            <td><code>rename file.txt newfile.txt</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>chmod permissions file</code></td>
+                            <td>Change permissions of a remote file</td>
+                            <td><code>chmod 644 file.txt</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="warning">
+                    <strong>Warning:</strong> Be careful when using <code>rm</code> and <code>rmdir</code> commands as they permanently delete files and directories.
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Helpful SFTP Client Commands</h2>
+                <table class="command-table">
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Description</th>
+                            <th>Example</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>help</code> or <code>?</code></td>
+                            <td>Show available commands</td>
+                            <td><code>help</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>!command</code></td>
+                            <td>Execute a local shell command</td>
+                            <td><code>!ls -la</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>df -h</code></td>
+                            <td>Display disk space usage</td>
+                            <td><code>df -h</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>version</code></td>
+                            <td>Show SFTP version</td>
+                            <td><code>version</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>progress</code></td>
+                            <td>Toggle display of progress meter</td>
+                            <td><code>progress</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h2>Command Line SFTP Examples</h2>
+                <table class="command-table">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Command</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Non-interactive file upload</td>
+                            <td><code>echo "put file.txt" | sftp user@hostname</code></td>
+                        </tr>
+                        <tr>
+                            <td>Non-interactive file download</td>
+                            <td><code>echo "get file.txt" | sftp user@hostname</code></td>
+                        </tr>
+                        <tr>
+                            <td>Using a batch file of commands</td>
+                            <td><code>sftp -b batchfile.txt user@hostname</code></td>
+                        </tr>
+                        <tr>
+                            <td>Setting password in script (not recommended)</td>
+                            <td><code>sshpass -p "password" sftp user@hostname</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="warning">
+                    <strong>Security Note:</strong> Using passwords in scripts is not secure. Use SSH keys for authentication whenever possible.
+                </div>
+            </div>
+        </main>
+        
+        <footer>
+            <p>SFTP Command Cheat Sheet - Created March 2025</p>
+        </footer>
+    </div>
+    
+    <button id="backToTop" title="Go to top">↑</button>
+    
+    <script>
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const rows = document.querySelectorAll('.command-table tbody tr');
+        
+        searchInput.addEventListener('keyup', function() {
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Back to top button
+        const backToTopButton = document.getElementById('backToTop');
+        
+        window.onscroll = function() {
+            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+                backToTopButton.style.display = 'block';
+            } else {
+                backToTopButton.style.display = 'none';
+            }
+        };
+        
+        backToTopButton.addEventListener('click', function() {
+            document.body.scrollTop = 0; // For Safari
+            document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
+        });
+    </script>
+
+
+</body></html>

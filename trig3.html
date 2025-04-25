@@ -1,0 +1,61 @@
+<!DOCTYPE html> 
+<html> 
+<head>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script>
+  function plot() {
+    var func = document.getElementById('func').value;
+    var data = [];
+    var x = 0; 
+    var increment = Math.PI / 180;
+    while (x < 2 * Math.PI) {
+      if (func == 'sin') {
+        data.push({x: x, y: Math.sin(x)}); 
+      } else if (func == 'cos') {
+        data.push({x: x, y: Math.cos(x)});  
+      } else if (func == 'tan') {
+        data.push({x: x, y: Math.tan(x)});  
+      }
+      x += increment; 
+    }
+
+    var svg = d3.select("svg"),
+        margin = {top: 20, right: 20, bottom: 30, left: 50},
+        width = +svg.attr("width") - margin.left - margin.right,
+        height = +svg.attr("height") - margin.top - margin.bottom,
+        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var xScale = d3.scaleLinear().range([0, width]);
+    var yScale = d3.scaleLinear().range([height, 0]);
+
+    xScale.domain([0, 2 * Math.PI]); 
+    yScale.domain([d3.min(data, function(d) { return d.y; }), d3.max(data, function(d) { return d.y; })]);
+
+    g.append("g")
+       .attr("transform", "translate(0," + height + ")")
+       .call(d3.axisBottom(xScale));
+
+    g.append("g")
+       .call(d3.axisLeft(yScale)); 
+
+    g.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1.5)
+      .attr("d", d3.line()
+        .x(function(d) { return xScale(d.x) })
+        .y(function(d) { return yScale(d.y) })
+      )
+  }
+  </script> 
+</head>
+<body>
+  <select id="func" onchange="plot()">
+    <option value="sin">sin</option>
+    <option value="cos">cos</option>
+    <option value="tan">tan</option>
+  </select>
+  <svg width="800" height="400"></svg>
+</body>
+</html>

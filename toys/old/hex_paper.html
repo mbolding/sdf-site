@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotated Hexagon Board Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #000;
+            margin-top: 20px;
+        }
+        input, button {
+            margin: 5px;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Rotated Hexagon Board Generator</h1>
+    <div>
+        <label for="rows">Rows:</label>
+        <input type="number" id="rows" min="1" max="20" value="6">
+        <label for="cols">Columns:</label>
+        <input type="number" id="cols" min="1" max="20" value="6">
+        <button onclick="generateBoard()">Generate Board</button>
+    </div>
+    <canvas id="hexCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('hexCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function drawHexagon(x, y, size) {
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const angle = (2 * Math.PI / 6 * i) + (Math.PI / 6); // Rotate by 30 degrees (pi/6 radians)
+                const xPos = x + size * Math.cos(angle);
+                const yPos = y + size * Math.sin(angle);
+                if (i === 0) {
+                    ctx.moveTo(xPos, yPos);
+                } else {
+                    ctx.lineTo(xPos, yPos);
+                }
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function generateBoard() {
+            const rows = parseInt(document.getElementById('rows').value);
+            const cols = parseInt(document.getElementById('cols').value);
+            const hexSize = 20;
+            const hexHeight = hexSize * 2;
+            const hexWidth = Math.sqrt(3) * hexSize;
+
+            canvas.width = (cols + 0.5) * hexWidth;
+            canvas.height = (rows + 0.5) * (hexHeight * 0.75);
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const x = col * hexWidth + ((row % 2) * (hexWidth / 2)) + (hexWidth / 2);
+                    const y = row * (hexHeight * 0.75) + (hexHeight / 2);
+                    drawHexagon(x, y, hexSize);
+                }
+            }
+        }
+
+        // Initial board generation
+        generateBoard();
+    </script>
+</body>
+</html>
+
+

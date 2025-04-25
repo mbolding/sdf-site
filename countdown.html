@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .clock {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            border: 16px solid #000;
+            border-radius: 50%;
+            background: #fff;
+            padding: 2px;
+            box-sizing: border-box;
+        }
+
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            width: 50%;
+            height: 6px;
+            background: #000;
+            transform-origin: right;
+            transition: all 0.05s;
+            transition-timing-function: steps(1, end);
+        }
+
+        .minute-hand {
+            height: 4px;
+        }
+
+        .second-hand {
+            height: 2px;
+            background: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="clock">
+        <div class="hand minute-hand"></div>
+        <div class="hand second-hand"></div>
+    </div>
+
+    <script>
+        const secondHand = document.querySelector('.second-hand');
+        const minuteHand = document.querySelector('.minute-hand');
+
+        // Get minutes from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        let countdownTime = Number(urlParams.get('minutes')) * 60;
+        
+        function setTimer() {
+            // Calculate the angle for each hand
+            const seconds = countdownTime % 60;
+            const secondsDegrees = ((seconds / 60) * 360) + 90;
+            secondHand.style.transform = `rotate(${secondsDegrees}deg)`;
+
+            const minutes = Math.floor(countdownTime / 60);
+            const minutesDegrees = ((minutes / 60) * 360) + 90;
+            minuteHand.style.transform = `rotate(${minutesDegrees}deg)`;
+
+            // Decrease the countdown time
+            countdownTime--;
+        }
+
+        const intervalId = setInterval(() => {
+            if (countdownTime < 0) {
+                // Stop the interval when the countdown reaches zero
+                clearInterval(intervalId);
+            } else {
+                setTimer();
+            }
+        }, 1000);
+
+        setTimer();
+    </script>
+</body>
+</html>

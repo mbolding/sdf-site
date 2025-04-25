@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/chartist@0.11.4/dist/chartist.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chartist@0.11.4/dist/chartist.min.css">
+  <script>
+  function plot() {
+    var func = document.getElementById('func').value;
+    var data = {series: []};
+    var x = 0; 
+    var increment = Math.PI / 180;
+    while (x < 2 * Math.PI) {
+      if (func == 'sin') {
+        data.series.push({x: x, y: Math.sin(x)}); 
+      } else if (func == 'cos') {
+        data.series.push({x: x, y: Math.cos(x)});  
+      } else if (func == 'tan') {
+        data.series.push({x: x, y: Math.tan(x)});  
+      }
+      x += increment; 
+    }
+    
+    var chart = new Chartist.Line('.ct-chart', data, {
+      axisX: {
+        labelInterpolationFnc: function(value, index) {
+          return index % Math.PI === 0 ? 'π/' + value : '';
+        }
+      }
+    });
+  } 
+  </script>
+</head>
+<body>
+  <select id="func" onchange="plot()">
+    <option value="sin">sin</option>
+    <option value="cos">cos</option>
+    <option value="tan">tan</option> 
+  </select>
+  <div class="ct-chart"></div>
+</body> 
+</html>

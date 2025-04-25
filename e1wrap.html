@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Multiples of 3 and 5</title>
+	<script>
+		function multiplesOf3and5(number) {
+		    var total = 0;
+		    for (n = 0; n < number; n++) {
+		        if (n % 3 == 0) {
+		            total += n;
+		        } else if (n % 5 == 0) {
+		            total += n;
+		        }
+		    }
+		    return total;
+		}
+
+		function calculate() {
+			// Get the input value
+			var number = parseInt(document.getElementById("number-input").value);
+
+			// Calculate the result
+			var result = multiplesOf3and5(number);
+
+			// Set the output text
+			document.getElementById("output").innerText = "The sum of all multiples of 3 and 5 below " + number + " is " + result;
+		}
+	</script>
+</head>
+<body>
+	<h1>Multiples of 3 and 5</h1>
+
+	<p>Enter a number:</p>
+	<input type="number" id="number-input" value="10">
+
+	<button onclick="calculate()">Calculate</button>
+
+	<p id="output"></p>
+</body>
+</html>
+

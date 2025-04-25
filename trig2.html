@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trig Function Plotter</title>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+</head>
+<script>
+function plot() {
+  var ctx = document.getElementById('myChart').getContext('2d');
+  var func = document.getElementById('func').value;
+  
+  var data = {
+    labels: [],
+    datasets: [{
+      label: func,
+      data: [],
+      fill: false,
+      borderColor: 'rgb(75, 192, 192)'
+    }]
+  };
+  
+  var x = 0;
+  var increment = Math.PI / 180;
+  while (x < 2 * Math.PI) {
+    data.labels.push(x);
+    if (func == 'sin') {
+      data.datasets[0].data.push(Math.sin(x));
+    } else if (func == 'cos') {
+      data.datasets[0].data.push(Math.cos(x));
+    } else if (func == 'tan') {
+      data.datasets[0].data.push(Math.tan(x));
+    }
+    x += increment; 
+  }
+  
+  var chart = new Chart(ctx, {
+    type: 'line',
+    data: data
+  });
+} 
+</script>
+</head>
+<body>
+
+<select id="func" onchange="plot()">
+  <option value="sin">sin</option>
+  <option value="cos">cos</option>
+  <option value="tan">tan</option>
+</select>
+
+<canvas id="myChart" width="800" height="400"></canvas>
+
+</body>
+</html>

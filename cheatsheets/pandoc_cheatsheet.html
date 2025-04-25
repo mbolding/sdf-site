@@ -1,0 +1,693 @@
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandoc Cheat Sheet</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-bg: #f5f7fa;
+            --code-bg: #f0f2f5;
+            --border-color: #ddd;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--secondary-color);
+        }
+        
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: var(--secondary-color);
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+        
+        section {
+            margin-bottom: 2rem;
+        }
+        
+        h2 {
+            color: var(--primary-color);
+            margin: 1.5rem 0 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        h3 {
+            color: var(--secondary-color);
+            margin: 1.2rem 0 0.8rem;
+        }
+        
+        .command-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .command-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .command-card {
+            background-color: var(--light-bg);
+            border-radius: 5px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+        }
+        
+        .command-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        pre {
+            background-color: var(--code-bg);
+            padding: 0.7rem;
+            border-radius: 5px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            margin: 0.5rem 0;
+        }
+        
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.9rem;
+        }
+        
+        .notes {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 0.3rem;
+        }
+        
+        .tag {
+            display: inline-block;
+            background-color: var(--secondary-color);
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            margin-right: 0.3rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .search-container {
+            margin-bottom: 1.5rem;
+        }
+        
+        #searchInput {
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab {
+            padding: 0.7rem 1.2rem;
+            cursor: pointer;
+            background-color: transparent;
+            border: none;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--secondary-color);
+            color: var(--secondary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        footer {
+            margin-top: 3rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #777;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Pandoc Cheat Sheet</h1>
+        <p class="subtitle">The universal document converter</p>
+    </header>
+    
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search for commands, formats, or options...">
+    </div>
+    
+    <div class="tabs">
+        <button class="tab active" data-tab="basic">Basic Usage</button>
+        <button class="tab" data-tab="formats">Format Options</button>
+        <button class="tab" data-tab="templates">Templates</button>
+        <button class="tab" data-tab="filters">Filters &amp; Extensions</button>
+        <button class="tab" data-tab="examples">Common Examples</button>
+    </div>
+    
+    <div id="basic" class="tab-content active">
+        <section>
+            <h2>Basic Syntax</h2>
+            <p>The basic Pandoc command structure follows this pattern:</p>
+            <pre><code>pandoc [options] [input-file]... -o output-file</code></pre>
+            
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">Convert Markdown to HTML</div>
+                    <pre><code>pandoc -o output.html input.md</code></pre>
+                    <div class="notes">Converts a Markdown file to HTML</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Convert Markdown to PDF</div>
+                    <pre><code>pandoc -o output.pdf input.md</code></pre>
+                    <div class="notes">Requires LaTeX to be installed</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Convert Markdown to DOCX</div>
+                    <pre><code>pandoc -o output.docx input.md</code></pre>
+                    <div class="notes">Creates a Microsoft Word document</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Convert HTML to Markdown</div>
+                    <pre><code>pandoc -o output.md input.html</code></pre>
+                    <div class="notes">Converts HTML to Markdown format</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Multiple Input Files</div>
+                    <pre><code>pandoc -o output.pdf file1.md file2.md file3.md</code></pre>
+                    <div class="notes">Combines multiple input files into one output</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Specify Input Format</div>
+                    <pre><code>pandoc -f markdown -o output.html input.txt</code></pre>
+                    <div class="notes">-f or --from specifies input format</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Specify Output Format</div>
+                    <pre><code>pandoc -t html -o output.html input.md</code></pre>
+                    <div class="notes">-t or --to specifies output format</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Read from Standard Input</div>
+                    <pre><code>echo "# Hello" | pandoc -f markdown -t html</code></pre>
+                    <div class="notes">Output is sent to standard output</div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Common Options</h2>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">Standalone Document</div>
+                    <pre><code>pandoc -s -o output.html input.md</code></pre>
+                    <div class="notes">-s creates a full document with header and footer</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Table of Contents</div>
+                    <pre><code>pandoc --toc -o output.html input.md</code></pre>
+                    <div class="notes">--toc generates a table of contents</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Set TOC Depth</div>
+                    <pre><code>pandoc --toc --toc-depth=2 -o output.html input.md</code></pre>
+                    <div class="notes">Controls how many heading levels appear in TOC</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">CSS Styling</div>
+                    <pre><code>pandoc -c style.css -o output.html input.md</code></pre>
+                    <div class="notes">Apply custom CSS styling to HTML output</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Syntax Highlighting</div>
+                    <pre><code>pandoc --highlight-style=zenburn -o output.html input.md</code></pre>
+                    <div class="notes">Available styles: pygments, kate, monochrome, espresso, zenburn, haddock, tango</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Number Sections</div>
+                    <pre><code>pandoc --number-sections -o output.html input.md</code></pre>
+                    <div class="notes">Adds section numbers to headings</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Template Variables</div>
+                    <pre><code>pandoc -V title="My Document" -o output.pdf input.md</code></pre>
+                    <div class="notes">Sets template variables for output</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Bibliography</div>
+                    <pre><code>pandoc --bibliography=refs.bib -o output.html input.md</code></pre>
+                    <div class="notes">Processes citations and adds bibliography</div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <div id="formats" class="tab-content">
+        <section>
+            <h2>Input Formats</h2>
+            <p>Pandoc can read from these formats:</p>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">Markdown Variants</div>
+                    <div><span class="tag">markdown</span><span class="tag">commonmark</span><span class="tag">gfm</span><span class="tag">markdown_mmd</span></div>
+                    <div class="notes">Various flavors of Markdown, including GitHub-Flavored Markdown (gfm)</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Document Formats</div>
+                    <div><span class="tag">docx</span><span class="tag">odt</span><span class="tag">epub</span><span class="tag">html</span><span class="tag">latex</span></div>
+                    <div class="notes">Common document formats</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Other Markup</div>
+                    <div><span class="tag">rst</span><span class="tag">textile</span><span class="tag">org</span><span class="tag">mediawiki</span><span class="tag">dokuwiki</span></div>
+                    <div class="notes">Various markup languages</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Academic/Publishing</div>
+                    <div><span class="tag">jats</span><span class="tag">tex</span><span class="tag">biblatex</span><span class="tag">bibtex</span></div>
+                    <div class="notes">Formats used in academic publishing</div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Output Formats</h2>
+            <p>Pandoc can write to these formats:</p>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">Document Formats</div>
+                    <div><span class="tag">docx</span><span class="tag">odt</span><span class="tag">pdf</span><span class="tag">epub</span><span class="tag">html</span></div>
+                    <div class="notes">Common document formats</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Markdown Variants</div>
+                    <div><span class="tag">markdown</span><span class="tag">commonmark</span><span class="tag">gfm</span><span class="tag">markdown_mmd</span></div>
+                    <div class="notes">Various flavors of Markdown</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Presentations</div>
+                    <div><span class="tag">pptx</span><span class="tag">beamer</span><span class="tag">revealjs</span><span class="tag">s5</span><span class="tag">slideous</span><span class="tag">slidy</span></div>
+                    <div class="notes">Presentation formats</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Other Markup</div>
+                    <div><span class="tag">rst</span><span class="tag">textile</span><span class="tag">org</span><span class="tag">mediawiki</span><span class="tag">dokuwiki</span></div>
+                    <div class="notes">Various markup languages</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Academic/Publishing</div>
+                    <div><span class="tag">jats</span><span class="tag">latex</span><span class="tag">context</span><span class="tag">texinfo</span></div>
+                    <div class="notes">Formats used in academic publishing</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Plain Text Formats</div>
+                    <div><span class="tag">plain</span><span class="tag">asciidoc</span><span class="tag">asciidoctor</span><span class="tag">man</span></div>
+                    <div class="notes">Plain text and documentation formats</div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>PDF Output Options</h2>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">PDF Margin</div>
+                    <pre><code>pandoc -V geometry:margin=1in -o output.pdf input.md</code></pre>
+                    <div class="notes">Sets document margins in inches</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">PDF Paper Size</div>
+                    <pre><code>pandoc -V geometry:a4paper -o output.pdf input.md</code></pre>
+                    <div class="notes">Sets paper size (a4paper, letterpaper, etc.)</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">PDF Font Size</div>
+                    <pre><code>pandoc -V fontsize=12pt -o output.pdf input.md</code></pre>
+                    <div class="notes">Sets document font size</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">PDF Font Family</div>
+                    <pre><code>pandoc -V mainfont="DejaVu Serif" -o output.pdf input.md</code></pre>
+                    <div class="notes">Sets main font family</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Custom LaTeX Template</div>
+                    <pre><code>pandoc --template=template.tex -o output.pdf input.md</code></pre>
+                    <div class="notes">Use a custom LaTeX template for PDF output</div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <div id="templates" class="tab-content">
+        <section>
+            <h2>Template Usage</h2>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">Use Custom Template</div>
+                    <pre><code>pandoc --template=mytemplate.html -o output.html input.md</code></pre>
+                    <div class="notes">Uses a custom template for output</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Print Default Template</div>
+                    <pre><code>pandoc -D html &gt; mytemplate.html</code></pre>
+                    <div class="notes">Prints the default template for a format</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Set Template Variables</div>
+                    <pre><code>pandoc -V author="John Doe" -V title="My Document" -o output.pdf input.md</code></pre>
+                    <div class="notes">Sets variables for use in templates</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">YAML Metadata Block</div>
+                    <pre><code>---
+title: My Document
+author: John Doe
+date: 2025-03-02
+---
+
+# Content starts here</code></pre>
+                    <div class="notes">Include metadata within the Markdown document</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Use Metadata File</div>
+                    <pre><code>pandoc --metadata-file=meta.yaml -o output.html input.md</code></pre>
+                    <div class="notes">Read metadata from external YAML file</div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Common Template Variables</h2>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">Document Info</div>
+                    <div><span class="tag">title</span><span class="tag">author</span><span class="tag">date</span><span class="tag">subtitle</span></div>
+                    <div class="notes">Basic document metadata</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">HTML Options</div>
+                    <div><span class="tag">css</span><span class="tag">include-in-header</span><span class="tag">include-before-body</span><span class="tag">include-after-body</span></div>
+                    <div class="notes">Customizing HTML output</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">PDF/LaTeX Options</div>
+                    <div><span class="tag">documentclass</span><span class="tag">geometry</span><span class="tag">mainfont</span><span class="tag">fontsize</span><span class="tag">papersize</span></div>
+                    <div class="notes">LaTeX/PDF document styling</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Language &amp; Locale</div>
+                    <div><span class="tag">lang</span><span class="tag">dir</span><span class="tag">babel-lang</span><span class="tag">locale</span></div>
+                    <div class="notes">Language and text direction settings</div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <div id="filters" class="tab-content">
+        <section>
+            <h2>Using Filters</h2>
+            <p>Filters allow transforming the document during conversion:</p>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">Apply Filter</div>
+                    <pre><code>pandoc --filter=pandoc-citeproc -o output.html input.md</code></pre>
+                    <div class="notes">Applies the pandoc-citeproc filter for citations</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Multiple Filters</div>
+                    <pre><code>pandoc --filter=filter1.py --filter=filter2.py -o output.html input.md</code></pre>
+                    <div class="notes">Applies multiple filters in sequence</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Lua Filter</div>
+                    <pre><code>pandoc --lua-filter=myfilter.lua -o output.html input.md</code></pre>
+                    <div class="notes">Applies a Lua filter</div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Common Pandoc Filters</h2>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">pandoc-citeproc</div>
+                    <pre><code>pandoc --citeproc --bibliography=refs.bib -o output.html input.md</code></pre>
+                    <div class="notes">Processes citations using a bibliography file</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">pandoc-crossref</div>
+                    <pre><code>pandoc --filter=pandoc-crossref -o output.html input.md</code></pre>
+                    <div class="notes">Adds cross-reference support for figures, equations, tables</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">pandoc-include</div>
+                    <pre><code>pandoc --filter=pandoc-include -o output.html input.md</code></pre>
+                    <div class="notes">Allows including external files</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">pandoc-mermaid</div>
+                    <pre><code>pandoc --filter=pandoc-mermaid -o output.html input.md</code></pre>
+                    <div class="notes">Renders mermaid diagrams</div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Markdown Extensions</h2>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">Enable Extensions</div>
+                    <pre><code>pandoc --from markdown+table_captions+pipe_tables -o output.html input.md</code></pre>
+                    <div class="notes">Enables specific Markdown extensions</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Disable Extensions</div>
+                    <pre><code>pandoc --from markdown-raw_html-raw_tex -o output.html input.md</code></pre>
+                    <div class="notes">Disables specific Markdown extensions</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Common Extensions</div>
+                    <div><span class="tag">pipe_tables</span><span class="tag">fenced_code_blocks</span><span class="tag">auto_identifiers</span><span class="tag">definition_lists</span></div>
+                    <div><span class="tag">footnotes</span><span class="tag">smart</span><span class="tag">yaml_metadata_block</span><span class="tag">tex_math_dollars</span></div>
+                    <div class="notes">Frequently used Markdown extensions</div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <div id="examples" class="tab-content">
+        <section>
+            <h2>Academic Writing</h2>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">Academic Paper to PDF</div>
+                    <pre><code>pandoc --citeproc --bibliography=refs.bib --filter=pandoc-crossref --number-sections --toc -o paper.pdf paper.md</code></pre>
+                    <div class="notes">Create a PDF with citations, cross-references, section numbers and TOC</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Conference Submission</div>
+                    <pre><code>pandoc -s --citeproc --bibliography=refs.bib --template=conference.latex -V documentclass=article -o submission.pdf paper.md</code></pre>
+                    <div class="notes">Create a paper using a specific LaTeX template</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Book Creation</div>
+                    <pre><code>pandoc -s --toc --toc-depth=3 -o book.pdf title.txt chapters/*.md</code></pre>
+                    <div class="notes">Combine multiple chapter files into a book</div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Presentations &amp; Slides</h2>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">Beamer Presentation</div>
+                    <pre><code>pandoc -t beamer -o slides.pdf presentation.md</code></pre>
+                    <div class="notes">Convert Markdown to a Beamer PDF presentation</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">PowerPoint Slides</div>
+                    <pre><code>pandoc -o presentation.pptx presentation.md</code></pre>
+                    <div class="notes">Create PowerPoint slides from Markdown</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Reveal.js Slides</div>
+                    <pre><code>pandoc -s -t revealjs -o slides.html presentation.md</code></pre>
+                    <div class="notes">Create web-based Reveal.js presentation</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Themed Beamer</div>
+                    <pre><code>pandoc -t beamer -V theme:Warsaw -V colortheme:dolphin -o slides.pdf presentation.md</code></pre>
+                    <div class="notes">Beamer presentation with custom themes</div>
+                </div>
+            </div>
+        </section>
+        
+        <section>
+            <h2>Website &amp; Documentation</h2>
+            <div class="command-grid">
+                <div class="command-card">
+                    <div class="command-title">Styled Website</div>
+                    <pre><code>pandoc -s --toc -c style.css -o website.html content.md</code></pre>
+                    <div class="notes">Create HTML with table of contents and custom CSS</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Documentation Site</div>
+                    <pre><code>pandoc -s --toc --toc-depth=2 --number-sections -o docs.html docs/*.md</code></pre>
+                    <div class="notes">Combine documentation files with TOC and numbered sections</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Wiki to Markdown</div>
+                    <pre><code>pandoc -f mediawiki -t markdown -o output.md input.wiki</code></pre>
+                    <div class="notes">Convert MediaWiki content to Markdown</div>
+                </div>
+                
+                <div class="command-card">
+                    <div class="command-title">Generate Man Page</div>
+                    <pre><code>pandoc -s -t man -o command.1 manpage.md</code></pre>
+                    <div class="notes">Create a Unix man page from Markdown</div>
+                </div>
+            </div>
+        </section>
+    </div>
+    
+    <footer>
+        <p>Pandoc Cheat Sheet — Universal Document Converter — Created 2025</p>
+    </footer>
+    
+    <script>
+        // Tab switching functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('.tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs and contents
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Show corresponding content
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Search functionality
+            const searchInput = document.getElementById('searchInput');
+            
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const commandCards = document.querySelectorAll('.command-card');
+                
+                commandCards.forEach(card => {
+                    const cardText = card.textContent.toLowerCase();
+                    if (cardText.includes(searchTerm)) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // If search is empty, show all cards
+                if (searchTerm === '') {
+                    commandCards.forEach(card => {
+                        card.style.display = 'block';
+                    });
+                }
+            });
+        });
+    </script>
+
+
+</body></html>

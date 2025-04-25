@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script>
+  function plot() {
+    var func = document.getElementById('func').value;
+    var x = []; 
+    var y = [];
+    var increment = Math.PI / 2000;
+    var xi = 0; 
+    while (xi < 2 * Math.PI) {
+      x.push(xi);
+      if (func == 'sin') {
+        y.push(Math.sin(xi)); 
+      } else if (func == 'cos') {
+        y.push(Math.cos(xi));  
+      } else if (func == 'tan') {
+        y.push(Math.tan(xi));  
+      }
+      xi += increment; 
+    }
+    
+    var data = [{x: x, y: y, mode: 'markers', name: func}];
+    var layout = {title: 'Trigonometric function',
+                 xaxis: {title: 'Angle (radians)'},
+                 yaxis: {title: 'Amplitude'}};
+    
+    Plotly.newPlot('myDiv', data, layout);
+  } 
+
+  window.onload = function() {
+    plot();
+  }
+</script>  
+  
+</head>
+<body>
+  <select id="func" onchange="plot()">
+    <option value="sin" selected>sin</option>
+    <option value="cos">cos</option>
+    <option value="tan">tan</option> 
+  </select>
+  <div id="myDiv"></div>
+</body>
+</html>

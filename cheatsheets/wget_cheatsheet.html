@@ -1,0 +1,359 @@
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wget Command Cheat Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        
+        .content {
+            padding: 20px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .command-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        @media (min-width: 768px) {
+            .command-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .command-card {
+            background-color: #f9f9f9;
+            border-left: 4px solid #2c3e50;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        
+        .command {
+            background-color: #2c3e50;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        .description {
+            font-size: 0.9rem;
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+        }
+        
+        #searchInput {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #eee;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 20px;
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Wget Command Cheat Sheet</h1>
+            <p>Essential commands and options for the wget utility</p>
+        </header>
+        
+        <div class="content">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search for commands...">
+            </div>
+            
+            <div id="noResults" class="no-results hidden">
+                No commands match your search.
+            </div>
+            
+            <div class="section">
+                <h2>Basic Usage</h2>
+                <div class="command-grid">
+                    <div class="command-card">
+                        <div class="command">wget https://example.com/file.zip</div>
+                        <div class="description">Download a file to the current directory</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget -O output.zip https://example.com/file.zip</div>
+                        <div class="description">Download a file and save it with a different name</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget -c https://example.com/file.zip</div>
+                        <div class="description">Resume a paused or interrupted download</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget -P /path/to/directory https://example.com/file.zip</div>
+                        <div class="description">Download a file to a specific directory</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Multiple Files</h2>
+                <div class="command-grid">
+                    <div class="command-card">
+                        <div class="command">wget -i urls.txt</div>
+                        <div class="description">Download files from URLs listed in a text file</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget https://example.com/file{1..10}.jpg</div>
+                        <div class="description">Download a sequence of files (file1.jpg to file10.jpg)</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Website Mirroring</h2>
+                <div class="command-grid">
+                    <div class="command-card">
+                        <div class="command">wget -m https://example.com/</div>
+                        <div class="description">Mirror a website (downloads the entire site)</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget -m -k -p https://example.com/</div>
+                        <div class="description">Mirror a website and convert links for offline viewing</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget -r -l 2 https://example.com/</div>
+                        <div class="description">Recursively download pages up to 2 levels deep</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget -r -np https://example.com/dir/</div>
+                        <div class="description">Recursively download but don't ascend to parent directory</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Download Customization</h2>
+                <div class="command-grid">
+                    <div class="command-card">
+                        <div class="command">wget -U "Mozilla/5.0" https://example.com/file.zip</div>
+                        <div class="description">Set a custom user agent</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget --limit-rate=200k https://example.com/file.zip</div>
+                        <div class="description">Limit download speed (e.g., to 200KB/s)</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget --wait=2 https://example.com/file.zip</div>
+                        <div class="description">Wait specified seconds between retrievals</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget --random-wait https://example.com/file.zip</div>
+                        <div class="description">Wait random amount of time between retrievals</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Authentication</h2>
+                <div class="command-grid">
+                    <div class="command-card">
+                        <div class="command">wget --user=username --password=password https://example.com/file.zip</div>
+                        <div class="description">HTTP authentication</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget --ftp-user=username --ftp-password=password ftp://example.com/file.zip</div>
+                        <div class="description">FTP authentication</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Output Options</h2>
+                <div class="command-grid">
+                    <div class="command-card">
+                        <div class="command">wget -q https://example.com/file.zip</div>
+                        <div class="description">Quiet mode (no output)</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget -v https://example.com/file.zip</div>
+                        <div class="description">Verbose output</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget -o log.txt https://example.com/file.zip</div>
+                        <div class="description">Log messages to a file</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget -a log.txt https://example.com/file.zip</div>
+                        <div class="description">Append log messages to a file</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Advanced Options</h2>
+                <div class="command-grid">
+                    <div class="command-card">
+                        <div class="command">wget --reject=png,jpg https://example.com/</div>
+                        <div class="description">Reject certain file types</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget --accept=pdf,doc https://example.com/</div>
+                        <div class="description">Accept only certain file types</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget --spider https://example.com/file.zip</div>
+                        <div class="description">Check if a file exists without downloading</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget --tries=10 https://example.com/file.zip</div>
+                        <div class="description">Set number of retry attempts</div>
+                    </div>
+
+                    <div class="command-card">
+                        <div class="command">wget --background https://example.com/largefile.zip</div>
+                        <div class="description">Download in the background</div>
+                    </div>
+                    
+                    <div class="command-card">
+                        <div class="command">wget --no-check-certificate https://example.com/file.zip</div>
+                        <div class="description">Skip SSL certificate validation (use with caution)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>This wget cheat sheet is for informational purposes. For full documentation, refer to the <a href="https://www.gnu.org/software/wget/manual/wget.html" target="_blank">official wget manual</a>.</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Search functionality
+        const searchInput = document.getElementById('searchInput');
+        const commandCards = document.querySelectorAll('.command-card');
+        const sections = document.querySelectorAll('.section');
+        const noResults = document.getElementById('noResults');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            let foundAny = false;
+            
+            // Reset visibility
+            noResults.classList.add('hidden');
+            sections.forEach(section => {
+                section.classList.remove('hidden');
+                let sectionHasVisible = false;
+                
+                const cards = section.querySelectorAll('.command-card');
+                cards.forEach(card => {
+                    const command = card.querySelector('.command').textContent.toLowerCase();
+                    const description = card.querySelector('.description').textContent.toLowerCase();
+                    
+                    if (command.includes(searchTerm) || description.includes(searchTerm)) {
+                        card.classList.remove('hidden');
+                        sectionHasVisible = true;
+                        foundAny = true;
+                    } else {
+                        card.classList.add('hidden');
+                    }
+                });
+                
+                if (!sectionHasVisible) {
+                    section.classList.add('hidden');
+                }
+            });
+            
+            if (!foundAny && searchTerm) {
+                noResults.classList.remove('hidden');
+            }
+        });
+    </script>
+
+
+</body></html>

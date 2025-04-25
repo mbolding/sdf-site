@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Like a Chipmunk at Philmont</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --chipmunk-brown: #8B4513;
+            --chipmunk-tan: #D2B48C;
+            --philmont-green: #2c5f2d;
+            --acorn-orange: #CD853F;
+            --sky-blue: #87CEEB;
+        }
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Cabin', Arial, sans-serif;
+            color: var(--chipmunk-brown);
+        }
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--sky-blue);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            filter: blur(5px);
+            z-index: -1;
+        }
+        .content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        h1 {
+            color: var(--chipmunk-brown);
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-size: 2.5em;
+        }
+        .checklist {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .item {
+            margin-bottom: 10px;
+        }
+        input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        input[type="checkbox"]:checked + label {
+            color: var(--philmont-green);
+            font-weight: bold;
+        }
+        #progress-container {
+            margin-top: 20px;
+            background-color: var(--chipmunk-tan);
+            border-radius: 15px;
+            height: 30px;
+            position: relative;
+            border: 2px solid var(--chipmunk-brown);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #progress-bar {
+            background-color: var(--acorn-orange);
+            height: 100%;
+            border-radius: 13px;
+            width: 0;
+            transition: width 0.5s ease-in-out;
+        }
+        #progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--chipmunk-brown);
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+        }
+        #message {
+            text-align: center;
+            margin-top: 20px;
+            font-weight: bold;
+            min-height: 1.5em;
+            color: var(--philmont-green);
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
+            font-size: 1.2em;
+        }
+        #reset-button {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: var(--acorn-orange);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            font-family: 'Cabin', Arial, sans-serif;
+        }
+        #reset-button:hover {
+            background-color: #B8860B;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    <div class="content">
+        <h1>Live Like a Chipmunk at Philmont</h1>
+        <div class="checklist">
+            <div class="item"><input type="checkbox" id="item1" onchange="updateProgress()"><label for="item1">Scurry quickly between rocks and trees</label></div>
+            <div class="item"><input type="checkbox" id="item2" onchange="updateProgress()"><label for="item2">Gather and store acorns for winter</label></div>
+            <div class="item"><input type="checkbox" id="item3" onchange="updateProgress()"><label for="item3">Chirp loudly to alert others of danger</label></div>
+            <div class="item"><input type="checkbox" id="item4" onchange="updateProgress()"><label for="item4">Build a cozy nest in a hollow tree</label></div>
+            <div class="item"><input type="checkbox" id="item5" onchange="updateProgress()"><label for="item5">Practice your climbing skills daily</label></div>
+            <div class="item"><input type="checkbox" id="item6" onchange="updateProgress()"><label for="item6">Forage for berries and seeds</label></div>
+            <div class="item"><input type="checkbox" id="item7" onchange="updateProgress()"><label for="item7">Take dust baths to keep your fur clean</label></div>
+            <div class="item"><input type="checkbox" id="item8" onchange="updateProgress()"><label for="item8">Observe hikers from a safe distance</label></div>
+            <div class="item"><input type="checkbox" id="item9" onchange="updateProgress()"><label for="item9">Practice your balance on thin branches</label></div>
+            <div class="item"><input type="checkbox" id="item10" onchange="updateProgress()"><label for="item10">Memorize the best hiding spots</label></div>
+            <div class="item"><input type="checkbox" id="item11" onchange="updateProgress()"><label for="item11">Groom your tail to keep it fluffy</label></div>
+            <div class="item"><input type="checkbox" id="item12" onchange="updateProgress()"><label for="item12">Take quick power naps throughout the day</label></div>
+        </div>
+        <div id="progress-container">
+            <div id="progress-bar"></div>
+            <div id="progress-text">0%</div>
+        </div>
+        <div id="message"></div>
+        <button id="reset-button" onclick="resetCheckboxes()">Reset Acorn Stash</button>
+    </div>
+
+    <script>
+        function updateProgress() {
+            const total = 12;
+            const checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const percentage = (checked / total) * 100;
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const messageElement = document.getElementById('message');
+
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `${percentage.toFixed(1)}%`;
+
+            if (percentage === 100) {
+                messageElement.textContent = "Congratulations! You're now the most Philmont-savvy chipmunk!";
+            } else if (percentage >= 75) {
+                messageElement.textContent = "You're almost there! Just a few more acorns to gather!";
+            } else if (percentage >= 50) {
+                messageElement.textContent = "Halfway to becoming a true Philmont chipmunk!";
+            } else if (percentage > 0) {
+                messageElement.textContent = "Good start! Keep exploring and gathering!";
+            } else {
+                messageElement.textContent = "Time to start your chipmunk adventure at Philmont!";
+            }
+        }
+
+        function resetCheckboxes() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateProgress();
+        }
+    </script>
+</body>
+</html>
+

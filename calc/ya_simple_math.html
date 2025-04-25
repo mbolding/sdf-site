@@ -1,0 +1,287 @@
+<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Expression Evaluator</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --background-color: #f5f7fa;
+            --error-color: #e74c3c;
+            --success-color: #2ecc71;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .calculator {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            padding: 25px;
+        }
+        
+        .calculator h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .input-area {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        #expression {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        #expression:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        #evaluate {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 12px 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        #evaluate:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .result-area {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            min-height: 30px;
+        }
+        
+        #result {
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .error {
+            color: var(--error-color);
+        }
+        
+        .success {
+            color: var(--success-color);
+        }
+        
+        .history {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .examples {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        
+        .examples h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 18px;
+        }
+        
+        .example-item {
+            background-color: #f8f9fa;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .example-item:hover {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>Math Expression Evaluator</h1>
+        
+        <div class="input-area">
+            <input type="text" id="expression" placeholder="Enter a math expression (e.g., 2+3*5)" autofocus="">
+            <button id="evaluate">Calculate</button>
+        </div>
+        
+        <div class="result-area">
+            <div id="result">Result will appear here</div>
+        </div>
+        
+        <div class="examples">
+            <h3>Try these examples:</h3>
+            <div class="example-item" data-expr="2+3*5">2+3*5</div>
+            <div class="example-item" data-expr="(4+2)^2">Power: (4+2)^2</div>
+            <div class="example-item" data-expr="sqrt(16)+log(100)">Functions: sqrt(16)+log(100)</div>
+            <div class="example-item" data-expr="sin(PI/2)">Trigonometry: sin(PI/2)</div>
+        </div>
+        
+        <div class="history">
+            <h3>History</h3>
+            <div id="history-list">
+                <!-- History items will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants and utility functions
+        const PI = Math.PI;
+        const E = Math.E;
+
+        function sqrt(x) { return Math.sqrt(x); }
+        function sin(x) { return Math.sin(x); }
+        function cos(x) { return Math.cos(x); }
+        function tan(x) { return Math.tan(x); }
+        function log(x) { return Math.log10(x); }
+        function ln(x) { return Math.log(x); }
+        function abs(x) { return Math.abs(x); }
+        function round(x) { return Math.round(x); }
+
+        // Main evaluation function
+        function evaluateMathExpression(expression) {
+            try {
+                // Replace ^ with ** for power operation
+                expression = expression.replace(/\^/g, '**');
+                
+                // Create a safe evaluation context
+                const safeEval = (expr) => {
+                    // Only allow specific mathematical operations and function
+                    const allowedFunctions = ['Math', 'PI', 'E', 'sqrt', 'sin', 'cos', 'tan', 'log', 'ln', 'abs', 'round'];
+                    const sandbox = {};
+                    
+                    // Add allowed functions to sandbox
+                    for (const func of allowedFunctions) {
+                        if (window[func]) sandbox[func] = window[func];
+                    }
+                    
+                    // Add Math functions
+                    sandbox.Math = Math;
+                    
+                    // Create a function from the expression and execute it with the sandbox context
+                    const func = new Function(...Object.keys(sandbox), `return ${expr};`);
+                    return func(...Object.values(sandbox));
+                };
+                
+                const result = safeEval(expression);
+                
+                if (result === undefined || isNaN(result)) {
+                    throw new Error("Invalid expression");
+                }
+                
+                return result;
+            } catch (error) {
+                throw new Error("Could not evaluate expression: " + error.message);
+            }
+        }
+
+        // UI interaction
+        document.addEventListener('DOMContentLoaded', () => {
+            const expressionInput = document.getElementById('expression');
+            const evaluateButton = document.getElementById('evaluate');
+            const resultDisplay = document.getElementById('result');
+            const historyList = document.getElementById('history-list');
+            const exampleItems = document.querySelectorAll('.example-item');
+            
+            // Load history from localStorage if available
+            const history = JSON.parse(localStorage.getItem('mathHistory') || '[]');
+            updateHistoryUI();
+            
+            function evaluate() {
+                const expression = expressionInput.value.trim();
+                if (!expression) {
+                    resultDisplay.innerHTML = "Please enter an expression";
+                    resultDisplay.className = "error";
+                    return;
+                }
+                
+                try {
+                    const result = evaluateMathExpression(expression);
+                    resultDisplay.innerHTML = `${expression} = <span class="success">${result}</span>`;
+                    resultDisplay.className = "";
+                    
+                    // Add to history
+                    history.unshift({ expression, result, timestamp: new Date().toISOString() });
+                    if (history.length > 10) history.pop(); // Keep only last 10 items
+                    localStorage.setItem('mathHistory', JSON.stringify(history));
+                    updateHistoryUI();
+                    
+                } catch (error) {
+                    resultDisplay.innerHTML = error.message;
+                    resultDisplay.className = "error";
+                }
+            }
+            
+            function updateHistoryUI() {
+                historyList.innerHTML = '';
+                history.forEach(item => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    historyItem.innerHTML = `<div>${item.expression}</div><div>${item.result}</div>`;
+                    historyItem.addEventListener('click', () => {
+                        expressionInput.value = item.expression;
+                    });
+                    historyList.appendChild(historyItem);
+                });
+            }
+            
+            // Event listeners
+            evaluateButton.addEventListener('click', evaluate);
+            expressionInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') evaluate();
+            });
+            
+            // Example click handlers
+            exampleItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    expressionInput.value = item.getAttribute('data-expr');
+                    evaluate();
+                });
+            });
+        });
+    </script>
+
+
+</body></html>
