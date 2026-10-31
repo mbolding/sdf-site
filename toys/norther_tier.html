@@ -3,78 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Like You're at Northern Tier</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cabin:wght@400;700&display=swap" rel="stylesheet">
+    <title>Live Like You're at Northern Tier · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
     <style>
-        :root {
-            --northern-blue: #0077be;
-            --northern-green: #228b22;
-            --northern-brown: #8b4513;
-            --northern-gray: #708090;
-            --light-blue: #e6f3ff;
-        }
-        body, html {
-            height: 100%;
-            margin: 0;
-            font-family: 'Cabin', Arial, sans-serif;
-            color: var(--northern-brown);
-        }
-        .background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: var(--light-blue);
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-            background-repeat: repeat;
-            background-size: 200px 200px;
-            filter: blur(2px);
-            z-index: -1;
-        }
-        .content {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            position: relative;
-            z-index: 1;
-        }
-        h1 {
-            color: var(--northern-blue);
-            text-align: center;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-            font-size: 2.5em;
-        }
-        .checklist {
-            background-color: rgba(255, 255, 255, 0.9);
-            border-radius: 5px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .item {
-            margin-bottom: 10px;
-        }
-        input[type="checkbox"] {
-            margin-right: 10px;
-        }
-        input[type="checkbox"]:checked + label {
-            color: var(--northern-green);
-            font-weight: bold;
-        }
+        .checklist { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 0.9em 1.1em; }
+        .item { margin-bottom: 0.4em; }
+        .item input[type="checkbox"] { margin-right: 0.6em; }
+        .item input[type="checkbox"]:checked + label { color: var(--good); font-weight: bold; }
         #progress-container {
-            margin-top: 20px;
-            background-color: var(--northern-gray);
-            border-radius: 5px;
+            margin-top: 1.2em;
             height: 30px;
             position: relative;
-            border: 2px solid var(--northern-brown);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            background: var(--panel);
+            border: 1px solid var(--rule);
+            border-radius: var(--radius);
         }
         #progress-bar {
-            background-color: var(--northern-blue);
             height: 100%;
-            border-radius: 3px;
             width: 0;
+            background: color-mix(in srgb, var(--link) 40%, var(--surface));
             transition: width 0.5s ease-in-out;
         }
         #progress-text {
@@ -82,42 +31,22 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: white;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            font: 600 15px var(--font-ui);
+            color: var(--text);
         }
         #message {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 1em;
             font-weight: bold;
-            min-height: 1.5em;
-            color: var(--northern-green);
-            text-shadow: 1px 1px 2px rgba(255,255,255,0.5);
             font-size: 1.2em;
+            min-height: 1.5em;
+            color: var(--good);
         }
-        #reset-button {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background-color: var(--northern-blue);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            font-family: 'Cabin', Arial, sans-serif;
-        }
-        #reset-button:hover {
-            background-color: #005c91;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 8px rgba(0,0,0,0.3);
-        }
+        #reset-button { display: block; margin: 1.2em auto; }
     </style>
 </head>
 <body>
-    <div class="background"></div>
+    <header><a href="../">mbolding</a> · <a href="./">Toys</a></header>
     <div class="content">
         <h1>Live Like You're at Northern Tier</h1>
         <div class="checklist">
@@ -139,7 +68,7 @@
             <div id="progress-text">0%</div>
         </div>
         <div id="message"></div>
-        <button id="reset-button" onclick="resetCheckboxes()">Reset Progress</button>
+        <button id="reset-button" class="primary" onclick="resetCheckboxes()">Reset Progress</button>
     </div>
 
     <script>

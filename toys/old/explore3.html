@@ -1,111 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Frontier Expedition</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frontier Expedition 3 · mbolding</title>
+<link rel="stylesheet" href="../../style.css">
+<script src="../../theme.js"></script>
 <style>
-body {
-	font-family: Arial, sans-serif;
-display: flex;
-	 justify-content: center;
-	 align-items: center;
-height: 100vh;
-margin: 0;
-	background-color: #f0f0f0;
-}
-#game-container {
-	background-color: white;
-padding: 20px;
-	 border-radius: 10px;
-	 box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
-#game-board {
-display: grid;
-	 grid-template-columns: repeat(15, 20px);
-gap: 1px;
-     margin-bottom: 20px;
-}
-
-#message-container {
-	max-width: 300px;
-margin: 10px auto;
-}
-
-#message {
-	word-wrap: break-word;
-	overflow-wrap: break-word;
-hyphens: auto;
-}
-
-#actions {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-#actions button {
-    padding: 10px 20px;
-    font-size: 16px;
-}
-
-.cell {
-width: 20px;
-height: 20px;
-border: 1px solid #ccc;
-}
-.player {
-	background-color: red;
-}
-.explored {
-	background-color: #e0e0e0;
-}
-.supply-cache {
-	background-color: #90EE90;
-}
-button {
-margin: 5px;
-padding: 5px 10px;
-}
-
-#movement-controls {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    margin-bottom: 10px;
-}
-
-#movement-controls button {
-    width: 40px;
-    height: 40px;
-    font-size: 18px;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
+#game-board { display: grid; grid-template-columns: repeat(15, 20px); gap: 1px; width: max-content; padding: 6px; margin-bottom: 1em;
+              background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); }
+.cell { width: 20px; height: 20px; border: 1px solid var(--rule); }
+.explored { background: color-mix(in srgb, var(--muted) 35%, var(--surface)); }
+.supply-cache { background: color-mix(in srgb, var(--good) 55%, var(--surface)); }
+.player { background: var(--bad); border-color: var(--bad); }
+#resources { font: 15px var(--font-ui); }
+#movement-controls { display: flex; gap: 5px; margin: 0.8em 0; }
+#movement-controls button { width: 40px; height: 40px; padding: 0; font-size: 18px; }
+#actions { display: flex; flex-wrap: wrap; gap: 0.6em; }
+#actions button { padding: 0.5em 1.2em; font-size: 16px; }
+#message-container { max-width: 22em; }
+#message { overflow-wrap: break-word; hyphens: auto; min-height: 1.6em; }
 </style>
 </head>
 <body>
-<div id="game-container">
+<header><a href="../../">mbolding</a> · <a href="../">Toys</a> · earlier version</header>
 <h1>Frontier Expedition</h1>
 <div id="game-board"></div>
 <div id="resources"></div>
 <div id="movement-controls">
-<button onclick="move(-1, 0)">←</button>
-<button onclick="move(0, 1)">↓</button>
-<button onclick="move(0, -1)">↑</button>
-<button onclick="move(1, 0)">→</button>
+  <button onclick="move(-1, 0)">←</button>
+  <button onclick="move(0, 1)">↓</button>
+  <button onclick="move(0, -1)">↑</button>
+  <button onclick="move(1, 0)">→</button>
 </div>
 <div id="actions">
-<button onclick="rest()">Rest</button>
-<button onclick="hunt()">Hunt</button>
-<button onclick="explore()">Explore</button>
+  <button onclick="rest()">Rest</button>
+  <button onclick="hunt()">Hunt</button>
+  <button onclick="explore()">Explore</button>
 </div>
 <div id="message-container"><p id="message"></p></div>
-</div>
 
 <script>
 const BOARD_WIDTH = 15;
@@ -327,5 +260,3 @@ initializeGame();
 </script>
 </body>
 </html>
-
-

@@ -1,57 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trig Function Plotter</title>
-
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trig function plotter 2 · mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+<style>
+#myChart { display: block; }
+</style>
 </head>
-<script>
-function plot() {
-  var ctx = document.getElementById('myChart').getContext('2d');
-  var func = document.getElementById('func').value;
-  
-  var data = {
-    labels: [],
-    datasets: [{
-      label: func,
-      data: [],
-      fill: false,
-      borderColor: 'rgb(75, 192, 192)'
-    }]
-  };
-  
-  var x = 0;
-  var increment = Math.PI / 180;
-  while (x < 2 * Math.PI) {
-    data.labels.push(x);
-    if (func == 'sin') {
-      data.datasets[0].data.push(Math.sin(x));
-    } else if (func == 'cos') {
-      data.datasets[0].data.push(Math.cos(x));
-    } else if (func == 'tan') {
-      data.datasets[0].data.push(Math.tan(x));
-    }
-    x += increment; 
-  }
-  
-  var chart = new Chart(ctx, {
-    type: 'line',
-    data: data
-  });
-} 
-</script>
-</head>
-<body>
-
-<select id="func" onchange="plot()">
-  <option value="sin">sin</option>
-  <option value="cos">cos</option>
-  <option value="tan">tan</option>
-</select>
+<body class="wide">
+<header><a href="./">mbolding</a></header>
+<h1>Trig function plotter</h1>
+<div class="row">
+  <select id="func" onchange="plot()">
+    <option value="sin">sin</option>
+    <option value="cos">cos</option>
+    <option value="tan">tan</option>
+  </select>
+</div>
 
 <canvas id="myChart" width="800" height="400"></canvas>
 
+<script>
+  function color(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  var chart = null;
+
+  function plot() {
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var func = document.getElementById('func').value;
+
+    var data = {
+      labels: [],
+      datasets: [{
+        label: func,
+        data: [],
+        fill: false,
+        borderColor: color('--link')
+      }]
+    };
+
+    var x = 0;
+    var increment = Math.PI / 180;
+    while (x < 2 * Math.PI) {
+      data.labels.push(x);
+      if (func == 'sin') {
+        data.datasets[0].data.push(Math.sin(x));
+      } else if (func == 'cos') {
+        data.datasets[0].data.push(Math.cos(x));
+      } else if (func == 'tan') {
+        data.datasets[0].data.push(Math.tan(x));
+      }
+      x += increment;
+    }
+
+    Chart.defaults.global.defaultFontColor = color('--muted');
+    Chart.defaults.global.defaultFontFamily = color('--font-ui');
+    var grid = { color: color('--rule'), zeroLineColor: color('--muted') };
+
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: data,
+      options: { scales: { xAxes: [{ gridLines: grid }], yAxes: [{ gridLines: grid }] } }
+    });
+  }
+
+  plot();
+  window.addEventListener('themechange', plot);
+</script>
 </body>
 </html>

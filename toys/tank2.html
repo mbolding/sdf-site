@@ -3,29 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tank Driving Game</title>
+    <title>Tank Driving Game · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
-            font-family: Arial, sans-serif;
-        }
         #gameArea {
             width: 300px;
             height: 300px;
-            background-color: #8bc34a;
+            background: color-mix(in srgb, var(--good) 35%, var(--surface));
+            border: 1px solid var(--rule);
+            border-radius: var(--radius);
             position: relative;
             overflow: hidden;
         }
         #tank {
             width: 40px;
             height: 40px;
-            background-color: #4a4a4a;
+            background: var(--muted);
             position: absolute;
             transition: transform 0.1s;
         }
@@ -34,7 +28,7 @@
             position: absolute;
             width: 30px;
             height: 8px;
-            background-color: #2a2a2a;
+            background: var(--text);
             top: 16px;
             left: 40px;
         }
@@ -42,14 +36,16 @@
             position: absolute;
             top: 10px;
             left: 10px;
-            background-color: rgba(255, 255, 255, 0.7);
+            background: color-mix(in srgb, var(--surface) 75%, transparent);
             padding: 5px;
-            border-radius: 5px;
-            font-size: 12px;
+            border-radius: var(--radius);
+            font: 12px/1.4 var(--font-ui);
         }
     </style>
 </head>
 <body>
+    <header><a href="../">mbolding</a> · <a href="./">Toys</a></header>
+    <h1>Tank Driving Game</h1>
     <div id="gameArea">
         <div id="tank"></div>
         <div id="instructions">W/S: Move forward/backward<br>A/D: Turn left/right</div>

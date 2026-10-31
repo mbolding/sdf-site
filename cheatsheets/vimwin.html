@@ -3,229 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vim Window Commands Cheatsheet</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            border-bottom: 3px solid #2c3e50;
-            padding-bottom: 10px;
-        }
-        .category {
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-        h2 {
-            color: #3498db;
-            margin-top: 0;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .command {
-            font-family: monospace;
-            background-color: #e8e8e8;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-    </style>
+    <title>Vim windows · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
 </head>
 <body>
+    <header><a href="../">mbolding</a> · <a href="./">Cheatsheets</a></header>
     <h1>Vim Window Commands Cheatsheet</h1>
 
-    <div class="category">
+    <div>
         <h2>Creating and Closing Windows</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">:split</span> or <span class="command">:sp</span></td>
+                <td><code>:split</code> or <code>:sp</code></td>
                 <td>Split window horizontally</td>
             </tr>
             <tr>
-                <td><span class="command">:vsplit</span> or <span class="command">:vs</span></td>
+                <td><code>:vsplit</code> or <code>:vs</code></td>
                 <td>Split window vertically</td>
             </tr>
             <tr>
-                <td><span class="command">:new</span></td>
+                <td><code>:new</code></td>
                 <td>Create new window (horizontal split)</td>
             </tr>
             <tr>
-                <td><span class="command">:vnew</span></td>
+                <td><code>:vnew</code></td>
                 <td>Create new window (vertical split)</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w s</span></td>
+                <td><code>Ctrl-w s</code></td>
                 <td>Split window horizontally (like :split)</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w v</span></td>
+                <td><code>Ctrl-w v</code></td>
                 <td>Split window vertically (like :vsplit)</td>
             </tr>
             <tr>
-                <td><span class="command">:q</span> or <span class="command">:close</span></td>
+                <td><code>:q</code> or <code>:close</code></td>
                 <td>Close current window</td>
             </tr>
             <tr>
-                <td><span class="command">:only</span> or <span class="command">Ctrl-w o</span></td>
+                <td><code>:only</code> or <code>Ctrl-w o</code></td>
                 <td>Close all windows except the current one</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Navigating Between Windows</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w h</span></td>
+                <td><code>Ctrl-w h</code></td>
                 <td>Move to the window on the left</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w j</span></td>
+                <td><code>Ctrl-w j</code></td>
                 <td>Move to the window below</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w k</span></td>
+                <td><code>Ctrl-w k</code></td>
                 <td>Move to the window above</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w l</span></td>
+                <td><code>Ctrl-w l</code></td>
                 <td>Move to the window on the right</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w w</span></td>
+                <td><code>Ctrl-w w</code></td>
                 <td>Cycle through all windows</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w p</span></td>
+                <td><code>Ctrl-w p</code></td>
                 <td>Move to the previous (last accessed) window</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w t</span></td>
+                <td><code>Ctrl-w t</code></td>
                 <td>Move to the top-left window</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w b</span></td>
+                <td><code>Ctrl-w b</code></td>
                 <td>Move to the bottom-right window</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Resizing Windows</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w =</span></td>
+                <td><code>Ctrl-w =</code></td>
                 <td>Make all windows equal size</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w _</span></td>
+                <td><code>Ctrl-w _</code></td>
                 <td>Maximize height of current window</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w |</span></td>
+                <td><code>Ctrl-w |</code></td>
                 <td>Maximize width of current window</td>
             </tr>
             <tr>
-                <td><span class="command">:resize</span> or <span class="command">:res</span></td>
+                <td><code>:resize</code> or <code>:res</code></td>
                 <td>Resize window to N rows</td>
             </tr>
             <tr>
-                <td><span class="command">:vertical resize</span> or <span class="command">:vert res</span></td>
+                <td><code>:vertical resize</code> or <code>:vert res</code></td>
                 <td>Resize window to N columns</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w +</span></td>
+                <td><code>Ctrl-w +</code></td>
                 <td>Increase window height</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w -</span></td>
+                <td><code>Ctrl-w -</code></td>
                 <td>Decrease window height</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w ></span></td>
+                <td><code>Ctrl-w ></code></td>
                 <td>Increase window width</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w <</span></td>
+                <td><code>Ctrl-w <</code></td>
                 <td>Decrease window width</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Moving Windows</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w r</span></td>
+                <td><code>Ctrl-w r</code></td>
                 <td>Rotate windows downwards/rightwards</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w R</span></td>
+                <td><code>Ctrl-w R</code></td>
                 <td>Rotate windows upwards/leftwards</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w x</span></td>
+                <td><code>Ctrl-w x</code></td>
                 <td>Exchange current window with next one</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w H</span></td>
+                <td><code>Ctrl-w H</code></td>
                 <td>Move current window to far left</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w J</span></td>
+                <td><code>Ctrl-w J</code></td>
                 <td>Move current window to bottom</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w K</span></td>
+                <td><code>Ctrl-w K</code></td>
                 <td>Move current window to top</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-w L</span></td>
+                <td><code>Ctrl-w L</code></td>
                 <td>Move current window to far right</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
 </body>

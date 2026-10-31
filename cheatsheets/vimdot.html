@@ -3,121 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vim Dot Command and Related Operations Cheatsheet</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            border-bottom: 3px solid #2c3e50;
-            padding-bottom: 10px;
-        }
-        .category {
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-        h2 {
-            color: #3498db;
-            margin-top: 0;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .command {
-            font-family: monospace;
-            background-color: #e8e8e8;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-        .note {
-            font-style: italic;
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }
-    </style>
+    <title>Vim dot command · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
 </head>
 <body>
+    <header><a href="../">mbolding</a> · <a href="./">Cheatsheets</a></header>
     <h1>Vim Dot Command and Related Operations Cheatsheet</h1>
 
-    <div class="category">
+    <div>
         <h2>Dot Command</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">.</span></td>
+                <td><code>.</code></td>
                 <td>Repeat the last change</td>
             </tr>
-        </table>
+        </table></div>
         <p class="note">The dot command repeats the last change, including the last command and its motion or text object.</p>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Related Repeat Commands</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">;</span></td>
+                <td><code>;</code></td>
                 <td>Repeat last f, t, F, or T motion</td>
             </tr>
             <tr>
-                <td><span class="command">,</span></td>
+                <td><code>,</code></td>
                 <td>Repeat last f, t, F, or T motion in opposite direction</td>
             </tr>
             <tr>
-                <td><span class="command">n</span></td>
+                <td><code>n</code></td>
                 <td>Repeat last search in same direction</td>
             </tr>
             <tr>
-                <td><span class="command">N</span></td>
+                <td><code>N</code></td>
                 <td>Repeat last search in opposite direction</td>
             </tr>
             <tr>
-                <td><span class="command">@:</span></td>
+                <td><code>@:</code></td>
                 <td>Repeat last Ex command</td>
             </tr>
             <tr>
-                <td><span class="command">@@</span></td>
+                <td><code>@@</code></td>
                 <td>Repeat last executed macro</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Efficient Editing with Dot Command</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Scenario</th>
                 <th>Commands</th>
@@ -125,61 +70,61 @@
             </tr>
             <tr>
                 <td>Change multiple occurrences</td>
-                <td><span class="command">cw[new text]&lt;Esc&gt;n.n.n.</span></td>
+                <td><code>cw[new text]&lt;Esc&gt;n.n.n.</code></td>
                 <td>Change word, then use n to find next occurrence and . to repeat change</td>
             </tr>
             <tr>
                 <td>Delete multiple lines</td>
-                <td><span class="command">dd.....</span></td>
+                <td><code>dd.....</code></td>
                 <td>Delete a line and repeat with . for subsequent lines</td>
             </tr>
             <tr>
                 <td>Append to multiple lines</td>
-                <td><span class="command">A[text]&lt;Esc&gt;j.j.j.</span></td>
+                <td><code>A[text]&lt;Esc&gt;j.j.j.</code></td>
                 <td>Append text to end of line, move down, and repeat</td>
             </tr>
             <tr>
                 <td>Change inside multiple parentheses</td>
-                <td><span class="command">ci([new text]&lt;Esc&gt;n.n.</span></td>
+                <td><code>ci([new text]&lt;Esc&gt;n.n.</code></td>
                 <td>Change inside parentheses, find next pair, repeat</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Advanced Dot Command Techniques</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Technique</th>
                 <th>Description</th>
             </tr>
             <tr>
                 <td>Combine with counts</td>
-                <td>Use <span class="command">3.</span> to repeat the last change three times</td>
+                <td>Use <code>3.</code> to repeat the last change three times</td>
             </tr>
             <tr>
                 <td>Use with visual mode</td>
-                <td>Make a change in visual mode, then use <span class="command">.</span> to repeat on next visual selection</td>
+                <td>Make a change in visual mode, then use <code>.</code> to repeat on next visual selection</td>
             </tr>
             <tr>
                 <td>Combine with macros</td>
-                <td>Record a macro, execute it, then use <span class="command">.</span> to repeat the macro's effect</td>
+                <td>Record a macro, execute it, then use <code>.</code> to repeat the macro's effect</td>
             </tr>
             <tr>
                 <td>Two-step repeats</td>
-                <td>Use <span class="command">;</span> to repeat a motion, then <span class="command">.</span> to repeat a change</td>
+                <td>Use <code>;</code> to repeat a motion, then <code>.</code> to repeat a change</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Tips for Effective Use</h2>
         <ul>
-            <li>Make your changes repeatable: prefer <span class="command">cw</span> over <span class="command">cwiwi</span></li>
-            <li>Use text objects (e.g., <span class="command">ciw</span>, <span class="command">ci"</span>) for more repeatable actions</li>
+            <li>Make your changes repeatable: prefer <code>cw</code> over <code>cwiwi</code></li>
+            <li>Use text objects (e.g., <code>ciw</code>, <code>ci"</code>) for more repeatable actions</li>
             <li>Combine the dot command with searches or jumps for efficient editing</li>
-            <li>Remember that <span class="command">u</span> (undo) and <span class="command">Ctrl-R</span> (redo) work well with the dot command</li>
-            <li>Practice combining <span class="command">.</span> with <span class="command">n</span> and <span class="command">;</span> for powerful editing sequences</li>
+            <li>Remember that <code>u</code> (undo) and <code>Ctrl-R</code> (redo) work well with the dot command</li>
+            <li>Practice combining <code>.</code> with <code>n</code> and <code>;</code> for powerful editing sequences</li>
         </ul>
     </div>
 

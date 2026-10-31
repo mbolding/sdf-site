@@ -1,78 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mind Mapping App</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f0f0f0;
-        }
-        #canvas {
-            background-color: white;
-            border: 1px solid #ccc;
-            margin-top: 20px;
-        }
-        #controls {
-            position: fixed;
-            top: 10px;
-            left: 10px;
-        }
-        #editInput {
-            position: absolute;
-            display: none;
-            font-size: 14px;
-            padding: 2px;
-            border: 1px solid #ccc;
-        }
-        #instructions {
-            background-color: #e0e0e0;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-            max-width: 800px;
-        }
-        h1 {
-            text-align: center;
-        }
-        #exportArea {
-            width: 800px;
-            height: 200px;
-            margin-top: 20px;
-            display: none;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mind map · mbolding</title>
+<link rel="stylesheet" href="../style.css">
+<script src="../theme.js"></script>
+<style>
+#canvas { display: block; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); }
+#editInput { position: fixed; display: none; font-size: 14px; padding: 2px 4px; }
+#exportArea { height: 200px; margin-top: 1em; display: none; font-family: var(--font-mono); }
+#instructions h3 { margin-top: 0.2em; }
+#instructions ul { margin: 0.3em 0 0; padding-left: 1.2em; }
+</style>
 </head>
-<body>
-    <h1>Mind Mapping App</h1>
-    <div id="instructions">
-        <h3>Instructions:</h3>
-        <ul>
-            <li>Double-click on an empty area to create a new node</li>
-            <li>Double-click on a node to edit its text</li>
-            <li>Left-click and drag to move nodes</li>
-            <li>Right-click on two nodes consecutively to connect them</li>
-            <li>Middle-click (mouse wheel click) on a node to delete it</li>
-            <li>Use the "Add Node" button to create a node at a random position</li>
-            <li>Click "Export to Mermaid" to generate Mermaid syntax for your diagram</li>
-        </ul>
-    </div>
-    <div id="controls">
-        <button id="addNode">Add Node</button>
-        <button id="exportBtn">Export to Mermaid</button>
-    </div>
-    <canvas id="canvas" width="800" height="600"></canvas>
-    <input type="text" id="editInput">
-    <textarea id="exportArea" readonly></textarea>
+<body class="wide">
+<header><a href="../">mbolding</a> · <a href="./">Notes</a></header>
+<h1>Mind map</h1>
+<div id="instructions" class="box">
+    <h3>Instructions:</h3>
+    <ul>
+        <li>Double-click on an empty area to create a new node</li>
+        <li>Double-click on a node to edit its text</li>
+        <li>Left-click and drag to move nodes</li>
+        <li>Right-click on two nodes consecutively to connect them</li>
+        <li>Middle-click (mouse wheel click) on a node to delete it</li>
+        <li>Use the "Add Node" button to create a node at a random position</li>
+        <li>Click "Export to Mermaid" to generate Mermaid syntax for your diagram</li>
+    </ul>
+</div>
+<div id="controls" class="row">
+    <button id="addNode">Add Node</button>
+    <button id="exportBtn">Export to Mermaid</button>
+</div>
+<canvas id="canvas" width="800" height="600"></canvas>
+<input type="text" id="editInput">
+<textarea id="exportArea" readonly></textarea>
 
-    <script>
+<script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const addNodeBtn = document.getElementById('addNode');
@@ -86,6 +51,19 @@
         let connectionStartNode = null;
         let offset = { x: 0, y: 0 };
 
+        function color(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        // The canvas may be shown smaller than its 800x600 drawing size on a narrow screen.
+        function canvasPoint(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: (e.clientX - rect.left) * canvas.width / rect.width,
+                y: (e.clientY - rect.top) * canvas.height / rect.height
+            };
+        }
+
         class Node {
             constructor(x, y, text = 'New Node') {
                 this.x = x;
@@ -98,12 +76,12 @@
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, 30, 0, 2 * Math.PI);
-                ctx.fillStyle = '#3498db';
+                ctx.fillStyle = color('--link');
                 ctx.fill();
-                ctx.fillStyle = 'black';
+                ctx.fillStyle = color('--on-link');
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.font = '14px Arial';
+                ctx.font = '14px ' + color('--font-ui');
                 ctx.fillText(this.text, this.x, this.y);
             }
 
@@ -120,7 +98,7 @@
         }
 
         function drawConnections() {
-            ctx.strokeStyle = '#2c3e50';
+            ctx.strokeStyle = color('--muted');
             ctx.lineWidth = 2;
             for (let node of nodes) {
                 for (let connectedNode of node.connections) {
@@ -184,9 +162,7 @@
         exportBtn.addEventListener('click', exportToMermaid);
 
         canvas.addEventListener('mousedown', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const { x, y } = canvasPoint(e);
 
             for (let node of nodes) {
                 if (node.isPointInside(x, y)) {
@@ -220,9 +196,9 @@
 
         canvas.addEventListener('mousemove', (e) => {
             if (dragging && selectedNode) {
-                const rect = canvas.getBoundingClientRect();
-                selectedNode.x = e.clientX - rect.left - offset.x;
-                selectedNode.y = e.clientY - rect.top - offset.y;
+                const p = canvasPoint(e);
+                selectedNode.x = p.x - offset.x;
+                selectedNode.y = p.y - offset.y;
                 draw();
             }
         });
@@ -233,9 +209,7 @@
         });
 
         canvas.addEventListener('dblclick', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const { x, y } = canvasPoint(e);
 
             let clickedNode = null;
             for (let node of nodes) {
@@ -291,7 +265,8 @@
             }
         });
 
+        window.addEventListener('themechange', draw);
         draw();
-    </script>
+</script>
 </body>
 </html>

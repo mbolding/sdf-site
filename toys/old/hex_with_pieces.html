@@ -1,52 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexagon Board Game with Multiple Pieces</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-        canvas {
-            border: 1px solid #000;
-            margin-top: 20px;
-        }
-        input, button {
-            margin: 5px;
-            padding: 5px;
-        }
-        #gameContainer {
-            position: relative;
-        }
-        .gamePiece {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            position: absolute;
-            cursor: move;
-            z-index: 10;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hex board 1 · mbolding</title>
+<link rel="stylesheet" href="../../style.css">
+<script src="../../theme.js"></script>
+<style>
+#gameContainer { position: relative; margin-top: 1em; }
+canvas { display: block; background: var(--surface); border: 1px solid var(--rule); }
+.gamePiece { width: 30px; height: 30px; border-radius: 50%; position: absolute; cursor: move; z-index: 10; border: 2px solid var(--surface); }
+</style>
 </head>
 <body>
-    <h1>Hexagon Board Game with Multiple Pieces</h1>
-    <div>
-        <label for="rows">Rows:</label>
-        <input type="number" id="rows" min="1" max="20" value="6">
-        <label for="cols">Columns:</label>
-        <input type="number" id="cols" min="1" max="20" value="6">
-        <button onclick="generateBoard()">Generate Board</button>
-    </div>
-    <div id="gameContainer">
-        <canvas id="hexCanvas"></canvas>
-    </div>
+<header><a href="../../">mbolding</a> · <a href="../">Toys</a> · earlier version</header>
+<h1>Hex board with pieces</h1>
+<div class="row">
+    <label for="rows">Rows:</label>
+    <input type="number" id="rows" min="1" max="20" value="6">
+    <label for="cols">Columns:</label>
+    <input type="number" id="cols" min="1" max="20" value="6">
+    <button onclick="generateBoard()">Generate Board</button>
+</div>
+<p class="small">Double-click the board to place a piece, then drag it.</p>
+<div id="gameContainer">
+    <canvas id="hexCanvas"></canvas>
+</div>
 
-    <script>
+<script>
         const canvas = document.getElementById('hexCanvas');
         const ctx = canvas.getContext('2d');
         const gameContainer = document.getElementById('gameContainer');
@@ -55,6 +36,10 @@
         let draggedPiece = null;
         let dragOffsetX, dragOffsetY;
         let pieceCount = 0;
+
+        function color(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
 
         function drawHexagon(x, y, size) {
             ctx.beginPath();
@@ -83,6 +68,7 @@
             canvas.height = (rows + 0.5) * (hexHeight * 0.75);
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = color('--text');
 
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
@@ -108,9 +94,10 @@
             pieceCount++;
         }
 
+        // A random one of the theme's distinct hues, kept as a var() so it follows the theme.
         function getRandomColor() {
-            const hue = Math.floor(Math.random() * 360);
-            return `hsl(${hue}, 100%, 50%)`;
+            const hues = ['--link', '--bad', '--good', '--warn', '--muted'];
+            return `var(${hues[Math.floor(Math.random() * hues.length)]})`;
         }
 
         function startDragging(e) {
@@ -153,8 +140,7 @@
 
         // Initial board generation
         generateBoard();
-    </script>
+        window.addEventListener('themechange', generateBoard);
+</script>
 </body>
 </html>
-
-

@@ -1,180 +1,33 @@
-<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SFTP Command Cheat Sheet</title>
+    <title>sftp cheat sheet · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            line-height: 1.6;
-            color: #333;
-            background-color: #f5f5f5;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-        }
-        
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        
-        h1 {
-            margin-bottom: 10px;
-            font-size: 2.2rem;
-        }
-        
-        .subtitle {
-            color: #ecf0f1;
-            font-size: 1rem;
-            font-weight: normal;
-        }
-        
-        main {
-            padding: 20px;
-        }
-        
-        .section {
-            margin-bottom: 30px;
-        }
-        
-        h2 {
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 8px;
-            margin-bottom: 15px;
-            color: #2c3e50;
-        }
-        
-        .command-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        
-        .command-table th, .command-table td {
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            text-align: left;
-        }
-        
-        .command-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        
-        .command-table tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        
-        .command-table tr:hover {
-            background-color: #f1f1f1;
-        }
-        
-        code {
-            background-color: #f7f7f7;
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-family: Consolas, Monaco, 'Andale Mono', monospace;
-            color: #e74c3c;
-        }
-        
-        .tip {
-            background-color: #e8f4f8;
-            border-left: 4px solid #3498db;
-            padding: 10px 15px;
-            margin: 15px 0;
-            border-radius: 0 4px 4px 0;
-        }
-        
-        .warning {
-            background-color: #fdf1e5;
-            border-left: 4px solid #e67e22;
-            padding: 10px 15px;
-            margin: 15px 0;
-            border-radius: 0 4px 4px 0;
-        }
-        
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 15px;
-            font-size: 0.9rem;
-        }
-        
-        @media screen and (max-width: 768px) {
-            h1 {
-                font-size: 1.8rem;
-            }
-            
-            .command-table {
-                display: block;
-                overflow-x: auto;
-            }
-            
-            .command-table th, .command-table td {
-                padding: 8px 10px;
-            }
-        }
-        
-        .search-container {
-            margin-bottom: 20px;
-        }
-        
-        #searchInput {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-        }
-        
+        .tip, .warning { border-left: 4px solid var(--link); }
+        .warning { border-left-color: var(--warn); }
         #backToTop {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 2.4em;
+            height: 2.4em;
+            padding: 0;
             font-size: 20px;
-            cursor: pointer;
             display: none;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        
-        #backToTop:hover {
-            background: #2980b9;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <header>
-            <h1>SFTP Command Cheat Sheet</h1>
-            <p class="subtitle">Secure File Transfer Protocol Reference Guide</p>
-        </header>
+<body class="wide">
+    <header><a href="../">mbolding</a> · <a href="./">Cheatsheets</a></header>
+    <h1>SFTP Command Cheat Sheet</h1>
+    <p class="tagline">Secure File Transfer Protocol Reference Guide</p>
         
         <main>
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search for commands...">
-            </div>
+            <input type="text" id="searchInput" class="search" placeholder="Search for commands...">
             
             <div class="section">
                 <h2>What is SFTP?</h2>
@@ -183,7 +36,7 @@
 
             <div class="section">
                 <h2>Connection Commands</h2>
-                <table class="command-table">
+                <div class="table-wrap"><table class="command-table">
                     <thead>
                         <tr>
                             <th>Command</th>
@@ -213,12 +66,12 @@
                             <td><code>exit</code></td>
                         </tr>
                     </tbody>
-                </table>
+                </table></div>
             </div>
             
             <div class="section">
                 <h2>Navigation Commands</h2>
-                <table class="command-table">
+                <div class="table-wrap"><table class="command-table">
                     <thead>
                         <tr>
                             <th>Command</th>
@@ -258,12 +111,12 @@
                             <td><code>lls -la</code></td>
                         </tr>
                     </tbody>
-                </table>
+                </table></div>
             </div>
             
             <div class="section">
                 <h2>File Transfer Commands</h2>
-                <table class="command-table">
+                <div class="table-wrap"><table class="command-table">
                     <thead>
                         <tr>
                             <th>Command</th>
@@ -303,16 +156,16 @@
                             <td><code>mput *.html</code></td>
                         </tr>
                     </tbody>
-                </table>
+                </table></div>
                 
-                <div class="tip">
+                <div class="card tip">
                     <strong>Tip:</strong> Use the <code>-r</code> flag with <code>get</code> and <code>put</code> to transfer directories recursively.
                 </div>
             </div>
             
             <div class="section">
                 <h2>File Management Commands</h2>
-                <table class="command-table">
+                <div class="table-wrap"><table class="command-table">
                     <thead>
                         <tr>
                             <th>Command</th>
@@ -352,16 +205,16 @@
                             <td><code>chmod 644 file.txt</code></td>
                         </tr>
                     </tbody>
-                </table>
+                </table></div>
                 
-                <div class="warning">
+                <div class="card warning">
                     <strong>Warning:</strong> Be careful when using <code>rm</code> and <code>rmdir</code> commands as they permanently delete files and directories.
                 </div>
             </div>
             
             <div class="section">
                 <h2>Helpful SFTP Client Commands</h2>
-                <table class="command-table">
+                <div class="table-wrap"><table class="command-table">
                     <thead>
                         <tr>
                             <th>Command</th>
@@ -396,12 +249,12 @@
                             <td><code>progress</code></td>
                         </tr>
                     </tbody>
-                </table>
+                </table></div>
             </div>
             
             <div class="section">
                 <h2>Command Line SFTP Examples</h2>
-                <table class="command-table">
+                <div class="table-wrap"><table class="command-table">
                     <thead>
                         <tr>
                             <th>Task</th>
@@ -426,9 +279,9 @@
                             <td><code>sshpass -p "password" sftp user@hostname</code></td>
                         </tr>
                     </tbody>
-                </table>
+                </table></div>
                 
-                <div class="warning">
+                <div class="card warning">
                     <strong>Security Note:</strong> Using passwords in scripts is not secure. Use SSH keys for authentication whenever possible.
                 </div>
             </div>
@@ -437,9 +290,8 @@
         <footer>
             <p>SFTP Command Cheat Sheet - Created March 2025</p>
         </footer>
-    </div>
-    
-    <button id="backToTop" title="Go to top">↑</button>
+
+    <button id="backToTop" class="primary" title="Go to top">↑</button>
     
     <script>
         // Search functionality

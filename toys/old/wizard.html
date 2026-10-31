@@ -1,70 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wizard Duel</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-        .game-container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        .wizard {
-            margin-bottom: 20px;
-        }
-        .spells button {
-            margin: 5px;
-            padding: 5px 10px;
-        }
-        #gameLog {
-            margin-top: 20px;
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wizard duel 1 · mbolding</title>
+<link rel="stylesheet" href="../../style.css">
+<script src="../../theme.js"></script>
+<style>
+.wizard { margin-bottom: 1.2em; }
+.wizard h2 { margin-top: 1.2em; }
+.wizard p { margin: 0.2em 0; }
+#gameLog { max-height: 200px; overflow-y: auto; font: 14px/1.6 var(--font-ui); background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 0.6em 0.9em; }
+</style>
 </head>
 <body>
-    <div class="game-container">
-        <h1>Wizard Duel</h1>
-        <div class="wizard" id="wizard1">
-            <h2>Wizard 1</h2>
-            <p>Health: <span id="health1">20</span></p>
-            <div class="spells">
-                <button onclick="castSpell(1, 'Fireball')">Fireball</button>
-                <button onclick="castSpell(1, 'Healing Light')">Healing Light</button>
-                <button onclick="castSpell(1, 'Magic Shield')">Magic Shield</button>
-                <button onclick="castSpell(1, 'Energy Drain')">Energy Drain</button>
-                <button onclick="castSpell(1, 'Chaos Bolt')">Chaos Bolt</button>
-            </div>
-        </div>
-        <div class="wizard" id="wizard2">
-            <h2>Wizard 2</h2>
-            <p>Health: <span id="health2">20</span></p>
-            <div class="spells">
-                <button onclick="castSpell(2, 'Fireball')">Fireball</button>
-                <button onclick="castSpell(2, 'Healing Light')">Healing Light</button>
-                <button onclick="castSpell(2, 'Magic Shield')">Magic Shield</button>
-                <button onclick="castSpell(2, 'Energy Drain')">Energy Drain</button>
-                <button onclick="castSpell(2, 'Chaos Bolt')">Chaos Bolt</button>
-            </div>
-        </div>
-        <div id="gameLog"></div>
+<header><a href="../../">mbolding</a> · <a href="../">Toys</a> · earlier version</header>
+<h1>Wizard Duel</h1>
+<div class="wizard" id="wizard1">
+    <h2>Wizard 1</h2>
+    <p>Health: <span id="health1">20</span></p>
+    <div class="spells row">
+        <button onclick="castSpell(1, 'Fireball')">Fireball</button>
+        <button onclick="castSpell(1, 'Healing Light')">Healing Light</button>
+        <button onclick="castSpell(1, 'Magic Shield')">Magic Shield</button>
+        <button onclick="castSpell(1, 'Energy Drain')">Energy Drain</button>
+        <button onclick="castSpell(1, 'Chaos Bolt')">Chaos Bolt</button>
     </div>
+</div>
+<div class="wizard" id="wizard2">
+    <h2>Wizard 2</h2>
+    <p>Health: <span id="health2">20</span></p>
+    <div class="spells row">
+        <button onclick="castSpell(2, 'Fireball')">Fireball</button>
+        <button onclick="castSpell(2, 'Healing Light')">Healing Light</button>
+        <button onclick="castSpell(2, 'Magic Shield')">Magic Shield</button>
+        <button onclick="castSpell(2, 'Energy Drain')">Energy Drain</button>
+        <button onclick="castSpell(2, 'Chaos Bolt')">Chaos Bolt</button>
+    </div>
+</div>
+<div id="gameLog"></div>
 
-    <script>
+<script>
         let currentTurn = 1;
         let health = [20, 20];
         let shield = [false, false];
@@ -143,7 +119,6 @@
         }
 
         log('Game started! Wizard 1 goes first.');
-    </script>
+</script>
 </body>
 </html>
-

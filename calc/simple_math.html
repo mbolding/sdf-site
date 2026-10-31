@@ -1,120 +1,46 @@
-<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Expression Evaluator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        .container {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            color: #333;
-            text-align: center;
-            margin-top: 0;
-        }
-        .input-group {
-            margin-bottom: 15px;
-        }
-        input {
-            width: 100%;
-            padding: 12px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border-radius: 4px;
-            width: 100%;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #result {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #f9f9f9;
-            border-radius: 4px;
-            min-height: 20px;
-            border-left: 4px solid #4CAF50;
-        }
-        .examples {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #666;
-        }
-        .error {
-            color: #d9534f;
-            font-weight: bold;
-        }
-        .history {
-            margin-top: 20px;
-            border-top: 1px solid #eee;
-            padding-top: 15px;
-        }
-        .history-item {
-            padding: 8px;
-            border-bottom: 1px solid #eee;
-        }
-        .history-item:last-child {
-            border-bottom: none;
-        }
-        @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                padding: 15px;
-            }
-        }
-    </style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Math expression evaluator, first version · mbolding</title>
+<link rel="stylesheet" href="../style.css">
+<script src="../theme.js"></script>
+<style>
+#expression { width: 100%; font-size: 16px; }
+#result { min-height: 2.8em; font: 18px/1.5 var(--font-ui); }
+.history-item { padding: 0.3em 0; border-bottom: 1px solid var(--rule); font-family: var(--font-mono); }
+.history-item:last-child { border-bottom: none; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Math Expression Evaluator</h1>
-        
-        <div class="input-group">
-            <input type="text" id="expression" placeholder="Enter a math expression (e.g., 2 + 2 * 3)" autofocus="">
-        </div>
-        
-        <button onclick="evaluateExpression()">Calculate</button>
-        
-        <div id="result">Result will appear here</div>
-        
-        <div class="examples">
-            <p><strong>Example expressions:</strong></p>
-            <ul>
-                <li>2 + 2 * 3</li>
-                <li>sqrt(16) + 3^2</li>
-                <li>sin(PI/2)</li>
-                <li>(10 + 5) / 3</li>
-                <li>log(100)</li>
-            </ul>
-        </div>
-        
-        <div class="history">
-            <h3>Calculation History</h3>
-            <div id="history-list"></div>
-        </div>
-    </div>
+<header><a href="../">mbolding</a> · <a href="./">Calc</a></header>
+<h1>Math Expression Evaluator</h1>
 
-    <script>
+<div class="row">
+    <input type="text" id="expression" placeholder="Enter a math expression (e.g., 2 + 2 * 3)" autofocus="">
+    <button class="primary" onclick="evaluateExpression()">Calculate</button>
+</div>
+
+<div id="result" class="box">Result will appear here</div>
+
+<div class="examples">
+    <h2>Example expressions</h2>
+    <ul>
+        <li><code>2 + 2 * 3</code></li>
+        <li><code>sqrt(16) + 3^2</code></li>
+        <li><code>sin(PI/2)</code></li>
+        <li><code>(10 + 5) / 3</code></li>
+        <li><code>log(100)</code></li>
+    </ul>
+</div>
+
+<div class="history">
+    <h2>Calculation History</h2>
+    <div id="history-list"></div>
+</div>
+
+<script>
         // Store calculation history
         let history = [];
         
@@ -124,7 +50,7 @@
             const expression = expressionInput.value.trim();
             
             if (!expression) {
-                resultDiv.innerHTML = '<span class="error">Please enter an expression</span>';
+                resultDiv.innerHTML = '<span class="bad">Please enter an expression</span>';
                 return;
             }
             
@@ -150,7 +76,7 @@
                 let processedExpression = expression
                     .replace(/\^/g, '**')                    // Replace ^ with ** for exponentiation
                     .replace(/π/g, 'PI')                     // Replace π with PI
-                    .replace(/\b(\d+)!\b/g, 'factorial($1)') // Replace n! with factorial(n)
+                    .replace(/\b(\d+)!(?!=)/g, 'factorial($1)') // Replace n! with factorial(n)
                     .replace(/(\d+(?:\.\d+)?)\s*\*\*\s*(\d+(?:\.\d+)?)/g, 'pow($1,$2)'); // x^y to pow(x,y)
                 
                 // Define factorial function
@@ -168,9 +94,9 @@
                 
                 // Display the result
                 if (isNaN(result)) {
-                    resultDiv.innerHTML = '<span class="error">Invalid expression</span>';
+                    resultDiv.innerHTML = '<span class="bad">Invalid expression</span>';
                 } else if (!isFinite(result)) {
-                    resultDiv.innerHTML = '<span class="error">Result is infinity</span>';
+                    resultDiv.innerHTML = '<span class="bad">Result is infinity</span>';
                 } else {
                     // Format the result: show up to 10 decimal places, but trim trailing zeros
                     const formattedResult = Number(result.toFixed(10)).toString();
@@ -182,7 +108,7 @@
                     updateHistory();
                 }
             } catch (error) {
-                resultDiv.innerHTML = `<span class="error">Error: ${error.message}</span>`;
+                resultDiv.innerHTML = `<span class="bad">Error: ${error.message}</span>`;
             }
         }
         
@@ -204,7 +130,6 @@
                 evaluateExpression();
             }
         });
-    </script>
-
-
-</body></html>
+</script>
+</body>
+</html>

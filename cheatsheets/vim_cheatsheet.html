@@ -1,188 +1,38 @@
-<!DOCTYPE html><html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+<!DOCTYPE html>
+<html lang="en">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vim Cheat Sheet</title>
+    <title>Vim cheat sheet · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
     <style>
-        :root {
-            --primary-color: #019875;
-            --secondary-color: #2E3440;
-            --text-color: #333;
-            --light-bg: #f5f5f5;
-            --card-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background-color: var(--light-bg);
-            color: var(--text-color);
-            line-height: 1.6;
-        }
-        
-        header {
-            background-color: var(--secondary-color);
-            color: white;
-            padding: 1.5rem;
-            text-align: center;
-        }
-        
-        h1 {
-            margin-bottom: 0.5rem;
-        }
-        
-        .description {
-            max-width: 800px;
-            margin: 0 auto;
-            font-size: 1.1rem;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
-        
-        .tabs {
-            display: flex;
-            flex-wrap: wrap;
-            margin-top: 1rem;
-            border-bottom: 2px solid var(--primary-color);
-        }
-        
-        .tab-button {
-            background: none;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 500;
-            outline: none;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        
-        .tab-button.active {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
-        .tab-content {
-            display: none;
-            padding: 1.5rem 0;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .category {
-            margin-bottom: 2rem;
-        }
-        
-        .category-title {
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        .commands-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-        }
-        
-        .command-card {
-            background-color: white;
-            border-radius: 5px;
-            padding: 1rem;
-            box-shadow: var(--card-shadow);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .command-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-        }
-        
-        .command {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-        
-        .description {
-            margin-top: 0.5rem;
-            font-size: 0.95rem;
-        }
-        
-        .search-box {
-            width: 100%;
-            padding: 0.8rem;
-            margin: 1rem 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card .cmd { font-weight: 600; }
+        .card .description { margin: 0.4em 0 0; font: 15px/1.5 var(--font-ui); }
         .mode-indicator {
             display: inline-block;
-            padding: 0.2rem 0.5rem;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            margin-right: 0.5rem;
-            color: white;
-        }
-        
-        .normal-mode {
-            background-color: #3498db;
-        }
-        
-        .insert-mode {
-            background-color: #2ecc71;
-        }
-        
-        .visual-mode {
-            background-color: #e74c3c;
-        }
-        
-        .command-mode {
-            background-color: #f39c12;
-        }
-        
-        footer {
+            min-width: 1.6em;
             text-align: center;
-            padding: 2rem;
-            background-color: var(--secondary-color);
-            color: white;
-            margin-top: 2rem;
+            font: 600 12px/1.6 var(--font-ui);
+            border: 1px solid currentColor;
+            border-radius: var(--radius);
+            padding: 0 0.4em;
+            margin-right: 0.5em;
         }
-        
-        @media (max-width: 768px) {
-            .commands-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .tab-button {
-                flex-grow: 1;
-                text-align: center;
-                padding: 0.6rem;
-            }
-        }
+        .normal-mode { color: var(--link); }
+        .insert-mode { color: var(--good); }
+        .visual-mode { color: var(--bad); }
+        .command-mode { color: var(--warn); }
     </style>
 </head>
-<body>
-    <header>
-        <h1>Vim Cheat Sheet</h1>
-        <p class="description">A comprehensive reference for Vim editor commands and shortcuts</p>
-    </header>
-    
-    <div class="container">
-        <input type="text" class="search-box" id="searchBox" placeholder="Search for commands...">
+<body class="wide">
+    <header><a href="../">mbolding</a> · <a href="./">Cheatsheets</a></header>
+    <h1>Vim Cheat Sheet</h1>
+    <p class="tagline">A comprehensive reference for Vim editor commands and shortcuts</p>
+
+        <input type="text" class="search" id="searchBox" placeholder="Search for commands...">
         
         <div class="tabs">
             <button class="tab-button active" data-tab="basics">Basics</button>
@@ -195,73 +45,73 @@
         
         <!-- Basics Tab -->
         <div class="tab-content active" id="basics">
-            <div class="category">
-                <h2 class="category-title">Modes</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Modes</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">i</span>
+                        <span class="cmd">i</span>
                         <p class="description">Enter Insert mode</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator insert-mode">I</span>
-                        <span class="command">Esc</span>
+                        <span class="cmd">Esc</span>
                         <p class="description">Exit Insert mode (return to Normal mode)</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">v</span>
+                        <span class="cmd">v</span>
                         <p class="description">Enter Visual mode</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">V</span>
+                        <span class="cmd">V</span>
                         <p class="description">Enter Visual Line mode</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+v</span>
+                        <span class="cmd">Ctrl+v</span>
                         <p class="description">Enter Visual Block mode</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">:</span>
+                        <span class="cmd">:</span>
                         <p class="description">Enter Command-line mode</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">File Operations</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>File Operations</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:w</span>
+                        <span class="cmd">:w</span>
                         <p class="description">Save file</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:q</span>
+                        <span class="cmd">:q</span>
                         <p class="description">Quit</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:wq</span>
+                        <span class="cmd">:wq</span>
                         <p class="description">Save and quit</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:q!</span>
+                        <span class="cmd">:q!</span>
                         <p class="description">Quit without saving</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:e filename</span>
+                        <span class="cmd">:e filename</span>
                         <p class="description">Open file</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:w filename</span>
+                        <span class="cmd">:w filename</span>
                         <p class="description">Save as</p>
                     </div>
                 </div>
@@ -270,125 +120,125 @@
         
         <!-- Navigation Tab -->
         <div class="tab-content" id="navigation">
-            <div class="category">
-                <h2 class="category-title">Basic Movement</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Basic Movement</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">h</span>
+                        <span class="cmd">h</span>
                         <p class="description">Move cursor left</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">j</span>
+                        <span class="cmd">j</span>
                         <p class="description">Move cursor down</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">k</span>
+                        <span class="cmd">k</span>
                         <p class="description">Move cursor up</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">l</span>
+                        <span class="cmd">l</span>
                         <p class="description">Move cursor right</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Word Movement</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Word Movement</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">w</span>
+                        <span class="cmd">w</span>
                         <p class="description">Move to start of next word</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">e</span>
+                        <span class="cmd">e</span>
                         <p class="description">Move to end of current word</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">b</span>
+                        <span class="cmd">b</span>
                         <p class="description">Move to beginning of current word</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">W</span>
+                        <span class="cmd">W</span>
                         <p class="description">Move to start of next WORD (space separated)</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">E</span>
+                        <span class="cmd">E</span>
                         <p class="description">Move to end of current WORD</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">B</span>
+                        <span class="cmd">B</span>
                         <p class="description">Move to beginning of current WORD</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Line Movement</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Line Movement</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">0</span>
+                        <span class="cmd">0</span>
                         <p class="description">Move to beginning of line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">^</span>
+                        <span class="cmd">^</span>
                         <p class="description">Move to first non-blank character of line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">$</span>
+                        <span class="cmd">$</span>
                         <p class="description">Move to end of line</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Document Movement</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Document Movement</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">gg</span>
+                        <span class="cmd">gg</span>
                         <p class="description">Move to first line of document</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">G</span>
+                        <span class="cmd">G</span>
                         <p class="description">Move to last line of document</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+f</span>
+                        <span class="cmd">Ctrl+f</span>
                         <p class="description">Page down</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+b</span>
+                        <span class="cmd">Ctrl+b</span>
                         <p class="description">Page up</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+d</span>
+                        <span class="cmd">Ctrl+d</span>
                         <p class="description">Half page down</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+u</span>
+                        <span class="cmd">Ctrl+u</span>
                         <p class="description">Half page up</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">:[num]</span>
+                        <span class="cmd">:[num]</span>
                         <p class="description">Go to specific line number</p>
                     </div>
                 </div>
@@ -397,156 +247,156 @@
         
         <!-- Editing Tab -->
         <div class="tab-content" id="editing">
-            <div class="category">
-                <h2 class="category-title">Inserting Text</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Inserting Text</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">i</span>
+                        <span class="cmd">i</span>
                         <p class="description">Insert before cursor</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">I</span>
+                        <span class="cmd">I</span>
                         <p class="description">Insert at beginning of line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">a</span>
+                        <span class="cmd">a</span>
                         <p class="description">Append after cursor</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">A</span>
+                        <span class="cmd">A</span>
                         <p class="description">Append at end of line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">o</span>
+                        <span class="cmd">o</span>
                         <p class="description">Open new line below current line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">O</span>
+                        <span class="cmd">O</span>
                         <p class="description">Open new line above current line</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Deleting Text</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Deleting Text</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">x</span>
+                        <span class="cmd">x</span>
                         <p class="description">Delete character under cursor</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">X</span>
+                        <span class="cmd">X</span>
                         <p class="description">Delete character before cursor</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">dw</span>
+                        <span class="cmd">dw</span>
                         <p class="description">Delete word</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">dd</span>
+                        <span class="cmd">dd</span>
                         <p class="description">Delete entire line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">D</span>
+                        <span class="cmd">D</span>
                         <p class="description">Delete from cursor to end of line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">d$</span>
+                        <span class="cmd">d$</span>
                         <p class="description">Delete to end of line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">d0</span>
+                        <span class="cmd">d0</span>
                         <p class="description">Delete to beginning of line</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Changing Text</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Changing Text</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">r</span>
+                        <span class="cmd">r</span>
                         <p class="description">Replace a single character</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">cw</span>
+                        <span class="cmd">cw</span>
                         <p class="description">Change word</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">cc</span>
+                        <span class="cmd">cc</span>
                         <p class="description">Change entire line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">C</span>
+                        <span class="cmd">C</span>
                         <p class="description">Change from cursor to end of line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">s</span>
+                        <span class="cmd">s</span>
                         <p class="description">Substitute character (delete and insert)</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">S</span>
+                        <span class="cmd">S</span>
                         <p class="description">Substitute line (delete and insert)</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Copy &amp; Paste</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Copy &amp; Paste</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">yy</span>
+                        <span class="cmd">yy</span>
                         <p class="description">Yank (copy) entire line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">yw</span>
+                        <span class="cmd">yw</span>
                         <p class="description">Yank (copy) word</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">p</span>
+                        <span class="cmd">p</span>
                         <p class="description">Paste after cursor</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">P</span>
+                        <span class="cmd">P</span>
                         <p class="description">Paste before cursor</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Undo &amp; Redo</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Undo &amp; Redo</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">u</span>
+                        <span class="cmd">u</span>
                         <p class="description">Undo</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+r</span>
+                        <span class="cmd">Ctrl+r</span>
                         <p class="description">Redo</p>
                     </div>
                 </div>
@@ -555,68 +405,68 @@
         
         <!-- Visual Mode Tab -->
         <div class="tab-content" id="visual">
-            <div class="category">
-                <h2 class="category-title">Visual Selections</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Visual Selections</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">v</span>
+                        <span class="cmd">v</span>
                         <p class="description">Start Visual character mode</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">V</span>
+                        <span class="cmd">V</span>
                         <p class="description">Start Visual line mode</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+v</span>
+                        <span class="cmd">Ctrl+v</span>
                         <p class="description">Start Visual block mode</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator visual-mode">V</span>
-                        <span class="command">o</span>
+                        <span class="cmd">o</span>
                         <p class="description">Move to other end of selection</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator visual-mode">V</span>
-                        <span class="command">Esc</span>
+                        <span class="cmd">Esc</span>
                         <p class="description">Exit Visual mode</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Operations in Visual Mode</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Operations in Visual Mode</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator visual-mode">V</span>
-                        <span class="command">d</span>
+                        <span class="cmd">d</span>
                         <p class="description">Delete selected text</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator visual-mode">V</span>
-                        <span class="command">y</span>
+                        <span class="cmd">y</span>
                         <p class="description">Yank (copy) selected text</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator visual-mode">V</span>
-                        <span class="command">c</span>
+                        <span class="cmd">c</span>
                         <p class="description">Change selected text</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator visual-mode">V</span>
-                        <span class="command">&gt;</span>
+                        <span class="cmd">&gt;</span>
                         <p class="description">Indent selected text</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator visual-mode">V</span>
-                        <span class="command">&lt;</span>
+                        <span class="cmd">&lt;</span>
                         <p class="description">Un-indent selected text</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator visual-mode">V</span>
-                        <span class="command">~</span>
+                        <span class="cmd">~</span>
                         <p class="description">Toggle case of selected text</p>
                     </div>
                 </div>
@@ -625,63 +475,63 @@
         
         <!-- Search & Replace Tab -->
         <div class="tab-content" id="search">
-            <div class="category">
-                <h2 class="category-title">Search</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Search</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">/pattern</span>
+                        <span class="cmd">/pattern</span>
                         <p class="description">Search forward for pattern</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">?pattern</span>
+                        <span class="cmd">?pattern</span>
                         <p class="description">Search backward for pattern</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">n</span>
+                        <span class="cmd">n</span>
                         <p class="description">Repeat search in same direction</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">N</span>
+                        <span class="cmd">N</span>
                         <p class="description">Repeat search in opposite direction</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">*</span>
+                        <span class="cmd">*</span>
                         <p class="description">Search forward for word under cursor</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">#</span>
+                        <span class="cmd">#</span>
                         <p class="description">Search backward for word under cursor</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Find &amp; Replace</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Find &amp; Replace</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:%s/old/new/g</span>
+                        <span class="cmd">:%s/old/new/g</span>
                         <p class="description">Replace all occurrences in file</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:%s/old/new/gc</span>
+                        <span class="cmd">:%s/old/new/gc</span>
                         <p class="description">Replace all occurrences with confirmation</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:s/old/new/g</span>
+                        <span class="cmd">:s/old/new/g</span>
                         <p class="description">Replace all occurrences in current line</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:#,#s/old/new/g</span>
+                        <span class="cmd">:#,#s/old/new/g</span>
                         <p class="description">Replace between line numbers #,#</p>
                     </div>
                 </div>
@@ -690,152 +540,151 @@
         
         <!-- Advanced Tab -->
         <div class="tab-content" id="advanced">
-            <div class="category">
-                <h2 class="category-title">Markers &amp; Jumps</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Markers &amp; Jumps</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">ma</span>
+                        <span class="cmd">ma</span>
                         <p class="description">Set mark 'a' at cursor position</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">`a</span>
+                        <span class="cmd">`a</span>
                         <p class="description">Jump to mark 'a'</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">'a</span>
+                        <span class="cmd">'a</span>
                         <p class="description">Jump to beginning of line of mark 'a'</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+o</span>
+                        <span class="cmd">Ctrl+o</span>
                         <p class="description">Jump to previous location</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+i</span>
+                        <span class="cmd">Ctrl+i</span>
                         <p class="description">Jump to next location</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Folding</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Folding</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">zf{motion}</span>
+                        <span class="cmd">zf{motion}</span>
                         <p class="description">Create fold</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">zo</span>
+                        <span class="cmd">zo</span>
                         <p class="description">Open fold</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">zc</span>
+                        <span class="cmd">zc</span>
                         <p class="description">Close fold</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">za</span>
+                        <span class="cmd">za</span>
                         <p class="description">Toggle fold</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">zR</span>
+                        <span class="cmd">zR</span>
                         <p class="description">Open all folds</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">zM</span>
+                        <span class="cmd">zM</span>
                         <p class="description">Close all folds</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Macros</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Macros</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">qa</span>
+                        <span class="cmd">qa</span>
                         <p class="description">Record macro 'a'</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">q</span>
+                        <span class="cmd">q</span>
                         <p class="description">Stop recording macro</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">@a</span>
+                        <span class="cmd">@a</span>
                         <p class="description">Execute macro 'a'</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">@@</span>
+                        <span class="cmd">@@</span>
                         <p class="description">Execute last used macro</p>
                     </div>
                 </div>
             </div>
             
-            <div class="category">
-                <h2 class="category-title">Windows &amp; Tabs</h2>
-                <div class="commands-grid">
-                    <div class="command-card">
+            <div>
+                <h2>Windows &amp; Tabs</h2>
+                <div class="grid">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:sp</span>
+                        <span class="cmd">:sp</span>
                         <p class="description">Split window horizontally</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:vsp</span>
+                        <span class="cmd">:vsp</span>
                         <p class="description">Split window vertically</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+w s</span>
+                        <span class="cmd">Ctrl+w s</span>
                         <p class="description">Split window horizontally</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+w v</span>
+                        <span class="cmd">Ctrl+w v</span>
                         <p class="description">Split window vertically</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+w w</span>
+                        <span class="cmd">Ctrl+w w</span>
                         <p class="description">Switch between windows</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator normal-mode">N</span>
-                        <span class="command">Ctrl+w q</span>
+                        <span class="cmd">Ctrl+w q</span>
                         <p class="description">Quit current window</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:tabnew</span>
+                        <span class="cmd">:tabnew</span>
                         <p class="description">Create new tab</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:tabn</span>
+                        <span class="cmd">:tabn</span>
                         <p class="description">Go to next tab</p>
                     </div>
-                    <div class="command-card">
+                    <div class="card">
                         <span class="mode-indicator command-mode">C</span>
-                        <span class="command">:tabp</span>
+                        <span class="cmd">:tabp</span>
                         <p class="description">Go to previous tab</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    
+
     <footer>
         <p>Vim Cheat Sheet © 2025 | A comprehensive reference for navigating the Vim text editor</p>
     </footer>
@@ -860,13 +709,13 @@
         
         // Search functionality
         const searchBox = document.getElementById('searchBox');
-        const commandCards = document.querySelectorAll('.command-card');
+        const commandCards = document.querySelectorAll('.card');
         
         searchBox.addEventListener('input', () => {
             const searchTerm = searchBox.value.toLowerCase();
             
             commandCards.forEach(card => {
-                const command = card.querySelector('.command').textContent.toLowerCase();
+                const command = card.querySelector('.cmd').textContent.toLowerCase();
                 const description = card.querySelector('.description').textContent.toLowerCase();
                 
                 if (command.includes(searchTerm) || description.includes(searchTerm)) {

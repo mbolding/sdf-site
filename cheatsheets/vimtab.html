@@ -3,163 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vim Tab Commands Cheatsheet</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            border-bottom: 3px solid #2c3e50;
-            padding-bottom: 10px;
-        }
-        .category {
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-        h2 {
-            color: #3498db;
-            margin-top: 0;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .command {
-            font-family: monospace;
-            background-color: #e8e8e8;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-    </style>
+    <title>Vim tabs · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
 </head>
 <body>
+    <header><a href="../">mbolding</a> · <a href="./">Cheatsheets</a></header>
     <h1>Vim Tab Commands Cheatsheet</h1>
 
-    <div class="category">
+    <div>
         <h2>Opening and Closing Tabs</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">:tabnew</span> or <span class="command">:tabnew {file}</span></td>
+                <td><code>:tabnew</code> or <code>:tabnew {file}</code></td>
                 <td>Open a new tab, optionally with specified file</td>
             </tr>
             <tr>
-                <td><span class="command">:tabclose</span> or <span class="command">:tabc</span></td>
+                <td><code>:tabclose</code> or <code>:tabc</code></td>
                 <td>Close the current tab</td>
             </tr>
             <tr>
-                <td><span class="command">:tabonly</span> or <span class="command">:tabo</span></td>
+                <td><code>:tabonly</code> or <code>:tabo</code></td>
                 <td>Close all other tabs</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Navigating Between Tabs</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">gt</span> or <span class="command">:tabnext</span> or <span class="command">:tabn</span></td>
+                <td><code>gt</code> or <code>:tabnext</code> or <code>:tabn</code></td>
                 <td>Move to the next tab</td>
             </tr>
             <tr>
-                <td><span class="command">gT</span> or <span class="command">:tabprevious</span> or <span class="command">:tabp</span></td>
+                <td><code>gT</code> or <code>:tabprevious</code> or <code>:tabp</code></td>
                 <td>Move to the previous tab</td>
             </tr>
             <tr>
-                <td><span class="command">{i}gt</span></td>
+                <td><code>{i}gt</code></td>
                 <td>Move to tab number i</td>
             </tr>
             <tr>
-                <td><span class="command">:tabfirst</span> or <span class="command">:tabfir</span></td>
+                <td><code>:tabfirst</code> or <code>:tabfir</code></td>
                 <td>Move to the first tab</td>
             </tr>
             <tr>
-                <td><span class="command">:tablast</span> or <span class="command">:tabl</span></td>
+                <td><code>:tablast</code> or <code>:tabl</code></td>
                 <td>Move to the last tab</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Moving and Rearranging Tabs</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">:tabm 0</span></td>
+                <td><code>:tabm 0</code></td>
                 <td>Move current tab to the beginning</td>
             </tr>
             <tr>
-                <td><span class="command">:tabm</span> or <span class="command">:tabm $</span></td>
+                <td><code>:tabm</code> or <code>:tabm $</code></td>
                 <td>Move current tab to the end</td>
             </tr>
             <tr>
-                <td><span class="command">:tabm {i}</span></td>
+                <td><code>:tabm {i}</code></td>
                 <td>Move current tab to position i (0-based index)</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Other Useful Tab Commands</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">:tabs</span></td>
+                <td><code>:tabs</code></td>
                 <td>List all tabs including their displayed windows</td>
             </tr>
             <tr>
-                <td><span class="command">:tab split</span></td>
+                <td><code>:tab split</code></td>
                 <td>Copy the current window to a new tab</td>
             </tr>
             <tr>
-                <td><span class="command">:tab help {subject}</span></td>
+                <td><code>:tab help {subject}</code></td>
                 <td>Open help in a new tab</td>
             </tr>
             <tr>
-                <td><span class="command">:tab drop {file}</span></td>
+                <td><code>:tab drop {file}</code></td>
                 <td>Open file in a new tab, or jump to a window/tab containing the file if there is one</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-W T</span></td>
+                <td><code>Ctrl-W T</code></td>
                 <td>Move the current split window into its own tab</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
 </body>

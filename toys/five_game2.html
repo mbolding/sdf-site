@@ -3,47 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Board Game</title>
+    <title>Enhanced Board Game · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
         #game-container {
             text-align: center;
         }
         #board {
             display: grid;
             grid-template-columns: repeat(5, 60px);
-            grid-gap: 2px;
-            margin-bottom: 20px;
+            gap: 2px;
+            width: max-content;
+            margin: 0 auto 20px;
         }
         .cell {
             width: 60px;
             height: 60px;
-            background-color: #fff;
-            border: 1px solid #000;
+            background: var(--surface);
+            border: 1px solid var(--text);
             display: flex;
             justify-content: center;
             align-items: center;
             font-size: 40px;
             cursor: pointer;
         }
+        .cell.selected {
+            background: color-mix(in srgb, var(--warn) 40%, var(--surface));
+        }
         #message {
             margin-bottom: 10px;
-        }
-        button {
-            font-size: 16px;
-            padding: 5px 10px;
+            font-family: var(--font-ui);
         }
     </style>
 </head>
 <body>
+    <header><a href="../">mbolding</a> · <a href="./">Toys</a></header>
+    <h1>Enhanced Board Game</h1>
     <div id="game-container">
         <div id="board"></div>
         <div id="message">Player 1's turn</div>
@@ -109,7 +105,7 @@
             if (!selectedCell) {
                 if (isPlayerPiece(gameBoard[row][col], currentPlayer)) {
                     selectedCell = { row, col };
-                    event.target.style.backgroundColor = '#ffff00';
+                    event.target.classList.add('selected');
                 }
             } else {
                 if (isValidMove(selectedCell, { row, col })) {

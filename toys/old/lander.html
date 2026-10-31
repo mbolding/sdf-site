@@ -1,42 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lunar Lander Game</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #000;
-            font-family: Arial, sans-serif;
-            overflow: hidden;
-        }
-        #gameCanvas {
-            border: 1px solid #fff;
-        }
-        #gameInfo {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            color: #fff;
-            font-size: 14px;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lunar lander · mbolding</title>
+<link rel="stylesheet" href="../../style.css">
+<script src="../../theme.js"></script>
+<style>
+#gameCanvas { display: block; border: 1px solid var(--rule); border-radius: var(--radius); }
+#gameInfo { font: 14px/1.6 var(--font-ui); margin-bottom: 1em; }
+#gameInfo span { font-family: var(--font-mono); }
+</style>
 </head>
 <body>
-    <div id="gameInfo">
-        Fuel: <span id="fuel">1000</span><br>
-        Velocity: <span id="velocity">0</span><br>
-        Use WASD keys to control the lander:<br>
-        W: Thrust, A: Left, D: Right
-    </div>
-    <canvas id="gameCanvas" width="300" height="400"></canvas>
-    <script>
+<header><a href="../../">mbolding</a> · <a href="../">Toys</a> · earlier version</header>
+<h1>Lunar lander</h1>
+<div id="gameInfo">
+    Fuel: <span id="fuel">1000</span><br>
+    Velocity: <span id="velocity">0</span><br>
+    Use WASD keys to control the lander:<br>
+    W: Thrust, A: Left, D: Right
+</div>
+<canvas id="gameCanvas" width="300" height="400"></canvas>
+<script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const fuelDisplay = document.getElementById('fuel');
@@ -61,11 +47,15 @@
         let gameOver = false;
         let keys = {};
 
+        function color(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
         function draw() {
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = color('--panel');
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = '#fff';
+            ctx.fillStyle = color('--muted');
             for (let i = 0; i < 50; i++) {
                 ctx.fillRect(
                     Math.random() * canvas.width,
@@ -75,10 +65,10 @@
                 );
             }
 
-            ctx.fillStyle = '#888';
+            ctx.fillStyle = color('--rule');
             ctx.fillRect(0, ground.y, ground.width, ground.height);
 
-            ctx.fillStyle = '#0f0';
+            ctx.fillStyle = color('--good');
             ctx.fillRect(lander.x, lander.y, lander.width, lander.height);
 
             fuelDisplay.textContent = Math.max(0, Math.floor(lander.fuel));
@@ -138,7 +128,6 @@
         });
 
         gameLoop = setInterval(gameLoopFunction, 1000 / 60); // 60 FPS
-    </script>
+</script>
 </body>
 </html>
-

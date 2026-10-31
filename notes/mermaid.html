@@ -1,85 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mermaid Diagram Renderer</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        textarea {
-            width: 100%;
-            height: 200px;
-            margin-bottom: 10px;
-        }
-        button {
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-        #output {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-top: 20px;
-        }
-        .popup {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
-        }
-        .popup-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            max-width: 80%;
-            max-height: 80%;
-            overflow-y: auto;
-        }
-        .close {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            font-size: 24px;
-            cursor: pointer;
-        }
-        .cheatsheet h2 {
-            color: #333;
-        }
-        .cheatsheet h3 {
-            color: #666;
-        }
-        .cheatsheet pre {
-            background-color: #f4f4f4;
-            padding: 10px;
-            border-radius: 5px;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mermaid diagrams · mbolding</title>
+<link rel="stylesheet" href="../style.css">
+<script src="../theme.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+#input { height: 200px; font-family: var(--font-mono); }
+#output { overflow-x: auto; }
+#output:empty { display: none; }
+.popup { display: none; position: fixed; inset: 0; background: color-mix(in srgb, var(--bg) 75%, transparent); z-index: 1000; }
+.popup-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(40em, 90%); max-height: 80%; overflow-y: auto;
+                 background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 1em 1.4em; }
+.close { position: absolute; top: 0.3em; right: 0.6em; font-size: 24px; line-height: 1; cursor: pointer; color: var(--muted); }
+.close:hover { color: var(--text); }
+.cheatsheet h2 { margin-top: 0.6em; }
+</style>
 </head>
 <body>
-    <h1>Mermaid Diagram Renderer</h1>
-    <textarea id="input" placeholder="Enter your Mermaid diagram code here... Press Shift+Enter to render"></textarea>
-    <button id="render-btn">Render Diagram</button>
-    <button id="cheatsheet-btn">Show Cheatsheet</button>
-    <div id="output"></div>
+<header><a href="../">mbolding</a> · <a href="./">Notes</a></header>
+<h1>Mermaid diagrams</h1>
+<textarea id="input" placeholder="Enter your Mermaid diagram code here... Press Shift+Enter to render"></textarea>
+<div class="row">
+  <button class="primary" id="render-btn">Render Diagram</button>
+  <button id="cheatsheet-btn">Show Cheatsheet</button>
+</div>
+<div id="output" class="box"></div>
 
-    <div id="cheatsheet-popup" class="popup">
+<div id="cheatsheet-popup" class="popup">
         <div class="popup-content">
             <span class="close">&times;</span>
             <div class="cheatsheet">
@@ -149,43 +99,74 @@ stateDiagram-v2
         </div>
     </div>
 
-    <script>
-        mermaid.initialize({ startOnLoad: true });
+<script>
+    // Mermaid's 'base' theme, filled in from the site's theme colours.
+    function setUpMermaid(startOnLoad) {
+        const c = SiteTheme.color;
+        mermaid.initialize({
+            startOnLoad,
+            theme: 'base',
+            themeVariables: {
+                darkMode: SiteTheme.isDark(),
+                background: c('bg'),
+                fontFamily: c('font-ui'),
+                primaryColor: c('surface'),
+                primaryTextColor: c('text'),
+                primaryBorderColor: c('link'),
+                secondaryColor: c('panel'),
+                tertiaryColor: c('panel'),
+                lineColor: c('muted'),
+                textColor: c('text'),
+                edgeLabelBackground: c('surface'),
+                clusterBkg: c('panel'),
+                clusterBorder: c('rule'),
+            },
+        });
+    }
+    setUpMermaid(true);
 
-        function renderDiagram() {
-            const input = document.getElementById('input').value;
-            const output = document.getElementById('output');
+    window.addEventListener('themechange', () => {
+        setUpMermaid(false);
+        if (document.querySelector('#output .mermaid')) renderDiagram();
+    });
 
-            output.innerHTML = '<div class="mermaid">' + input + '</div>';
-            mermaid.init(undefined, '.mermaid');
+    function renderDiagram() {
+        const input = document.getElementById('input').value;
+        const output = document.getElementById('output');
+
+        const div = document.createElement('div');
+        div.className = 'mermaid';
+        div.textContent = input;
+        output.replaceChildren(div);
+        mermaid.init(undefined, '.mermaid');
+    }
+
+    document.getElementById('render-btn').addEventListener('click', renderDiagram);
+
+    document.getElementById('input').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && event.shiftKey) {
+            event.preventDefault();
+            renderDiagram();
         }
+    });
 
-        document.getElementById('render-btn').addEventListener('click', renderDiagram);
+    const cheatsheetPopup = document.getElementById('cheatsheet-popup');
+    const cheatsheetBtn = document.getElementById('cheatsheet-btn');
+    const closeBtn = document.querySelector('.close');
 
-        document.getElementById('input').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter' && event.shiftKey) {
-                event.preventDefault();
-                renderDiagram();
-            }
-        });
+    cheatsheetBtn.addEventListener('click', function() {
+        cheatsheetPopup.style.display = 'block';
+    });
 
-        const cheatsheetPopup = document.getElementById('cheatsheet-popup');
-        const cheatsheetBtn = document.getElementById('cheatsheet-btn');
-        const closeBtn = document.querySelector('.close');
+    closeBtn.addEventListener('click', function() {
+        cheatsheetPopup.style.display = 'none';
+    });
 
-        cheatsheetBtn.addEventListener('click', function() {
-            cheatsheetPopup.style.display = 'block';
-        });
-
-        closeBtn.addEventListener('click', function() {
+    window.addEventListener('click', function(event) {
+        if (event.target === cheatsheetPopup) {
             cheatsheetPopup.style.display = 'none';
-        });
-
-        window.addEventListener('click', function(event) {
-            if (event.target === cheatsheetPopup) {
-                cheatsheetPopup.style.display = 'none';
-            }
-        });
-    </script>
+        }
+    });
+</script>
 </body>
 </html>

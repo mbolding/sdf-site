@@ -3,25 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hexagon Board Game with Multiple Piece Types</title>
+    <title>Hexagon Board Game with Multiple Piece Types · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
+        :root {
+            --piece-pawn: var(--link);
+            --piece-rook: var(--bad);
+            --piece-knight: var(--good);
+            --piece-bishop: var(--warn);
+            --piece-queen: color-mix(in srgb, var(--link) 50%, var(--bad));
+            --piece-king: var(--text);
         }
         canvas {
-            border: 1px solid #000;
-            margin-top: 20px;
-        }
-        input, button, select {
-            margin: 5px;
-            padding: 5px;
+            display: block;
+            max-width: none;
+            background: var(--surface);
+            border: 1px solid var(--rule);
         }
         #gameContainer {
             position: relative;
+            margin-top: 20px;
         }
         .gamePiece {
             width: 30px;
@@ -34,20 +36,28 @@
             justify-content: center;
             align-items: center;
             font-weight: bold;
-            color: white;
+            color: var(--on-link);
+            user-select: none;
         }
+        .gamePiece[data-type="pawn"] { background: var(--piece-pawn); }
+        .gamePiece[data-type="rook"] { background: var(--piece-rook); }
+        .gamePiece[data-type="knight"] { background: var(--piece-knight); }
+        .gamePiece[data-type="bishop"] { background: var(--piece-bishop); }
+        .gamePiece[data-type="queen"] { background: var(--piece-queen); }
+        .gamePiece[data-type="king"] { background: var(--piece-king); }
     </style>
 </head>
-<body>
+<body class="wide">
+    <header><a href="../">mbolding</a> · <a href="./">Toys</a></header>
     <h1>Hexagon Board Game with Multiple Piece Types</h1>
-    <div>
+    <div class="row">
         <label for="rows">Rows:</label>
         <input type="number" id="rows" min="1" max="20" value="6">
         <label for="cols">Columns:</label>
         <input type="number" id="cols" min="1" max="20" value="6">
         <button onclick="generateBoard()">Generate Board</button>
     </div>
-    <div>
+    <div class="row">
         <label for="pieceType">Piece Type:</label>
         <select id="pieceType">
             <option value="pawn">Pawn</option>
@@ -73,12 +83,12 @@
         let dragOffsetX, dragOffsetY;
 
         const pieceTypes = {
-            pawn: { symbol: '♙', color: '#8B4513' },
-            rook: { symbol: '♖', color: '#A0522D' },
-            knight: { symbol: '♘', color: '#D2691E' },
-            bishop: { symbol: '♗', color: '#CD853F' },
-            queen: { symbol: '♕', color: '#DEB887' },
-            king: { symbol: '♔', color: '#F4A460' }
+            pawn: { symbol: '♙' },
+            rook: { symbol: '♖' },
+            knight: { symbol: '♘' },
+            bishop: { symbol: '♗' },
+            queen: { symbol: '♕' },
+            king: { symbol: '♔' }
         };
 
         function drawHexagon(x, y, size) {
@@ -108,6 +118,7 @@
             canvas.height = (rows + 0.5) * (hexHeight * 0.75);
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
 
             for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
@@ -126,7 +137,6 @@
             piece.className = 'gamePiece';
             piece.style.left = x + 'px';
             piece.style.top = y + 'px';
-            piece.style.backgroundColor = pieceTypes[type].color;
             piece.textContent = pieceTypes[type].symbol;
             piece.dataset.type = type;
             gameContainer.appendChild(piece);
@@ -172,6 +182,9 @@
 
         document.addEventListener('mousemove', drag);
         document.addEventListener('mouseup', stopDragging);
+
+        // Redraw the grid lines in the new colours when the system switches light/dark
+        window.addEventListener('themechange', generateBoard);
 
         // Initial board generation
         generateBoard();

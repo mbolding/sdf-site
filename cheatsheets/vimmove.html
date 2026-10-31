@@ -3,261 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vim Movement Commands Cheatsheet</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            border-bottom: 3px solid #2c3e50;
-            padding-bottom: 10px;
-        }
-        .category {
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-        h2 {
-            color: #3498db;
-            margin-top: 0;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .command {
-            font-family: monospace;
-            background-color: #e8e8e8;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-    </style>
+    <title>Vim movement · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
 </head>
 <body>
+    <header><a href="../">mbolding</a> · <a href="./">Cheatsheets</a></header>
     <h1>Vim Movement Commands Cheatsheet</h1>
 
-    <div class="category">
+    <div>
         <h2>Basic Movements</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">h</span></td>
+                <td><code>h</code></td>
                 <td>Move left</td>
             </tr>
             <tr>
-                <td><span class="command">j</span></td>
+                <td><code>j</code></td>
                 <td>Move down</td>
             </tr>
             <tr>
-                <td><span class="command">k</span></td>
+                <td><code>k</code></td>
                 <td>Move up</td>
             </tr>
             <tr>
-                <td><span class="command">l</span></td>
+                <td><code>l</code></td>
                 <td>Move right</td>
             </tr>
             <tr>
-                <td><span class="command">gj</span></td>
+                <td><code>gj</code></td>
                 <td>Move down (multi-line text)</td>
             </tr>
             <tr>
-                <td><span class="command">gk</span></td>
+                <td><code>gk</code></td>
                 <td>Move up (multi-line text)</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Word Movements</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">w</span></td>
+                <td><code>w</code></td>
                 <td>Move to the beginning of the next word</td>
             </tr>
             <tr>
-                <td><span class="command">b</span></td>
+                <td><code>b</code></td>
                 <td>Move to the beginning of the previous word</td>
             </tr>
             <tr>
-                <td><span class="command">e</span></td>
+                <td><code>e</code></td>
                 <td>Move to the end of the current word</td>
             </tr>
             <tr>
-                <td><span class="command">ge</span></td>
+                <td><code>ge</code></td>
                 <td>Move to the end of the previous word</td>
             </tr>
             <tr>
-                <td><span class="command">W</span></td>
+                <td><code>W</code></td>
                 <td>Move to the beginning of the next WORD (space-separated)</td>
             </tr>
             <tr>
-                <td><span class="command">B</span></td>
+                <td><code>B</code></td>
                 <td>Move to the beginning of the previous WORD</td>
             </tr>
             <tr>
-                <td><span class="command">E</span></td>
+                <td><code>E</code></td>
                 <td>Move to the end of the current WORD</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Line Movements</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">0</span></td>
+                <td><code>0</code></td>
                 <td>Move to the beginning of the line</td>
             </tr>
             <tr>
-                <td><span class="command">^</span></td>
+                <td><code>^</code></td>
                 <td>Move to the first non-blank character of the line</td>
             </tr>
             <tr>
-                <td><span class="command">$</span></td>
+                <td><code>$</code></td>
                 <td>Move to the end of the line</td>
             </tr>
             <tr>
-                <td><span class="command">g_</span></td>
+                <td><code>g_</code></td>
                 <td>Move to the last non-blank character of the line</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Document Movements</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">gg</span></td>
+                <td><code>gg</code></td>
                 <td>Move to the first line of the document</td>
             </tr>
             <tr>
-                <td><span class="command">G</span></td>
+                <td><code>G</code></td>
                 <td>Move to the last line of the document</td>
             </tr>
             <tr>
-                <td><span class="command">{num}G</span></td>
+                <td><code>{num}G</code></td>
                 <td>Move to line {num}</td>
             </tr>
             <tr>
-                <td><span class="command">H</span></td>
+                <td><code>H</code></td>
                 <td>Move to the top of the screen</td>
             </tr>
             <tr>
-                <td><span class="command">M</span></td>
+                <td><code>M</code></td>
                 <td>Move to the middle of the screen</td>
             </tr>
             <tr>
-                <td><span class="command">L</span></td>
+                <td><code>L</code></td>
                 <td>Move to the bottom of the screen</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Scrolling</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">Ctrl+f</span></td>
+                <td><code>Ctrl+f</code></td>
                 <td>Scroll forward one full screen</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl+b</span></td>
+                <td><code>Ctrl+b</code></td>
                 <td>Scroll backward one full screen</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl+d</span></td>
+                <td><code>Ctrl+d</code></td>
                 <td>Scroll forward 1/2 screen</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl+u</span></td>
+                <td><code>Ctrl+u</code></td>
                 <td>Scroll backward 1/2 screen</td>
             </tr>
             <tr>
-                <td><span class="command">zz</span></td>
+                <td><code>zz</code></td>
                 <td>Center cursor on screen</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Advanced Movements</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">%</span></td>
+                <td><code>%</code></td>
                 <td>Move to matching parenthesis/bracket</td>
             </tr>
             <tr>
-                <td><span class="command">f{char}</span></td>
+                <td><code>f{char}</code></td>
                 <td>Move to next occurrence of {char} on the current line</td>
             </tr>
             <tr>
-                <td><span class="command">F{char}</span></td>
+                <td><code>F{char}</code></td>
                 <td>Move to previous occurrence of {char} on the current line</td>
             </tr>
             <tr>
-                <td><span class="command">t{char}</span></td>
+                <td><code>t{char}</code></td>
                 <td>Move to before next occurrence of {char}</td>
             </tr>
             <tr>
-                <td><span class="command">T{char}</span></td>
+                <td><code>T{char}</code></td>
                 <td>Move to after previous occurrence of {char}</td>
             </tr>
             <tr>
-                <td><span class="command">;</span></td>
+                <td><code>;</code></td>
                 <td>Repeat last f, F, t, or T movement</td>
             </tr>
             <tr>
-                <td><span class="command">,</span></td>
+                <td><code>,</code></td>
                 <td>Repeat last f, F, t, or T movement, backwards</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
 </body>

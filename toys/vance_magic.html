@@ -3,32 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vancian Wizard Duel</title>
+    <title>Vancian Wizard Duel · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
+        .wizard h2 {
+            margin-top: 0.2em;
         }
-        .game-container {
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-            max-width: 800px;
-            width: 100%;
-        }
-        .wizard {
-            margin-bottom: 20px;
+        .wizard p {
+            margin: 0.2em 0;
+            font-family: var(--font-ui);
         }
         .spells {
             display: flex;
             flex-wrap: wrap;
             gap: 5px;
+            margin-top: 0.6em;
         }
         .spells button {
             padding: 5px 10px;
@@ -38,21 +28,25 @@
             margin-top: 20px;
             max-height: 200px;
             overflow-y: auto;
-            border: 1px solid #ccc;
             padding: 10px;
+            background: var(--surface);
+            border: 1px solid var(--rule);
+            border-radius: var(--radius);
+            font: 14px/1.5 var(--font-ui);
         }
     </style>
 </head>
-<body>
+<body class="wide">
+    <header><a href="../">mbolding</a> · <a href="./">Toys</a></header>
+    <h1>Vancian Wizard Duel</h1>
     <div class="game-container">
-        <h1>Vancian Wizard Duel</h1>
-        <div class="wizard" id="wizard1">
+        <div class="wizard box" id="wizard1">
             <h2>Wizard 1</h2>
             <p>Health: <span id="health1">20</span></p>
             <p>Mana: <span id="mana1">10</span></p>
             <div class="spells" id="spells1"></div>
         </div>
-        <div class="wizard" id="wizard2">
+        <div class="wizard box" id="wizard2">
             <h2>Wizard 2</h2>
             <p>Health: <span id="health2">20</span></p>
             <p>Mana: <span id="mana2">10</span></p>

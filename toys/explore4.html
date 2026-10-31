@@ -3,13 +3,15 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Frontier Expedition</title>
+	<title>Frontier Expedition · mbolding</title>
+	<link rel="stylesheet" href="../style.css">
+	<script src="../theme.js"></script>
 	<link rel="stylesheet" href="explore.css">
-	<link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
+	<header><a href="../">mbolding</a> · <a href="./">Toys</a></header>
+	<h1>Frontier Expedition</h1>
 	<div id="game-container">
-		<h1>Frontier Expedition</h1>
 		<div id="game-board"></div>
 		<div id="resources"></div>
 		<div id="movement-controls">
@@ -59,7 +61,7 @@
 					cell.className = 'cell';
 					cell.id = `cell-${x}-${y}`;
 					if (x === BOARD_WIDTH - 1 && y === 0) {
-						cell.style.backgroundColor = 'blue';
+						cell.classList.add('goal');
 					}
 					gameBoard.appendChild(cell);
 				}

@@ -1,77 +1,117 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <style>
-        .clock {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            border: 16px solid #000;
-            border-radius: 50%;
-            background: #fff;
-            padding: 2px;
-            box-sizing: border-box;
-        }
-
-        .hand {
-            position: absolute;
-            bottom: 50%;
-            width: 50%;
-            height: 6px;
-            background: #000;
-            transform-origin: right;
-            transition: all 0.05s;
-            transition-timing-function: steps(1, end);
-        }
-
-        .minute-hand {
-            height: 4px;
-        }
-
-        .second-hand {
-            height: 2px;
-            background: red;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Timer · mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<style>
+.dial { display: block; width: min(18em, 80vw); margin: 1.5em auto 0.5em; }
+.dial .track { stroke: var(--rule); }
+.dial .left { stroke: var(--link); transition: stroke-dashoffset 0.25s linear; }
+.dial .tick { stroke: var(--muted); }
+.dial text { fill: var(--text); font: 600 15px var(--font-ui); font-variant-numeric: tabular-nums; }
+.dial .sub { fill: var(--muted); font-size: 5px; font-weight: 400; }
+.row { justify-content: center; }
+.done .left { stroke: var(--muted); }
+</style>
 </head>
 <body>
-    <div class="clock">
-        <div class="hand minute-hand"></div>
-        <div class="hand second-hand"></div>
-    </div>
+<header><a href="./">mbolding</a></header>
+<h1 id="title">Timer</h1>
 
-    <script>
-        const secondHand = document.querySelector('.second-hand');
-        const minuteHand = document.querySelector('.minute-hand');
+<svg class="dial" viewBox="0 0 100 100" aria-hidden="true">
+  <circle class="track" cx="50" cy="50" r="44" fill="none" stroke-width="6"/>
+  <circle class="left" id="arc" cx="50" cy="50" r="44" fill="none" stroke-width="6" stroke-linecap="round"
+          transform="rotate(-90 50 50)"/>
+  <g id="ticks"></g>
+  <text id="clock" x="50" y="53" text-anchor="middle">0:00</text>
+  <text class="sub" id="sub" x="50" y="63" text-anchor="middle"></text>
+</svg>
+<p class="small" id="said" role="status" style="text-align:center"></p>
 
-        // Get minutes from URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        let countdownTime = Number(urlParams.get('minutes')) * 60;
-        
-        function setTimer() {
-            // Calculate the angle for each hand
-            const seconds = countdownTime % 60;
-            const secondsDegrees = ((seconds / 60) * 360) + 90;
-            secondHand.style.transform = `rotate(${secondsDegrees}deg)`;
+<div class="row">
+  <button class="primary" id="go">Pause</button>
+  <button id="again">Start again</button>
+</div>
+<div class="row small">
+  <a href="?minutes=5">5</a> · <a href="?minutes=15">15</a> · <a href="?minutes=25">25</a> · <a href="?minutes=30">30</a> · <a href="?minutes=60">60</a> minutes
+</div>
 
-            const minutes = Math.floor(countdownTime / 60);
-            const minutesDegrees = ((minutes / 60) * 360) + 90;
-            minuteHand.style.transform = `rotate(${minutesDegrees}deg)`;
+<script>
+// The length comes from ?minutes=, as the homepage's links give it; 25 when there's none.
+const asked = parseFloat(new URLSearchParams(location.search).get('minutes'));
+const total = Math.round((asked > 0 && asked <= 24 * 60 ? asked : 25) * 60) * 1000;
+const $ = id => document.getElementById(id);
+const ring = 2 * Math.PI * 44;
+let ends = Date.now() + total, pausedLeft = null, finished = false;
 
-            // Decrease the countdown time
-            countdownTime--;
-        }
+for (let i = 0; i < 12; i++) {
+    const a = i * Math.PI / 6, r1 = 36.5, r2 = i % 3 ? 38.5 : 39.5;
+    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    l.setAttribute('class', 'tick');
+    l.setAttribute('stroke-width', i % 3 ? 0.6 : 1);
+    l.setAttribute('x1', 50 + r1 * Math.sin(a)); l.setAttribute('y1', 50 - r1 * Math.cos(a));
+    l.setAttribute('x2', 50 + r2 * Math.sin(a)); l.setAttribute('y2', 50 - r2 * Math.cos(a));
+    $('ticks').appendChild(l);
+}
 
-        const intervalId = setInterval(() => {
-            if (countdownTime < 0) {
-                // Stop the interval when the countdown reaches zero
-                clearInterval(intervalId);
-            } else {
-                setTimer();
-            }
-        }, 1000);
+const minutes = total / 60000;
+$('title').textContent = (Number.isInteger(minutes) ? minutes : minutes.toFixed(1)) + ' minute timer';
 
-        setTimer();
-    </script>
+function show(ms) {
+    const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, sec = s % 60;
+    return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(sec).padStart(2, '0');
+}
+
+function chime() {
+    try {
+        const ctx = new AudioContext();
+        [0, 0.35, 0.7].forEach(t => {
+            const o = ctx.createOscillator(), g = ctx.createGain();
+            o.frequency.value = 880;
+            g.gain.setValueAtTime(0.0001, ctx.currentTime + t);
+            g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime + t + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.3);
+            o.connect(g).connect(ctx.destination);
+            o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.32);
+        });
+    } catch (e) {}
+}
+
+function tick() {
+    const left = pausedLeft ?? Math.max(0, ends - Date.now());
+    // The ring's own length, so a finished timer leaves no round cap showing.
+    $('arc').style.strokeDasharray = ring;
+    $('arc').style.strokeDashoffset = ring * (1 - left / total);
+    $('arc').style.visibility = left ? 'visible' : 'hidden';
+    $('clock').textContent = show(left);
+    $('sub').textContent = pausedLeft !== null ? 'paused' : left ? 'left' : '';
+    document.title = (left ? show(left) : 'Done') + ' · Timer';
+    if (!left && !finished) {
+        finished = true;
+        document.body.classList.add('done');
+        $('said').textContent = 'Time’s up.';
+        $('go').hidden = true;
+        chime();
+    }
+}
+
+$('go').onclick = () => {
+    if (pausedLeft === null) { pausedLeft = Math.max(0, ends - Date.now()); $('go').textContent = 'Resume'; }
+    else { ends = Date.now() + pausedLeft; pausedLeft = null; $('go').textContent = 'Pause'; }
+    tick();
+};
+$('again').onclick = () => {
+    ends = Date.now() + total; pausedLeft = null; finished = false;
+    document.body.classList.remove('done');
+    $('said').textContent = ''; $('go').hidden = false; $('go').textContent = 'Pause';
+    tick();
+};
+
+setInterval(tick, 250);
+tick();
+</script>
 </body>
 </html>

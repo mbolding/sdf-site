@@ -3,239 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vim: Combining Movement and Editing Commands</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            border-bottom: 3px solid #2c3e50;
-            padding-bottom: 10px;
-        }
-        .category {
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-        h2 {
-            color: #3498db;
-            margin-top: 0;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .command {
-            font-family: monospace;
-            background-color: #e8e8e8;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-        .note {
-            font-style: italic;
-            color: #666;
-            font-size: 0.9em;
-        }
-    </style>
+    <title>Vim movement with editing · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
 </head>
 <body>
+    <header><a href="../">mbolding</a> · <a href="./">Cheatsheets</a></header>
     <h1>Vim: Combining Movement and Editing Commands</h1>
 
-    <div class="category">
+    <div>
         <h2>Operators</h2>
         <p class="note">Operators are commands that perform an action when combined with a motion or text object.</p>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Operator</th>
                 <th>Action</th>
             </tr>
             <tr>
-                <td><span class="command">d</span></td>
+                <td><code>d</code></td>
                 <td>Delete</td>
             </tr>
             <tr>
-                <td><span class="command">c</span></td>
+                <td><code>c</code></td>
                 <td>Change (delete and enter insert mode)</td>
             </tr>
             <tr>
-                <td><span class="command">y</span></td>
+                <td><code>y</code></td>
                 <td>Yank (copy)</td>
             </tr>
             <tr>
-                <td><span class="command">></span></td>
+                <td><code>></code></td>
                 <td>Indent right</td>
             </tr>
             <tr>
-                <td><span class="command"><</span></td>
+                <td><code><</code></td>
                 <td>Indent left</td>
             </tr>
             <tr>
-                <td><span class="command">g~</span></td>
+                <td><code>g~</code></td>
                 <td>Swap case</td>
             </tr>
             <tr>
-                <td><span class="command">gu</span></td>
+                <td><code>gu</code></td>
                 <td>Make lowercase</td>
             </tr>
             <tr>
-                <td><span class="command">gU</span></td>
+                <td><code>gU</code></td>
                 <td>Make uppercase</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Text Objects</h2>
         <p class="note">Text objects are used with operators to act on structured pieces of text.</p>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Object</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">iw</span></td>
+                <td><code>iw</code></td>
                 <td>Inner word</td>
             </tr>
             <tr>
-                <td><span class="command">aw</span></td>
+                <td><code>aw</code></td>
                 <td>A word (includes surrounding space)</td>
             </tr>
             <tr>
-                <td><span class="command">is</span></td>
+                <td><code>is</code></td>
                 <td>Inner sentence</td>
             </tr>
             <tr>
-                <td><span class="command">as</span></td>
+                <td><code>as</code></td>
                 <td>A sentence</td>
             </tr>
             <tr>
-                <td><span class="command">ip</span></td>
+                <td><code>ip</code></td>
                 <td>Inner paragraph</td>
             </tr>
             <tr>
-                <td><span class="command">ap</span></td>
+                <td><code>ap</code></td>
                 <td>A paragraph</td>
             </tr>
             <tr>
-                <td><span class="command">i(</span> or <span class="command">i)</span></td>
+                <td><code>i(</code> or <code>i)</code></td>
                 <td>Inside parentheses</td>
             </tr>
             <tr>
-                <td><span class="command">a(</span> or <span class="command">a)</span></td>
+                <td><code>a(</code> or <code>a)</code></td>
                 <td>A pair of parentheses</td>
             </tr>
             <tr>
-                <td><span class="command">i{</span> or <span class="command">i}</span></td>
+                <td><code>i{</code> or <code>i}</code></td>
                 <td>Inside curly braces</td>
             </tr>
             <tr>
-                <td><span class="command">a{</span> or <span class="command">a}</span></td>
+                <td><code>a{</code> or <code>a}</code></td>
                 <td>A pair of curly braces</td>
             </tr>
             <tr>
-                <td><span class="command">i"</span></td>
+                <td><code>i"</code></td>
                 <td>Inside double quotes</td>
             </tr>
             <tr>
-                <td><span class="command">a"</span></td>
+                <td><code>a"</code></td>
                 <td>A pair of double quotes</td>
             </tr>
             <tr>
-                <td><span class="command">it</span></td>
+                <td><code>it</code></td>
                 <td>Inner XML/HTML tag</td>
             </tr>
             <tr>
-                <td><span class="command">at</span></td>
+                <td><code>at</code></td>
                 <td>A XML/HTML tag block</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Common Combinations</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">dw</span></td>
+                <td><code>dw</code></td>
                 <td>Delete to the start of the next word</td>
             </tr>
             <tr>
-                <td><span class="command">d$</span> or <span class="command">D</span></td>
+                <td><code>d$</code> or <code>D</code></td>
                 <td>Delete to the end of the line</td>
             </tr>
             <tr>
-                <td><span class="command">d0</span></td>
+                <td><code>d0</code></td>
                 <td>Delete to the beginning of the line</td>
             </tr>
             <tr>
-                <td><span class="command">diw</span></td>
+                <td><code>diw</code></td>
                 <td>Delete inner word</td>
             </tr>
             <tr>
-                <td><span class="command">ciw</span></td>
+                <td><code>ciw</code></td>
                 <td>Change inner word</td>
             </tr>
             <tr>
-                <td><span class="command">ci"</span></td>
+                <td><code>ci"</code></td>
                 <td>Change text inside double quotes</td>
             </tr>
             <tr>
-                <td><span class="command">da(</span></td>
+                <td><code>da(</code></td>
                 <td>Delete a pair of parentheses and their content</td>
             </tr>
             <tr>
-                <td><span class="command">yi{</span></td>
+                <td><code>yi{</code></td>
                 <td>Yank text inside curly braces</td>
             </tr>
             <tr>
-                <td><span class="command">gUiw</span></td>
+                <td><code>gUiw</code></td>
                 <td>Make inner word uppercase</td>
             </tr>
             <tr>
-                <td><span class="command">>&lt;motion&gt;</span></td>
+                <td><code>>&lt;motion&gt;</code></td>
                 <td>Indent right (e.g., >G to indent to end of file)</td>
             </tr>
             <tr>
-                <td><span class="command">cit</span></td>
+                <td><code>cit</code></td>
                 <td>Change inner XML/HTML tag</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Tips</h2>
         <ul>
-            <li>Most commands follow the pattern: <span class="command">&lt;operator&gt;&lt;count&gt;&lt;motion&gt;</span></li>
-            <li>You can use a count before the operator or the motion (e.g., <span class="command">2dw</span> or <span class="command">d2w</span>)</li>
-            <li>Operators can be doubled to operate on a whole line (e.g., <span class="command">dd</span>, <span class="command">yy</span>, <span class="command">cc</span>)</li>
-            <li>The <span class="command">v</span> command enters visual mode, allowing you to select text before applying an operator</li>
+            <li>Most commands follow the pattern: <code>&lt;operator&gt;&lt;count&gt;&lt;motion&gt;</code></li>
+            <li>You can use a count before the operator or the motion (e.g., <code>2dw</code> or <code>d2w</code>)</li>
+            <li>Operators can be doubled to operate on a whole line (e.g., <code>dd</code>, <code>yy</code>, <code>cc</code>)</li>
+            <li>The <code>v</code> command enters visual mode, allowing you to select text before applying an operator</li>
         </ul>
     </div>
 

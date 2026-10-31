@@ -1,61 +1,85 @@
-<!DOCTYPE html> 
-<html> 
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <script src="https://d3js.org/d3.v5.min.js"></script>
-  <script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trig function plotter 3 · mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.16.0/d3.min.js"></script>
+<style>
+svg { display: block; width: 100%; height: auto; }
+.tick text { font-family: var(--font-ui); }
+</style>
+</head>
+<body class="wide">
+<header><a href="./">mbolding</a></header>
+<h1>Trig function plotter</h1>
+<div class="row">
+  <select id="func" onchange="plot()">
+    <option value="sin">sin</option>
+    <option value="cos">cos</option>
+    <option value="tan">tan</option>
+  </select>
+</div>
+<svg width="800" height="400" viewBox="0 0 800 400"></svg>
+
+<script>
+  function color(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
   function plot() {
     var func = document.getElementById('func').value;
     var data = [];
-    var x = 0; 
+    var x = 0;
     var increment = Math.PI / 180;
     while (x < 2 * Math.PI) {
       if (func == 'sin') {
-        data.push({x: x, y: Math.sin(x)}); 
+        data.push({x: x, y: Math.sin(x)});
       } else if (func == 'cos') {
-        data.push({x: x, y: Math.cos(x)});  
+        data.push({x: x, y: Math.cos(x)});
       } else if (func == 'tan') {
-        data.push({x: x, y: Math.tan(x)});  
+        data.push({x: x, y: Math.tan(x)});
       }
-      x += increment; 
+      x += increment;
     }
 
     var svg = d3.select("svg"),
         margin = {top: 20, right: 20, bottom: 30, left: 50},
         width = +svg.attr("width") - margin.left - margin.right,
-        height = +svg.attr("height") - margin.top - margin.bottom,
-        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        height = +svg.attr("height") - margin.top - margin.bottom;
+    svg.selectAll("*").remove();
+    var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var xScale = d3.scaleLinear().range([0, width]);
     var yScale = d3.scaleLinear().range([height, 0]);
 
-    xScale.domain([0, 2 * Math.PI]); 
+    xScale.domain([0, 2 * Math.PI]);
     yScale.domain([d3.min(data, function(d) { return d.y; }), d3.max(data, function(d) { return d.y; })]);
 
     g.append("g")
        .attr("transform", "translate(0," + height + ")")
+       .attr("color", color('--muted'))
        .call(d3.axisBottom(xScale));
 
     g.append("g")
-       .call(d3.axisLeft(yScale)); 
+       .attr("color", color('--muted'))
+       .call(d3.axisLeft(yScale));
 
     g.append("path")
       .datum(data)
       .attr("fill", "none")
-      .attr("stroke", "steelblue")
+      .attr("stroke", color('--link'))
       .attr("stroke-width", 1.5)
       .attr("d", d3.line()
         .x(function(d) { return xScale(d.x) })
         .y(function(d) { return yScale(d.y) })
       )
   }
-  </script> 
-</head>
-<body>
-  <select id="func" onchange="plot()">
-    <option value="sin">sin</option>
-    <option value="cos">cos</option>
-    <option value="tan">tan</option>
-  </select>
-  <svg width="800" height="400"></svg>
+
+  plot();
+  window.addEventListener('themechange', plot);
+</script>
 </body>
 </html>

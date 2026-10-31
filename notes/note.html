@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Notepad · mbolding</title>
+<link rel="stylesheet" href="../style.css">
+<script src="../theme.js"></script>
+<style>
+#note-content { height: 150px; resize: vertical; }
+.saved-note { position: relative; padding-right: 5.5em; }
+.saved-note p { margin: 0 0 0.3em; }
+.note-controls { position: absolute; top: 0.6em; right: 0.6em; }
+.note-controls button { font-size: 13px; padding: 0.2em 0.6em; }
+</style>
+</head>
+<body>
+<header><a href="../">mbolding</a> · <a href="./">Notes</a></header>
+<h1>Notepad</h1>
+
+<textarea id="note-content" placeholder="Write your note here..."></textarea>
+<div class="row">
+  <button class="primary" id="save-btn">Save Note</button>
+  <button id="clear-btn">Clear</button>
+</div>
+<div id="notes-container"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const noteContent = document.getElementById('note-content');
+    const saveBtn = document.getElementById('save-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const notesContainer = document.getElementById('notes-container');
+
+    // Load saved notes from localStorage
+    loadNotes();
+
+    saveBtn.addEventListener('click', function() {
+        if (noteContent.value.trim() !== '') {
+            saveNote(noteContent.value);
+            noteContent.value = '';
+        }
+    });
+
+    clearBtn.addEventListener('click', function() {
+        noteContent.value = '';
+    });
+
+    function saveNote(content) {
+        const notes = getNotes();
+        const newNote = {
+            id: Date.now(),
+            content: content,
+            date: new Date().toLocaleString()
+        };
+
+        notes.push(newNote);
+        localStorage.setItem('notes', JSON.stringify(notes));
+        displayNote(newNote);
+    }
+
+    function getNotes() {
+        return JSON.parse(localStorage.getItem('notes') || '[]');
+    }
+
+    function loadNotes() {
+        const notes = getNotes();
+        notes.forEach(note => {
+            displayNote(note);
+        });
+    }
+
+    function displayNote(note) {
+        const noteElement = document.createElement('div');
+        noteElement.className = 'card saved-note';
+        noteElement.dataset.id = note.id;
+
+        noteElement.innerHTML = `
+            <div class="note-controls">
+                <button class="delete-btn">Delete</button>
+            </div>
+            <p>${note.content.replace(/\n/g, '<br>')}</p>
+            <span class="small">${note.date}</span>
+        `;
+
+        notesContainer.prepend(noteElement);
+
+        noteElement.querySelector('.delete-btn').addEventListener('click', function() {
+            deleteNote(note.id);
+            noteElement.remove();
+        });
+    }
+
+    function deleteNote(id) {
+        const notes = getNotes().filter(note => note.id !== id);
+        localStorage.setItem('notes', JSON.stringify(notes));
+    }
+});
+</script>
+</body>
+</html>

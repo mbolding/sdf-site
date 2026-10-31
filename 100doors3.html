@@ -1,53 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript Doors Example</title>
-    <style>
-        .door {
-            display: inline-block;
-            width: 20px;
-            height: 40px;
-            margin: 5px;
-            border: 1px solid black;
-        }
-
-        .closed {
-            background-color: red;
-        }
-
-        .open {
-            background-color: green;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>100 doors · mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<style>
+.doors { display: grid; grid-template-columns: repeat(10, 1fr); gap: 5px; max-width: 26em; margin: 1.2em 0; }
+.door { aspect-ratio: 1 / 1.6; border-radius: 4px 4px 0 0; border: 1px solid var(--rule); background: var(--panel); color: var(--muted);
+        display: flex; align-items: flex-end; justify-content: center; font: 11px var(--font-ui); padding-bottom: 2px; transition: background 0.15s; }
+.door.open { background: var(--link); border-color: var(--link); color: var(--on-link); }
+.door.hit { outline: 2px solid var(--muted); outline-offset: 1px; }
+</style>
 </head>
 <body>
-    <div id="output"></div>
-    <script>
-        var doors = [];
-        for (var i = 0; i < 100; i++) {
-            doors[i] = false;
-            var door = document.createElement("div");
-            door.className = "door closed";
-            door.title = "Door " + (i + 1) + " is closed";
-            document.getElementById("output").appendChild(door);
-        }
+<header><a href="./">mbolding</a></header>
+<h1>100 doors</h1>
+<p>A hundred doors start shut. On pass 1 you toggle every door, on pass 2 every second door, on pass 3 every third, and so on up to pass 100. Which doors are open at the end?</p>
 
-        function updateDoors(step) {
-            if (step > 100) return;
+<div class="row">
+  <button class="primary" id="play">Play</button>
+  <button id="step">One pass</button>
+  <button id="end">Skip to the end</button>
+  <span class="small" id="status">Before pass 1: all shut.</span>
+</div>
+<div class="doors" id="doors"></div>
+<p class="small" id="answer" hidden>Open: the perfect squares, 1, 4, 9, 16, 25, 36, 49, 64, 81 and 100. Door <i>n</i> is toggled once for every number that divides it, and only a square has an odd number of divisors.</p>
 
-            for (var i2 = step - 1; i2 < 100; i2 += step) {
-                doors[i2] = !doors[i2];
-                var door = document.getElementsByClassName("door")[i2];
-                door.className = "door " + (doors[i2] ? "open" : "closed");
-                door.title = "Door " + (i2 + 1) + " is " + (doors[i2] ? "open" : "closed");
-            }
+<script>
+const $ = id => document.getElementById(id);
+const doors = [], open = new Array(101).fill(false);
+let pass = 0, timer = null;
 
-            setTimeout(function() { updateDoors(step + 1); }, 100);
-        }
+for (let i = 1; i <= 100; i++) {
+    const d = document.createElement('div');
+    d.className = 'door';
+    d.textContent = i;
+    doors[i] = d;
+    $('doors').appendChild(d);
+}
 
-        updateDoors(1);
-    </script>
+function draw(hits) {
+    for (let i = 1; i <= 100; i++) {
+        doors[i].classList.toggle('open', open[i]);
+        doors[i].classList.toggle('hit', hits.has(i));
+        doors[i].title = 'Door ' + i + (open[i] ? ' is open' : ' is shut');
+    }
+    const count = open.filter(Boolean).length;
+    $('status').textContent = pass === 0 ? 'Before pass 1: all shut.' : 'After pass ' + pass + ': ' + count + ' open.';
+    $('answer').hidden = pass < 100;
+    $('step').disabled = $('end').disabled = pass >= 100;
+    $('play').textContent = timer ? 'Pause' : pass >= 100 ? 'Play again' : 'Play';
+}
+
+function step() {
+    if (pass >= 100) return stop();
+    pass++;
+    const hits = new Set();
+    for (let i = pass; i <= 100; i += pass) { open[i] = !open[i]; hits.add(i); }
+    if (pass >= 100) stop();
+    draw(hits);
+}
+
+function stop() { clearInterval(timer); timer = null; }
+
+function reset() { stop(); pass = 0; open.fill(false); }
+
+$('play').onclick = () => {
+    if (timer) { stop(); return draw(new Set()); }
+    if (pass >= 100) reset();
+    timer = setInterval(step, 120);
+    step();
+};
+$('step').onclick = () => { stop(); step(); };
+$('end').onclick = () => { stop(); while (pass < 100) step(); };
+draw(new Set());
+</script>
 </body>
 </html>

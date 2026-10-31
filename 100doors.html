@@ -1,25 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript Doors Example</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>100 doors, as text · mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<style>
+#output { font: 15px/1.6 var(--font-ui); }
+</style>
 </head>
 <body>
-    <div id="output"></div>
-    <script>
-        var doors = [];
-        for (var i = 0; i < 100; i++)
-            doors[i] = false;
-        for (var i = 1; i <= 100; i++)
-            for (var i2 = i - 1; i2 < 100; i2 += i)
-                doors[i2] = !doors[i2];
+<header><a href="./">mbolding</a></header>
+<h1>100 doors, as text</h1>
+<div id="output"></div>
+<script>
+    var doors = [];
+    for (var i = 0; i < 100; i++)
+        doors[i] = false;
+    for (var i = 1; i <= 100; i++)
+        for (var i2 = i - 1; i2 < 100; i2 += i)
+            doors[i2] = !doors[i2];
 
-        var output = document.getElementById("output");
-        for (var i = 1; i <= 100; i++) {
-            var result = "Door " + i + " is " + (doors[i - 1] ? "open" : "closed");
-            output.innerHTML += result + "<br>";
-        }
-    </script>
+    var output = document.getElementById("output");
+    for (var i = 1; i <= 100; i++) {
+        var result = "Door " + i + " is " + (doors[i - 1] ? "open" : "closed");
+        output.innerHTML += result + "<br>";
+    }
+</script>
 </body>
 </html>

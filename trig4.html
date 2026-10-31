@@ -1,41 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <script src="https://cdn.jsdelivr.net/npm/chartist@0.11.4/dist/chartist.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chartist@0.11.4/dist/chartist.min.css">
-  <script>
-  function plot() {
-    var func = document.getElementById('func').value;
-    var data = {series: []};
-    var x = 0; 
-    var increment = Math.PI / 180;
-    while (x < 2 * Math.PI) {
-      if (func == 'sin') {
-        data.series.push({x: x, y: Math.sin(x)}); 
-      } else if (func == 'cos') {
-        data.series.push({x: x, y: Math.cos(x)});  
-      } else if (func == 'tan') {
-        data.series.push({x: x, y: Math.tan(x)});  
-      }
-      x += increment; 
-    }
-    
-    var chart = new Chartist.Line('.ct-chart', data, {
-      axisX: {
-        labelInterpolationFnc: function(value, index) {
-          return index % Math.PI === 0 ? 'π/' + value : '';
-        }
-      }
-    });
-  } 
-  </script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trig function plotter 4 · mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartist@0.11.4/dist/chartist.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chartist@0.11.4/dist/chartist.min.css">
+<style>
+.ct-chart { height: 400px; }
+.ct-label { color: var(--muted); fill: var(--muted); font-family: var(--font-ui); }
+.ct-grid { stroke: var(--rule); }
+.ct-series-a .ct-line, .ct-series-a .ct-point { stroke: var(--link); }
+</style>
 </head>
-<body>
+<body class="wide">
+<header><a href="./">mbolding</a></header>
+<h1>Trig function plotter</h1>
+<div class="row">
   <select id="func" onchange="plot()">
     <option value="sin">sin</option>
     <option value="cos">cos</option>
-    <option value="tan">tan</option> 
+    <option value="tan">tan</option>
   </select>
-  <div class="ct-chart"></div>
-</body> 
+</div>
+<div class="ct-chart"></div>
+
+<script>
+  function plot() {
+    var func = document.getElementById('func').value;
+    var points = [];
+    var x = 0;
+    var increment = Math.PI / 180;
+    while (x < 2 * Math.PI) {
+      if (func == 'sin') {
+        points.push({x: x, y: Math.sin(x)});
+      } else if (func == 'cos') {
+        points.push({x: x, y: Math.cos(x)});
+      } else if (func == 'tan') {
+        points.push({x: x, y: Math.tan(x)});
+      }
+      x += increment;
+    }
+
+    // One series of {x, y} points, on a numeric x axis.
+    var chart = new Chartist.Line('.ct-chart', {series: [points]}, {
+      showPoint: false,
+      axisX: {
+        type: Chartist.AutoScaleAxis,
+        onlyInteger: false
+      }
+    });
+  }
+
+  plot();
+</script>
+</body>
 </html>

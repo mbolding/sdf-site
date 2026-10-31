@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trig Function Plotter</title>
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trig function plotter 1 · mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<script src="https://cdn.plot.ly/plotly-1.58.5.min.js"></script>
 </head>
-<body>
-    <h1>Trig Function Plotter</h1>
-    <label for="trig-function">Select a trigonometric function:</label>
-    <select id="trig-function">
-        <option value="sin">Sine (sin)</option>
-        <option value="cos">Cosine (cos)</option>
-        <option value="tan">Tangent (tan)</option>
-    </select>
-    <div id="plot"></div>
-    <script src="script.js"></script>
+<body class="wide">
+<header><a href="./">mbolding</a></header>
+<h1>Trig Function Plotter</h1>
+<div class="row">
+  <label for="trig-function">Select a trigonometric function:</label>
+  <select id="trig-function">
+    <option value="sin">Sine (sin)</option>
+    <option value="cos">Cosine (cos)</option>
+    <option value="tan">Tangent (tan)</option>
+  </select>
+</div>
+<div id="plot"></div>
+<script src="script.js"></script>
 </body>
 </html>
-
-	

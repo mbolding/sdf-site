@@ -3,205 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vim Registers Cheatsheet</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            border-bottom: 3px solid #2c3e50;
-            padding-bottom: 10px;
-        }
-        .category {
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-        h2 {
-            color: #3498db;
-            margin-top: 0;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .command {
-            font-family: monospace;
-            background-color: #e8e8e8;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-        .note {
-            font-style: italic;
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }
-    </style>
+    <title>Vim registers · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
 </head>
 <body>
+    <header><a href="../">mbolding</a> · <a href="./">Cheatsheets</a></header>
     <h1>Vim Registers Cheatsheet</h1>
 
-    <div class="category">
+    <div>
         <h2>Types of Registers</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Register</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">"0</span> to <span class="command">"9</span></td>
+                <td><code>"0</code> to <code>"9</code></td>
                 <td>Numbered registers. "0 contains last yank, "1-"9 contain last deletes</td>
             </tr>
             <tr>
-                <td><span class="command">"a</span> to <span class="command">"z</span></td>
+                <td><code>"a</code> to <code>"z</code></td>
                 <td>Named registers for user storage</td>
             </tr>
             <tr>
-                <td><span class="command">""</span></td>
+                <td><code>""</code></td>
                 <td>Unnamed register, last delete or yank</td>
             </tr>
             <tr>
-                <td><span class="command">"*</span></td>
+                <td><code>"*</code></td>
                 <td>Selection register (X11 primary)</td>
             </tr>
             <tr>
-                <td><span class="command">"+</span></td>
+                <td><code>"+</code></td>
                 <td>Clipboard register</td>
             </tr>
             <tr>
-                <td><span class="command">"_</span></td>
+                <td><code>"_</code></td>
                 <td>Black hole register (discards text)</td>
             </tr>
             <tr>
-                <td><span class="command">"%</span></td>
+                <td><code>"%</code></td>
                 <td>Current file name</td>
             </tr>
             <tr>
-                <td><span class="command">"#</span></td>
+                <td><code>"#</code></td>
                 <td>Alternate file name</td>
             </tr>
             <tr>
-                <td><span class="command">":</span></td>
+                <td><code>":</code></td>
                 <td>Last executed command</td>
             </tr>
             <tr>
-                <td><span class="command">".</span></td>
+                <td><code>".</code></td>
                 <td>Last inserted text</td>
             </tr>
             <tr>
-                <td><span class="command">"=</span></td>
+                <td><code>"=</code></td>
                 <td>Expression register for calculations</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Using Registers</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">"ay</span></td>
+                <td><code>"ay</code></td>
                 <td>Yank into register a</td>
             </tr>
             <tr>
-                <td><span class="command">"Ay</span></td>
+                <td><code>"Ay</code></td>
                 <td>Append yank to register a</td>
             </tr>
             <tr>
-                <td><span class="command">"ap</span></td>
+                <td><code>"ap</code></td>
                 <td>Paste from register a</td>
             </tr>
             <tr>
-                <td><span class="command">"+y</span></td>
+                <td><code>"+y</code></td>
                 <td>Yank into clipboard</td>
             </tr>
             <tr>
-                <td><span class="command">"+p</span></td>
+                <td><code>"+p</code></td>
                 <td>Paste from clipboard</td>
             </tr>
             <tr>
-                <td><span class="command">:reg</span></td>
+                <td><code>:reg</code></td>
                 <td>View contents of all registers</td>
             </tr>
             <tr>
-                <td><span class="command">:reg a</span></td>
+                <td><code>:reg a</code></td>
                 <td>View contents of register a</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Special Register Operations</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-R a</span></td>
+                <td><code>Ctrl-R a</code></td>
                 <td>Insert contents of register a (in insert mode)</td>
             </tr>
             <tr>
-                <td><span class="command">Ctrl-R =</span></td>
+                <td><code>Ctrl-R =</code></td>
                 <td>Insert result of expression (in insert mode)</td>
             </tr>
             <tr>
-                <td><span class="command">:put a</span></td>
+                <td><code>:put a</code></td>
                 <td>Put contents of register a on new line</td>
             </tr>
             <tr>
-                <td><span class="command">q{register}</span></td>
+                <td><code>q{register}</code></td>
                 <td>Record macro into specified register</td>
             </tr>
             <tr>
-                <td><span class="command">@{register}</span></td>
+                <td><code>@{register}</code></td>
                 <td>Execute macro from specified register</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Tips and Tricks</h2>
         <ul>
-            <li>Use <span class="command">""p</span> to paste the last deleted or yanked text.</li>
-            <li>Use <span class="command">"0p</span> to paste the last yanked text, even after a delete operation.</li>
-            <li>Use <span class="command">"_d</span> to delete text without affecting other registers.</li>
-            <li>In insert mode, use <span class="command">Ctrl-R %</span> to insert the current file name.</li>
-            <li>Use <span class="command">"=5*5&lt;CR&gt;p</span> to insert the result of 5*5.</li>
-            <li>Use <span class="command">:let @a = "some text"</span> to set register a programmatically.</li>
+            <li>Use <code>""p</code> to paste the last deleted or yanked text.</li>
+            <li>Use <code>"0p</code> to paste the last yanked text, even after a delete operation.</li>
+            <li>Use <code>"_d</code> to delete text without affecting other registers.</li>
+            <li>In insert mode, use <code>Ctrl-R %</code> to insert the current file name.</li>
+            <li>Use <code>"=5*5&lt;CR&gt;p</code> to insert the result of 5*5.</li>
+            <li>Use <code>:let @a = "some text"</code> to set register a programmatically.</li>
         </ul>
     </div>
 
     <div class="note">
-        Note: Register operations can be combined with motions and counts. For example, <span class="command">"a3yy</span> yanks 3 lines into register a.
+        Note: Register operations can be combined with motions and counts. For example, <code>"a3yy</code> yanks 3 lines into register a.
     </div>
 
 </body>

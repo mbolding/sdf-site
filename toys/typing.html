@@ -3,25 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Typing Tutor</title>
+    <title>Typing Tutor · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
         .container {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            width: 100%;
             text-align: center;
         }
         .sentence {
@@ -38,27 +24,29 @@
             padding: 10px;
             width: 100%;
             max-width: 500px;
-            border: 2px solid #ccc;
-            border-radius: 4px;
+            background: var(--surface);
+            border-width: 2px;
         }
         .stats {
-            font-size: 1em;
             margin-top: 20px;
+            font-family: var(--font-ui);
         }
         .stats div {
             margin-bottom: 10px;
         }
         .highlight {
-            color: #28a745;
+            color: var(--good);
         }
         .error {
-            color: #dc3545;
+            color: var(--bad);
         }
     </style>
 </head>
 <body>
+<header><a href="../">mbolding</a> · <a href="./">Toys</a></header>
+<h1>Typing Tutor</h1>
 
-<div class="container">
+<div class="container box">
     <div class="sentence" id="sentence"></div>
     <div class="input-container">
         <input type="text" id="userInput" placeholder="Start typing here...">

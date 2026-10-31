@@ -1,44 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JavaScript Doors Example</title>
-    <style>
-        .door {
-            display: inline-block;
-            width: 20px;
-            height: 40px;
-            margin: 5px;
-            border: 1px solid black;
-        }
-
-        .closed {
-            background-color: red;
-        }
-
-        .open {
-            background-color: green;
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>100 doors, as boxes · mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<style>
+.door { display: inline-block; width: 20px; height: 40px; margin: 5px; border: 1px solid var(--rule); border-radius: 3px 3px 0 0; }
+.closed { background: var(--bad); }
+.open { background: var(--good); }
+</style>
 </head>
 <body>
-    <div id="output"></div>
-    <script>
-        var doors = [];
-        for (var i = 0; i < 100; i++)
-            doors[i] = false;
-        for (var i = 1; i <= 100; i++)
-            for (var i2 = i - 1; i2 < 100; i2 += i)
-                doors[i2] = !doors[i2];
+<header><a href="./">mbolding</a></header>
+<h1>100 doors, as boxes</h1>
+<div id="output"></div>
+<script>
+    var doors = [];
+    for (var i = 0; i < 100; i++)
+        doors[i] = false;
+    for (var i = 1; i <= 100; i++)
+        for (var i2 = i - 1; i2 < 100; i2 += i)
+            doors[i2] = !doors[i2];
 
-        var output = document.getElementById("output");
-        for (var i = 1; i <= 100; i++) {
-            var door = document.createElement("div");
-            door.className = "door " + (doors[i - 1] ? "open" : "closed");
-            door.title = "Door " + i + " is " + (doors[i - 1] ? "open" : "closed");
-            output.appendChild(door);
-        }
-    </script>
+    var output = document.getElementById("output");
+    for (var i = 1; i <= 100; i++) {
+        var door = document.createElement("div");
+        door.className = "door " + (doors[i - 1] ? "open" : "closed");
+        door.title = "Door " + i + " is " + (doors[i - 1] ? "open" : "closed");
+        output.appendChild(door);
+    }
+</script>
 </body>
 </html>

@@ -1,91 +1,67 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>mbolding...</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <meta charset="UTF-8">
-    <style>
-      body {
-        font-family: 'Roboto', sans-serif;
-        font-size: 16px;
-        line-height: 1.6;
-        margin: 0;
-        padding: 0;
-      }
-      header {
-        background-color: #007bff;
-        color: #fff;
-        padding: 10px;
-      }
-      h1 {
-        font-size: 36px;
-        font-weight: 700;
-        margin: 0;
-      }
-      .container {
-        display: flex;
-        flex-wrap: wrap;
-      }
-      .left-column {
-        width: 25%;
-        padding: 10px;
-        background-color: #f7f7f7;
-      }
-      .main-content {
-        width: 75%;
-        padding: 10px;
-      }
-      p {
-        margin-bottom: 10px;
-      }
-      a {
-        color: #007bff;
-        text-decoration: none;
-      }
-      a:hover {
-        text-decoration: underline;
-      }
-    
-  </style>
-  </head>
-  <body>
-    <header>
-      <h1>mbolding...</h1>
-    </header>
-    <div class="container">
-      <div class="main-content">
-        <h2>I &#128151 sdf   </h2>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+</head>
+<body>
+<h1>mbolding</h1>
+<p class="tagline">I &#128151; SDF</p>
 
-    <p>out <a href="https://markbolding.com">markbolding.com</a>, 
-	<a href="https://mbolding.github.io">mbolding.github.io</a>,  
-	<a href="https://markbolding.blogspot.com">blogger</a>
-       	.</p>
+<div class="box">
+  <p class="title"><a href="blog/">Blog</a></p>
+  <p class="small">New posts, also as a <a href="gopher://sdf.org/1/users/mbolding/phlog/">phlog</a> in gopherspace and a <a href="gemini://sdf.org/mbolding/gemlog/">gemlog</a> in Geminispace.</p>
+</div>
 
-    <p>
-       <a href="cheatsheets">cheatsheets</a>, 
-       <a href="notes">notes</a>, 
-       <a href="toys">toys</a>,
-       <a href="calc">calc</a>
-    </p>
+<h2>Elsewhere</h2>
+<ul class="links">
+  <li><a href="https://web-clocks.mark-bolding.workers.dev">Web clocks</a> <span class="small">a gallery of odd clocks</span></li>
+  <li><a href="https://markbolding.com">markbolding.com</a></li>
+  <li><a href="https://mbolding.github.io">mbolding.github.io</a></li>
+  <li><a href="https://markbolding.blogspot.com">Blogger</a></li>
+</ul>
 
-    <p>timers: 
-       <a href="countdown.html?minutes=15">15 min,</a>	
-       <a href="countdown.html?minutes=25">25 min,</a>	
-       <a href="countdown.html?minutes=30">30 min</a>
-    </p>
-		
-    <p><a href="roll.html">Roll Dice</a></p>
-		
-    <p><a href="100doors3.html">100 doors</a></p>    
+<h2>Here</h2>
+<ul class="links">
+  <li><a href="cheatsheets/">Cheatsheets</a> <span class="small">vim, sftp, wget, pandoc</span></li>
+  <li><a href="notes/">Notes</a> <span class="small">a notepad, a mind map, Mermaid diagrams</span></li>
+  <li><a href="toys/">Toys</a> <span class="small">games, duels and Philmont</span></li>
+  <li><a href="calc/">Calc</a> <span class="small">type a sum, get the answer</span></li>
+  <li><a href="roll.html">Roll dice</a></li>
+  <li><a href="100doors3.html">100 doors</a></li>
+</ul>
 
-<hr>
+<h2>Timers</h2>
+<p><a href="countdown.html?minutes=15">15 min</a> · <a href="countdown.html?minutes=25">25 min</a> · <a href="countdown.html?minutes=30">30 min</a></p>
 
-<iframe width="625" height="387" seamless frameborder="0" scrolling="no" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vQaBdD0HEfSumZ98V8XHBuiApOT8x529qYuGNhT-tOeFXEQFsccrwushPrd6VAY__A0jngObbbvgiYA/pubchart?oid=1650724123&amp;format=interactive"></iframe>
+<h2>Theme</h2>
+<div class="themes" id="themes"></div>
 
-<p><a href="https://docs.google.com/spreadsheets/d/1L2_vDdip9GZy_NOoI80gcGald5mrOE1xhqa73B7VojY/edit?usp=sharing">log run</a></p>
+<footer>On the <a href="https://sdf.org">SDF Public Access UNIX System</a>.</footer>
 
-      </div>
-    </div>
-  </body>
+<script>
+// Each button wears its own theme (style.css's [data-theme] blocks), so it shows
+// what you'd get; Auto shows whatever the system is using now.
+const picker = document.getElementById('themes');
+for (const [name, label] of SiteTheme.themes) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.theme = name || 'auto';   // auto: light or dark as the system is
+    b.dataset.name = name;
+    b.innerHTML = '<span class="swatch"></span>';
+    b.append(label);
+    b.onclick = () => SiteTheme.set(name);
+    picker.appendChild(b);
+}
+function mark() {
+    const current = SiteTheme.get();
+    for (const b of picker.children) b.setAttribute('aria-pressed', b.dataset.name === current);
+}
+window.addEventListener('themechange', mark);
+mark();
+</script>
+</body>
 </html>
-

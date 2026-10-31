@@ -3,230 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vim Special Character Commands Cheatsheet</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        h1 {
-            color: #2c3e50;
-            text-align: center;
-            border-bottom: 3px solid #2c3e50;
-            padding-bottom: 10px;
-        }
-        .category {
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            padding: 20px;
-        }
-        h2 {
-            color: #3498db;
-            margin-top: 0;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-            font-weight: bold;
-        }
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-        .command {
-            font-family: monospace;
-            background-color: #e8e8e8;
-            padding: 2px 4px;
-            border-radius: 3px;
-        }
-        .note {
-            font-style: italic;
-            color: #666;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }
-    </style>
+    <title>Vim special characters · mbolding</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../theme.js"></script>
 </head>
 <body>
+    <header><a href="../">mbolding</a> · <a href="./">Cheatsheets</a></header>
     <h1>Vim Special Character Commands Cheatsheet</h1>
 
-    <div class="category">
+    <div>
         <h2>Search Commands</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">*</span></td>
+                <td><code>*</code></td>
                 <td>Search forward for word under cursor</td>
             </tr>
             <tr>
-                <td><span class="command">#</span></td>
+                <td><code>#</code></td>
                 <td>Search backward for word under cursor</td>
             </tr>
             <tr>
-                <td><span class="command">/pattern</span></td>
+                <td><code>/pattern</code></td>
                 <td>Search forward for pattern</td>
             </tr>
             <tr>
-                <td><span class="command">?pattern</span></td>
+                <td><code>?pattern</code></td>
                 <td>Search backward for pattern</td>
             </tr>
             <tr>
-                <td><span class="command">n</span></td>
+                <td><code>n</code></td>
                 <td>Repeat search in same direction</td>
             </tr>
             <tr>
-                <td><span class="command">N</span></td>
+                <td><code>N</code></td>
                 <td>Repeat search in opposite direction</td>
             </tr>
             <tr>
-                <td><span class="command">:%s/old/new/g</span></td>
+                <td><code>:%s/old/new/g</code></td>
                 <td>Replace all occurrences of 'old' with 'new' in file</td>
             </tr>
             <tr>
-                <td><span class="command">:%s/old/new/gc</span></td>
+                <td><code>:%s/old/new/gc</code></td>
                 <td>Replace all occurrences with confirmation</td>
             </tr>
-        </table>
-        <p class="note">Use <span class="command">\c</span> at the end of a search pattern for case-insensitive search.</p>
+        </table></div>
+        <p class="note">Use <code>\c</code> at the end of a search pattern for case-insensitive search.</p>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Text Object Selection</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">vi"</span></td>
+                <td><code>vi"</code></td>
                 <td>Select text inside double quotes</td>
             </tr>
             <tr>
-                <td><span class="command">va"</span></td>
+                <td><code>va"</code></td>
                 <td>Select text including double quotes</td>
             </tr>
             <tr>
-                <td><span class="command">vi(</span> or <span class="command">vi)</span></td>
+                <td><code>vi(</code> or <code>vi)</code></td>
                 <td>Select text inside parentheses</td>
             </tr>
             <tr>
-                <td><span class="command">va(</span> or <span class="command">va)</span></td>
+                <td><code>va(</code> or <code>va)</code></td>
                 <td>Select text including parentheses</td>
             </tr>
             <tr>
-                <td><span class="command">vi{</span> or <span class="command">vi}</span></td>
+                <td><code>vi{</code> or <code>vi}</code></td>
                 <td>Select text inside curly braces</td>
             </tr>
             <tr>
-                <td><span class="command">va{</span> or <span class="command">va}</span></td>
+                <td><code>va{</code> or <code>va}</code></td>
                 <td>Select text including curly braces</td>
             </tr>
             <tr>
-                <td><span class="command">vit</span></td>
+                <td><code>vit</code></td>
                 <td>Select text inside XML/HTML tag</td>
             </tr>
             <tr>
-                <td><span class="command">vat</span></td>
+                <td><code>vat</code></td>
                 <td>Select text including XML/HTML tag</td>
             </tr>
-        </table>
-        <p class="note">Combine these with operators like <span class="command">d</span> (delete), <span class="command">c</span> (change), or <span class="command">y</span> (yank/copy).</p>
+        </table></div>
+        <p class="note">Combine these with operators like <code>d</code> (delete), <code>c</code> (change), or <code>y</code> (yank/copy).</p>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Advanced Movement</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Command</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">f{char}</span></td>
+                <td><code>f{char}</code></td>
                 <td>Move to next occurrence of {char} on current line</td>
             </tr>
             <tr>
-                <td><span class="command">F{char}</span></td>
+                <td><code>F{char}</code></td>
                 <td>Move to previous occurrence of {char} on current line</td>
             </tr>
             <tr>
-                <td><span class="command">t{char}</span></td>
+                <td><code>t{char}</code></td>
                 <td>Move to before next occurrence of {char}</td>
             </tr>
             <tr>
-                <td><span class="command">T{char}</span></td>
+                <td><code>T{char}</code></td>
                 <td>Move to after previous occurrence of {char}</td>
             </tr>
             <tr>
-                <td><span class="command">;</span></td>
+                <td><code>;</code></td>
                 <td>Repeat last f, F, t, or T movement</td>
             </tr>
             <tr>
-                <td><span class="command">,</span></td>
+                <td><code>,</code></td>
                 <td>Repeat last f, F, t, or T movement, backwards</td>
             </tr>
             <tr>
-                <td><span class="command">%</span></td>
+                <td><code>%</code></td>
                 <td>Move to matching parenthesis, bracket, or brace</td>
             </tr>
-        </table>
+        </table></div>
     </div>
 
-    <div class="category">
+    <div>
         <h2>Special Registers</h2>
-        <table>
+        <div class="table-wrap"><table>
             <tr>
                 <th>Register</th>
                 <th>Description</th>
             </tr>
             <tr>
-                <td><span class="command">"+</span></td>
+                <td><code>"+</code></td>
                 <td>System clipboard (for copy/paste with other applications)</td>
             </tr>
             <tr>
-                <td><span class="command">"*</span></td>
+                <td><code>"*</code></td>
                 <td>System selection (Linux) or clipboard (Windows/macOS)</td>
             </tr>
             <tr>
-                <td><span class="command">"_</span></td>
+                <td><code>"_</code></td>
                 <td>Black hole register (deleting without affecting other registers)</td>
             </tr>
             <tr>
-                <td><span class="command">"0</span></td>
+                <td><code>"0</code></td>
                 <td>Yank register (last yanked text)</td>
             </tr>
             <tr>
-                <td><span class="command">":</span></td>
+                <td><code>":</code></td>
                 <td>Last executed command</td>
             </tr>
             <tr>
-                <td><span class="command">"%</span></td>
+                <td><code>"%</code></td>
                 <td>Name of the current file</td>
             </tr>
             <tr>
-                <td><span class="command">"#</span></td>
+                <td><code>"#</code></td>
                 <td>Name of the alternate file</td>
             </tr>
-        </table>
-        <p class="note">Use these registers with commands like <span class="command">y</span> (yank), <span class="command">p</span> (put/paste), or <span class="command">d</span> (delete). For example, <span class="command">"+yy</span> to copy a line to system clipboard.</p>
+        </table></div>
+        <p class="note">Use these registers with commands like <code>y</code> (yank), <code>p</code> (put/paste), or <code>d</code> (delete). For example, <code>"+yy</code> to copy a line to system clipboard.</p>
     </div>
 
 </body>
