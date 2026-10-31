@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stipple · mbolding</title>
+<link rel="stylesheet" href="../style.css">
+<script src="../theme.js"></script>
+<style>
+/* The paper is always white (or black, inverted), whatever the theme: it's the drawing. */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 15.5em; gap: 1.4em; align-items: start; }
+@media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.stage { position: relative; display: flex; align-items: center; justify-content: center; min-height: 60vh;
+  background: var(--panel); border: 1px dashed var(--rule); border-radius: var(--radius); padding: 0.8em; }
+.stage.drawn { min-height: 0; }
+.stage.over { border-color: var(--link); background: var(--surface); }
+.stage canvas { display: block; box-shadow: 0 2px 12px rgb(0 0 0 / 0.25); }
+.empty { text-align: center; font: 15px/1.5 var(--font-ui); color: var(--muted); }
+.empty p { margin: 0.4em 0 1em; }
+.status { font: 14px/1.5 var(--font-ui); color: var(--muted); margin: 0.6em 0 0; min-height: 1.5em; }
+.panel h2:first-child { margin-top: 0; }
+.slider { display: grid; grid-template-columns: 1fr auto; margin: 0.5em 0; font: 14px/1.4 var(--font-ui); }
+.slider span:last-of-type { color: var(--muted); font-variant-numeric: tabular-nums; }
+.panel input[type=range] { grid-column: 1 / -1; width: 100%; padding: 0; margin: 0.2em 0 0; border: 0; background: none; }
+.check { display: flex; gap: 0.5em; align-items: center; margin: 0.5em 0; font: 14px/1.4 var(--font-ui); }
+.panel .tabs { margin: 0.5em 0; }
+.panel .row { margin: 0.5em 0; }
+.panel .note { margin: 0.4em 0; }
+</style>
+</head>
+<body class="wide">
+<header><a href="../">mbolding</a> / <a href="./">Toys</a></header>
+<h1>Stipple</h1>
+<p class="tagline">Turn a picture into dots, or one long line, after Adrian Secord's weighted Voronoi stippling and Evil Mad Scientist's StippleGen. Your picture stays in your browser.</p>
+
+<div class="layout">
+  <div>
+    <div class="stage" id="stage">
+      <div class="empty" id="empty">
+        <p>Drop a picture here, or paste one.</p>
+        <div class="row" style="justify-content: center">
+          <button type="button" class="primary" data-choose>Choose a picture…</button>
+          <button type="button" id="sample">Try the sample</button>
+        </div>
+      </div>
+      <canvas id="view" hidden></canvas>
+    </div>
+    <p class="status" id="status"></p>
+  </div>
+
+  <aside class="panel">
+    <h2>Picture</h2>
+    <div class="row">
+      <button type="button" data-choose>Choose…</button>
+      <input type="file" id="file" accept="image/*" hidden>
+    </div>
+
+    <h2>Dots</h2>
+    <label class="slider"><span>Number</span><span id="dots-out"></span>
+      <input type="range" id="dots" min="500" max="20000" step="500"></label>
+    <label class="slider"><span>White cut-off</span><span id="cutoff-out"></span>
+      <input type="range" id="cutoff" min="0.5" max="1" step="0.01"></label>
+    <label class="check"><input type="checkbox" id="invert"> Light on black</label>
+
+    <h2>Drawing</h2>
+    <div class="tabs" id="modes">
+      <button type="button" data-mode="dots">Dots</button>
+      <button type="button" data-mode="line">Line</button>
+    </div>
+    <div id="dot-sizes">
+      <label class="slider"><span>Smallest</span><span id="smallest-out"></span>
+        <input type="range" id="smallest" min="0.5" max="20" step="0.5"></label>
+      <label class="slider"><span>Largest</span><span id="largest-out"></span>
+        <input type="range" id="largest" min="0.5" max="30" step="0.5"></label>
+    </div>
+    <div id="line-width" hidden>
+      <label class="slider"><span>Width</span><span id="width-out"></span>
+        <input type="range" id="width" min="0.25" max="8" step="0.25"></label>
+    </div>
+    <label class="check"><input type="checkbox" id="showPicture"> Show the picture underneath</label>
+
+    <h2>Settling</h2>
+    <label class="slider"><span>Steps a run</span><span id="steps-out"></span>
+      <input type="range" id="steps" min="10" max="300" step="10"></label>
+    <div class="row">
+      <button type="button" id="go" disabled>Pause</button>
+      <button type="button" id="restart" disabled>Scatter again</button>
+    </div>
+
+    <h2>Save</h2>
+    <div class="row">
+      <button type="button" id="svg" disabled>SVG</button>
+      <button type="button" id="png" disabled>PNG</button>
+    </div>
+    <p class="note">SVG on white has no background, so a pen plotter draws only the ink. PNG is 4800 pixels on its long side.</p>
+  </aside>
+</div>
+
+<footer><a href="./">More toys</a> · <a href="../">Back home</a></footer>
+
+<!-- The work, run in a worker so the page keeps drawing. Dots start scattered by the
+     picture's darkness, then each moves to the darkness-weighted centre of the pixels
+     nearest it (Lloyd's method), over and over, until they settle. "Line" joins them into
+     one route, TSP art: along a Hilbert curve first, then untangled with 2-opt moves tried
+     only against each dot's nearest neighbours. A port of the Stipple Mac app. -->
+<script type="text/plain" id="worker-source">
+'use strict';
+let W = 0, H = 0, dark = null, n = 0;
+let xs = null, ys = null, shades = null;
+let budget = 0, step = 0, moved = Infinity, settled = false, ticking = false;
+
+onmessage = (e) => {
+    const m = e.data;
+    if (m.type === 'start') {
+        W = m.width; H = m.height; dark = m.darkness; n = m.count;
+        xs = new Float32Array(n); ys = new Float32Array(n); shades = new Float32Array(n);
+        for (let i = 0; i < n; i++) {
+            const [x, y] = randomPoint();
+            xs[i] = x; ys[i] = y; shades[i] = at(x, y);
+        }
+        step = 0; moved = Infinity; settled = false;
+        postDots(m.steps > 0);
+        run(m.steps);
+    } else if (m.type === 'run') {
+        settled = false;
+        run(m.steps);
+    } else if (m.type === 'pause') {
+        budget = 0;
+    } else if (m.type === 'route') {
+        budget = 0;
+        route();
+    }
+};
+
+function run(steps) {
+    budget = steps;
+    if (!ticking && budget > 0) { ticking = true; setTimeout(tick, 0); }
+}
+
+// One step at a time, so a pause or a route can get in between.
+function tick() {
+    if (budget <= 0) { ticking = false; postDots(false); return; }
+    moved = relax();
+    step++; budget--;
+    if (moved < 0.02) { settled = true; budget = 0; }
+    postDots(budget > 0);
+    if (budget > 0) setTimeout(tick, 0); else ticking = false;
+}
+
+function postDots(running) {
+    postMessage({ type: 'dots', xs: xs.slice(), ys: ys.slice(), shades: shades.slice(), step, moved, settled, running });
+}
+
+function at(x, y) {
+    const i = Math.min(Math.max(x | 0, 0), W - 1), j = Math.min(Math.max(y | 0, 0), H - 1);
+    return dark[j * W + i];
+}
+
+// A spot picked with probability following the darkness, so the first scatter already
+// looks like the picture. An all-white picture gets dots anywhere.
+function randomPoint() {
+    for (let t = 0; t < 10000; t++) {
+        const x = Math.random() * W, y = Math.random() * H;
+        if (Math.random() < at(x, y)) return [x, y];
+    }
+    return [Math.random() * W, Math.random() * H];
+}
+
+// The dots binned into square cells about one dot apart, to find the nearest dot to a
+// spot without checking them all. Dots in cell c are members[starts[c] .. starts[c + 1]).
+function makeGrid() {
+    const cell = Math.max(1, Math.sqrt(W * H / Math.max(n, 1)));
+    const cols = Math.max(1, Math.ceil(W / cell)), rows = Math.max(1, Math.ceil(H / cell));
+    const starts = new Int32Array(cols * rows + 1), cellOf = new Int32Array(n), members = new Int32Array(n);
+    for (let i = 0; i < n; i++) {
+        const cx = Math.min(Math.max(Math.floor(xs[i] / cell), 0), cols - 1);
+        const cy = Math.min(Math.max(Math.floor(ys[i] / cell), 0), rows - 1);
+        cellOf[i] = cy * cols + cx;
+        starts[cellOf[i] + 1]++;
+    }
+    for (let c = 1; c < starts.length; c++) starts[c] += starts[c - 1];
+    const fill = starts.slice();
+    for (let i = 0; i < n; i++) members[fill[cellOf[i]]++] = i;
+    return { cell, cols, rows, starts, members };
+}
+
+// The nearest dot to (x, y), searching rings of cells outwards until no closer dot can be
+// left. `guess`, the answer for the pixel before, gives a close start.
+function nearest(g, x, y, guess) {
+    let best = guess, bestD = Infinity;
+    if (guess >= 0) { const dx = xs[guess] - x, dy = ys[guess] - y; bestD = dx * dx + dy * dy; }
+    const { cell, cols, rows, starts, members } = g;
+    const cx = Math.min(Math.max(Math.floor(x / cell), 0), cols - 1);
+    const cy = Math.min(Math.max(Math.floor(y / cell), 0), rows - 1);
+    const reach = Math.max(cols, rows);
+    for (let ring = 0; ring <= reach; ring++) {
+        // Anything in this ring or beyond is at least (ring - 1) cells away.
+        const near = (ring - 1) * cell;
+        if (ring > 0 && best >= 0 && near > 0 && near * near >= bestD) break;
+        const y0 = Math.max(cy - ring, 0), y1 = Math.min(cy + ring, rows - 1);
+        for (let gy = y0; gy <= y1; gy++) {
+            // Inside rows of the ring only have its two end cells.
+            const stride = gy === cy - ring || gy === cy + ring || ring === 0 ? 1 : 2 * ring;
+            for (let gx = cx - ring; gx <= cx + ring; gx += stride) {
+                if (gx < 0 || gx >= cols) continue;
+                const c = gy * cols + gx;
+                for (let m = starts[c], end = starts[c + 1]; m < end; m++) {
+                    const i = members[m];
+                    const dx = xs[i] - x, dy = ys[i] - y, d = dx * dx + dy * dy;
+                    if (d < bestD) { bestD = d; best = i; }
+                }
+            }
+        }
+    }
+    return best;
+}
+
+// One round of Lloyd's method. Returns how far the dots moved, on average, in pixels.
+function relax() {
+    const g = makeGrid();
+    const sx = new Float64Array(n), sy = new Float64Array(n), sw = new Float64Array(n), sa = new Float64Array(n);
+    for (let y = 0; y < H; y++) {
+        let near = -1;
+        const py = y + 0.5, row = y * W;
+        for (let x = 0; x < W; x++) {
+            const d = dark[row + x];
+            if (d <= 0) continue;
+            const px = x + 0.5;
+            near = nearest(g, px, py, near);
+            sx[near] += d * px; sy[near] += d * py; sw[near] += d; sa[near] += 1;
+        }
+    }
+    let total = 0;
+    for (let i = 0; i < n; i++) {
+        let x, y;
+        if (sw[i] > 0) {
+            x = sx[i] / sw[i]; y = sy[i] / sw[i];
+            shades[i] = sw[i] / sa[i];
+        } else {
+            // A dot stranded where there's nothing to gather goes somewhere useful.
+            [x, y] = randomPoint();
+            shades[i] = at(x, y);
+        }
+        total += Math.hypot(x - xs[i], y - ys[i]);
+        xs[i] = x; ys[i] = y;
+    }
+    return total / n;
+}
+
+// MARK: the line
+
+function route() {
+    if (n <= 3) { postPath(Int32Array.from({ length: n }, (_, i) => i), true); return; }
+    const tour = hilbertOrder();
+    postPath(tour, false);
+    untangle(tour, neighbours(8), 8);
+    postPath(opened(tour), true);
+}
+
+function postPath(path, done) {
+    let length = 0;
+    for (let i = 1; i < path.length; i++) length += Math.hypot(xs[path[i]] - xs[path[i - 1]], ys[path[i]] - ys[path[i - 1]]);
+    postMessage({ type: 'path', path: path.slice(), step, done, length });
+}
+
+// The dots in the order a Hilbert curve passes them: neighbours on the curve are neighbours
+// on the page, so it's a fair route to start from.
+function hilbertOrder() {
+    const side = 1 << 16, scale = (side - 1) / Math.max(W, H);
+    const keys = new Float64Array(n);
+    for (let i = 0; i < n; i++) keys[i] = hilbert(Math.floor(xs[i] * scale), Math.floor(ys[i] * scale), side);
+    const order = Array.from({ length: n }, (_, i) => i).sort((a, b) => keys[a] - keys[b]);
+    return Int32Array.from(order);
+}
+
+// Distance along a Hilbert curve filling a side × side square.
+function hilbert(x, y, side) {
+    x = Math.min(Math.max(x, 0), side - 1); y = Math.min(Math.max(y, 0), side - 1);
+    let d = 0;
+    for (let s = side / 2; s > 0; s = Math.floor(s / 2)) {
+        const rx = (x & s) > 0 ? 1 : 0, ry = (y & s) > 0 ? 1 : 0;
+        d += s * s * ((3 * rx) ^ ry);
+        if (ry === 0) {
+            if (rx === 1) { x = side - 1 - x; y = side - 1 - y; }
+            const t = x; x = y; y = t;
+        }
+    }
+    return d;
+}
+
+// Each dot's k nearest others, nearest first, flattened into one array.
+function neighbours(k) {
+    const g = makeGrid();
+    const out = new Int32Array(n * k);
+    const fd = new Float64Array(k), fj = new Int32Array(k);
+    for (let i = 0; i < n; i++) {
+        let count = 0;
+        const x = xs[i], y = ys[i];
+        const cx = Math.min(Math.max(Math.floor(x / g.cell), 0), g.cols - 1);
+        const cy = Math.min(Math.max(Math.floor(y / g.cell), 0), g.rows - 1);
+        for (let ring = 0; ring <= Math.max(g.cols, g.rows); ring++) {
+            const near = (ring - 1) * g.cell;
+            if (count === k && near > 0 && near * near >= fd[k - 1]) break;
+            for (let gy = Math.max(cy - ring, 0); gy <= Math.min(cy + ring, g.rows - 1); gy++) {
+                for (let gx = Math.max(cx - ring, 0); gx <= Math.min(cx + ring, g.cols - 1); gx++) {
+                    if (gy !== cy - ring && gy !== cy + ring && gx !== cx - ring && gx !== cx + ring) continue;
+                    const c = gy * g.cols + gx;
+                    for (let m = g.starts[c]; m < g.starts[c + 1]; m++) {
+                        const j = g.members[m];
+                        if (j === i) continue;
+                        const dx = xs[j] - x, dy = ys[j] - y, d = dx * dx + dy * dy;
+                        if (count < k || d < fd[count - 1]) {
+                            if (count < k) count++;
+                            let p = count - 1;
+                            while (p > 0 && fd[p - 1] > d) { fd[p] = fd[p - 1]; fj[p] = fj[p - 1]; p--; }
+                            fd[p] = d; fj[p] = j;
+                        }
+                    }
+                }
+            }
+        }
+        for (let s = 0; s < k; s++) out[i * k + s] = s < count ? fj[s] : (count ? fj[count - 1] : i);
+    }
+    return out;
+}
+
+// 2-opt on the route as a closed loop, with "don't look" bits: only dots whose edges
+// changed are looked at again, so it settles in roughly linear time.
+function untangle(tour, nb, k) {
+    const pos = new Int32Array(n);
+    for (let p = 0; p < n; p++) pos[tour[p]] = p;
+    const dist = (a, b) => Math.hypot(xs[a] - xs[b], ys[a] - ys[b]);
+    const next = (c) => tour[(pos[c] + 1) % n];
+    const prev = (c) => tour[(pos[c] + n - 1) % n];
+
+    // Reverses tour[from..to], going forwards round the loop, or the rest of the loop if
+    // that's shorter; on a loop the two are the same move.
+    function reverse(from, to) {
+        let i = from, j = to, length = (j - i + n) % n + 1;
+        if (length * 2 > n) { i = (to + 1) % n; j = (from + n - 1) % n; length = n - length; }
+        for (let s = 0; s < (length >> 1); s++) {
+            const a = tour[i], b = tour[j];
+            tour[i] = b; pos[b] = i;
+            tour[j] = a; pos[a] = j;
+            i = (i + 1) % n; j = (j + n - 1) % n;
+        }
+    }
+
+    let queue = Array.from(tour), head = 0;
+    const queued = new Uint8Array(n).fill(1);
+    const push = (c) => { if (!queued[c]) { queued[c] = 1; queue.push(c); } };
+    let lastReport = performance.now(), steps = 0;
+
+    while (head < queue.length) {
+        const a = queue[head++];
+        queued[a] = 0;
+        if (head > 65536 && head * 2 > queue.length) { queue = queue.slice(head); head = 0; }
+        if ((++steps & 255) === 0 && performance.now() - lastReport > 250) {
+            postPath(tour, false);
+            lastReport = performance.now();
+        }
+        search: for (const forward of [true, false]) {
+            const b = forward ? next(a) : prev(a);
+            const ab = dist(a, b);
+            for (let s = 0; s < k; s++) {
+                const c = nb[a * k + s];
+                const ac = dist(a, c);
+                // Neighbours come nearest first, so no later one can do better.
+                if (ac >= ab) break;
+                const d = forward ? next(c) : prev(c);
+                if (c === b || d === a) continue;
+                if (ab + dist(c, d) - ac - dist(b, d) > 1e-3) {
+                    if (forward) reverse(pos[b], pos[c]); else reverse(pos[a], pos[d]);
+                    push(a); push(b); push(c); push(d);
+                    break search;
+                }
+            }
+        }
+    }
+}
+
+// Opens the loop at its longest edge, so the drawing doesn't jump across the page.
+function opened(tour) {
+    let longest = 0, longestLength = -1;
+    for (let i = 0; i < n; i++) {
+        const a = tour[i], b = tour[(i + 1) % n];
+        const d = Math.hypot(xs[a] - xs[b], ys[a] - ys[b]);
+        if (d > longestLength) { longestLength = d; longest = i; }
+    }
+    const start = (longest + 1) % n;
+    const out = new Int32Array(n);
+    out.set(tour.subarray(start)); out.set(tour.subarray(0, start), n - start);
+    return out;
+}
+</script>
+
+<script>
+// The page: reads the picture into a grid of brightness 1200 pixels on its long side, hands
+// the darkness to the worker, and draws whatever it sends back. Changing the number of
+// dots, the cut-off or light-on-black starts again; the sizes, the mode and the picture
+// underneath only redraw.
+const SIDE = 1200;
+const $ = (id) => document.getElementById(id);
+const stage = $('stage'), view = $('view'), statusLine = $('status'), fileInput = $('file');
+
+const defaults = { dots: 4000, cutoff: 1, invert: false, mode: 'dots', smallest: 2, largest: 6, width: 1.5, showPicture: false, steps: 60 };
+const settings = { ...defaults };
+try { Object.assign(settings, JSON.parse(localStorage.getItem('stipple') || '{}')); } catch (e) {}
+function saveSettings() { try { localStorage.setItem('stipple', JSON.stringify(settings)); } catch (e) {} }
+
+// The picture and the drawing.
+let gray = null;          // { width, height, bytes }
+let picture = null;       // the picture in colour, at grid size, to show underneath
+let name = 'stipple';
+let dots = null;          // { xs, ys, shades, step, moved, settled, running }
+let path = null, pathStep = -1, pathLength = 0, routing = false;
+let worker = null;
+
+// MARK: reading a picture
+
+async function readFile(file) {
+    if (!file || !file.type.startsWith('image/')) { say('That isn’t a picture this browser can read.'); return; }
+    const url = URL.createObjectURL(file);
+    try {
+        const img = new Image();
+        img.src = url;
+        await img.decode();
+        name = file.name.replace(/\.[^.]+$/, '') || 'stipple';
+        use(img, img.naturalWidth, img.naturalHeight);
+    } catch (e) {
+        say('That picture couldn’t be read. Try a JPEG, PNG, GIF or WebP.');
+    } finally {
+        URL.revokeObjectURL(url);
+    }
+}
+
+// Flattens the picture onto white at grid size and keeps its brightness.
+function use(source, w, h) {
+    const scale = SIDE / Math.max(w, h);
+    const width = Math.max(1, Math.round(w * scale)), height = Math.max(1, Math.round(h * scale));
+    picture = document.createElement('canvas');
+    picture.width = width; picture.height = height;
+    const ctx = picture.getContext('2d', { willReadFrequently: true });
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, width, height);
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(source, 0, 0, width, height);
+    const rgba = ctx.getImageData(0, 0, width, height).data;
+    const bytes = new Uint8Array(width * height);
+    for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = Math.round(0.2126 * rgba[i * 4] + 0.7152 * rgba[i * 4 + 1] + 0.0722 * rgba[i * 4 + 2]);
+    }
+    gray = { width, height, bytes };
+    $('empty').hidden = true;
+    view.hidden = false;
+    stage.classList.add('drawn');
+    for (const id of ['go', 'restart', 'svg', 'png']) $(id).disabled = false;
+    start();
+}
+
+// A shaded ball on a soft floor, to try it on without a picture of your own.
+function sample() {
+    const c = document.createElement('canvas');
+    c.width = 1200; c.height = 900;
+    const ctx = c.getContext('2d');
+    const wall = ctx.createLinearGradient(0, 0, 0, 900);
+    wall.addColorStop(0, '#f6f6f6'); wall.addColorStop(0.62, '#d8d8d8'); wall.addColorStop(1, '#a8a8a8');
+    ctx.fillStyle = wall;
+    ctx.fillRect(0, 0, 1200, 900);
+    ctx.save();
+    ctx.filter = 'blur(28px)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.beginPath(); ctx.ellipse(660, 770, 330, 58, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    const ball = ctx.createRadialGradient(480, 300, 10, 600, 440, 330);
+    ball.addColorStop(0, '#ffffff'); ball.addColorStop(0.2, '#d6d6d6'); ball.addColorStop(0.75, '#3a3a3a'); ball.addColorStop(1, '#141414');
+    ctx.fillStyle = ball;
+    ctx.beginPath(); ctx.arc(600, 440, 320, 0, Math.PI * 2); ctx.fill();
+    name = 'sphere';
+    use(c, 1200, 900);
+}
+
+// MARK: the worker
+
+const workerURL = URL.createObjectURL(new Blob([$('worker-source').textContent], { type: 'text/javascript' }));
+
+// Starts again from a fresh scatter, in a fresh worker, so nothing old can arrive late.
+function start() {
+    if (!gray) return;
+    if (worker) worker.terminate();
+    const w = new Worker(workerURL);
+    worker = w;
+    w.onmessage = (e) => { if (w === worker) heard(e.data); };
+    dots = null; path = null; pathStep = -1; routing = false;
+    const darkness = new Float32Array(gray.bytes.length);
+    const limit = settings.cutoff;
+    for (let i = 0; i < darkness.length; i++) {
+        const b = gray.bytes[i] / 255, tone = settings.invert ? 1 - b : b;
+        darkness[i] = limit < 1 && tone >= limit ? 0 : 1 - tone;
+    }
+    w.postMessage({ type: 'start', width: gray.width, height: gray.height, darkness, count: settings.dots, steps: settings.steps }, [darkness.buffer]);
+}
+
+function heard(m) {
+    if (m.type === 'dots') {
+        dots = m;
+        if (m.step !== pathStep) path = null;
+        if (!m.running && settings.mode === 'line' && !path && !routing) joinDots();
+    } else if (m.type === 'path') {
+        path = m.path; pathStep = m.step; pathLength = m.length; routing = !m.done;
+    }
+    $('go').textContent = dots && dots.running ? 'Pause' : 'Keep settling';
+    $('go').disabled = routing;
+    redraw();
+}
+
+function joinDots() {
+    if (!worker || !dots) return;
+    routing = true;
+    worker.postMessage({ type: 'route' });
+}
+
+// MARK: drawing
+
+function diameter(shade) {
+    return settings.smallest + (settings.largest - settings.smallest) * Math.min(Math.max(shade, 0), 1);
+}
+
+// Draws the paper, the picture if asked, and the ink, at `scale` pixels per grid unit.
+function paint(ctx, scale, underneath) {
+    const w = gray.width * scale, h = gray.height * scale;
+    ctx.fillStyle = settings.invert ? '#000' : '#fff';
+    ctx.fillRect(0, 0, w, h);
+    if (underneath && picture) {
+        ctx.globalAlpha = 0.3;
+        ctx.drawImage(picture, 0, 0, w, h);
+        ctx.globalAlpha = 1;
+    }
+    if (!dots) return;
+    const { xs, ys, shades } = dots;
+    ctx.fillStyle = ctx.strokeStyle = settings.invert ? '#fff' : '#000';
+    ctx.beginPath();
+    if (settings.mode === 'line' && path && path.length > 1) {
+        ctx.lineWidth = settings.width * scale;
+        ctx.lineCap = ctx.lineJoin = 'round';
+        ctx.moveTo(xs[path[0]] * scale, ys[path[0]] * scale);
+        for (let i = 1; i < path.length; i++) ctx.lineTo(xs[path[i]] * scale, ys[path[i]] * scale);
+        ctx.stroke();
+    } else {
+        for (let i = 0; i < xs.length; i++) {
+            const r = diameter(shades[i]) * scale / 2, x = xs[i] * scale, y = ys[i] * scale;
+            ctx.moveTo(x + r, y);
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+        }
+        ctx.fill();
+    }
+}
+
+let drawQueued = false;
+function redraw() {
+    if (drawQueued) return;
+    drawQueued = true;
+    requestAnimationFrame(() => { drawQueued = false; paintView(); describe(); });
+}
+
+function paintView() {
+    if (!gray) return;
+    const pad = 26;
+    const room = Math.max(100, stage.clientWidth - pad), tall = Math.max(200, window.innerHeight * 0.75);
+    const scale = Math.min(room / gray.width, tall / gray.height);
+    const w = gray.width * scale, h = gray.height * scale, dpr = window.devicePixelRatio || 1;
+    view.style.width = w + 'px';
+    view.style.height = h + 'px';
+    view.width = Math.round(w * dpr);
+    view.height = Math.round(h * dpr);
+    const ctx = view.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    paint(ctx, scale, settings.showPicture);
+}
+
+function describe() {
+    if (!dots) { say('Scattering…'); return; }
+    const count = dots.xs.length.toLocaleString();
+    let text;
+    if (dots.running) text = `${count} dots · step ${dots.step} · moving ${dots.moved.toFixed(2)} px`;
+    else if (dots.settled) text = `${count} dots · settled after ${dots.step} steps`;
+    else text = `${count} dots · stopped after ${dots.step} steps`;
+    if (settings.mode === 'line') {
+        if (routing) text += ` · joining the dots… ${Math.round(pathLength).toLocaleString()} px of line`;
+        else if (path) text += ` · one line ${Math.round(pathLength).toLocaleString()} px long`;
+    }
+    say(text);
+}
+
+function say(text) { statusLine.textContent = text; }
+
+// MARK: saving
+
+function stamp() { return name + (settings.mode === 'line' && path ? '-line' : '-dots'); }
+
+function download(blob, filename) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+function svg() {
+    const w = gray.width, h = gray.height, ink = settings.invert ? '#fff' : '#000';
+    const f = (v) => v.toFixed(2);
+    const out = [`<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">\n`];
+    if (settings.invert) out.push(`<rect width="${w}" height="${h}" fill="#000"/>\n`);
+    const { xs, ys, shades } = dots;
+    if (settings.mode === 'line' && path && path.length > 1) {
+        out.push(`<polyline fill="none" stroke="${ink}" stroke-width="${f(settings.width)}" stroke-linecap="round" stroke-linejoin="round" points="`);
+        const pts = [];
+        for (let k = 0; k < path.length; k++) pts.push((k && k % 8 === 0 ? '\n' : '') + f(xs[path[k]]) + ',' + f(ys[path[k]]));
+        out.push(pts.join(' ') + '"/>\n');
+    } else {
+        out.push(`<g fill="${ink}">\n`);
+        for (let i = 0; i < xs.length; i++) out.push(`<circle cx="${f(xs[i])}" cy="${f(ys[i])}" r="${f(diameter(shades[i]) / 2)}"/>\n`);
+        out.push('</g>\n');
+    }
+    out.push('</svg>\n');
+    download(new Blob(out, { type: 'image/svg+xml' }), stamp() + '.svg');
+}
+
+function png() {
+    const scale = 4800 / Math.max(gray.width, gray.height);
+    const c = document.createElement('canvas');
+    c.width = Math.round(gray.width * scale);
+    c.height = Math.round(gray.height * scale);
+    paint(c.getContext('2d'), scale, false);
+    c.toBlob((blob) => blob ? download(blob, stamp() + '.png') : say('The PNG couldn’t be made.'), 'image/png');
+}
+
+// MARK: controls
+
+const formats = {
+    dots: (v) => Number(v).toLocaleString(),
+    cutoff: (v) => v >= 1 ? 'off' : Math.round(v * 100) + '%',
+    smallest: (v) => v + ' px', largest: (v) => v + ' px', width: (v) => v + ' px',
+    steps: (v) => v,
+};
+const restarts = new Set(['dots', 'cutoff']);
+let restartTimer = 0;
+
+for (const key of Object.keys(formats)) {
+    const input = $(key), out = $(key + '-out');
+    input.value = settings[key];
+    out.textContent = formats[key](settings[key]);
+    input.addEventListener('input', () => {
+        settings[key] = Number(input.value);
+        // Keep the smallest dot no bigger than the largest.
+        if (key === 'smallest' && settings.smallest > settings.largest) { settings.largest = settings.smallest; $('largest').value = settings.largest; $('largest-out').textContent = formats.largest(settings.largest); }
+        if (key === 'largest' && settings.largest < settings.smallest) { settings.smallest = settings.largest; $('smallest').value = settings.smallest; $('smallest-out').textContent = formats.smallest(settings.smallest); }
+        out.textContent = formats[key](settings[key]);
+        saveSettings();
+        if (restarts.has(key)) { clearTimeout(restartTimer); restartTimer = setTimeout(start, 300); }
+        else redraw();
+    });
+}
+
+for (const key of ['invert', 'showPicture']) {
+    $(key).checked = settings[key];
+    $(key).addEventListener('change', () => {
+        settings[key] = $(key).checked;
+        saveSettings();
+        if (key === 'invert') start(); else redraw();
+    });
+}
+
+function showMode() {
+    for (const b of $('modes').children) b.classList.toggle('active', b.dataset.mode === settings.mode);
+    $('dot-sizes').hidden = settings.mode !== 'dots';
+    $('line-width').hidden = settings.mode !== 'line';
+}
+$('modes').addEventListener('click', (e) => {
+    const mode = e.target.dataset && e.target.dataset.mode;
+    if (!mode || mode === settings.mode) return;
+    settings.mode = mode;
+    saveSettings();
+    showMode();
+    if (mode === 'line' && dots && !path && !routing) joinDots();
+    redraw();
+});
+showMode();
+
+$('go').addEventListener('click', () => {
+    if (!worker || !dots) return;
+    worker.postMessage(dots.running ? { type: 'pause' } : { type: 'run', steps: settings.steps });
+});
+$('restart').addEventListener('click', start);
+$('svg').addEventListener('click', () => dots && svg());
+$('png').addEventListener('click', () => dots && png());
+$('sample').addEventListener('click', sample);
+
+for (const b of document.querySelectorAll('[data-choose]')) b.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => { readFile(fileInput.files[0]); fileInput.value = ''; });
+
+// Drop a picture anywhere on the stage, or paste one.
+stage.addEventListener('dragover', (e) => { e.preventDefault(); stage.classList.add('over'); });
+stage.addEventListener('dragleave', () => stage.classList.remove('over'));
+stage.addEventListener('drop', (e) => {
+    e.preventDefault();
+    stage.classList.remove('over');
+    readFile(e.dataTransfer.files[0]);
+});
+document.addEventListener('paste', (e) => {
+    const item = [...e.clipboardData.items].find((i) => i.type.startsWith('image/'));
+    if (item) readFile(item.getAsFile());
+});
+
+new ResizeObserver(redraw).observe(stage);
+</script>
+</body>
+</html>
