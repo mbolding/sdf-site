@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tea guide · mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<style>
+/* The cups are drawn in the theme's text colour; the tea in them keeps its own colour. */
+.basics ul { margin: 0.3em 0 0; padding-left: 1.2em; font: 15px/1.6 var(--font-ui); }
+.settings, .filters { display: flex; flex-wrap: wrap; gap: 0.6em 1.2em; align-items: center; margin: 1.2em 0 0.6em; }
+.settings .tabs, .filters .tabs { margin: 0; }
+.settings label { font: 14px var(--font-ui); display: flex; gap: 0.5em; align-items: center; }
+.settings input { width: 5em; }
+.filters input { flex: 1 1 12em; max-width: 20em; }
+.style-note { margin: 0 0 1em; }
+.teas { display: grid; grid-template-columns: repeat(auto-fill, minmax(16em, 1fr)); gap: 1em; }
+.tea { margin: 0; display: flex; flex-direction: column; }
+.tea[hidden] { display: none; }
+.tea .art { color: var(--text); text-align: center; }
+.tea svg { width: 100%; max-width: 10em; height: auto; display: inline-block; }
+.tea h3 { margin: 0.2em 0 0; text-align: center; }
+.tea .alt { text-align: center; margin: 0.1em 0 0.6em; min-height: 1.5em; }
+.facts { display: grid; grid-template-columns: repeat(3, auto); justify-content: space-between; gap: 0.2em 0.8em; margin: 0 0 0.3em; }
+.facts b { display: block; font: 600 17px/1.3 var(--font-ui); }
+.facts span { font: 12px/1.3 var(--font-ui); color: var(--muted); }
+.therm { position: relative; height: 6px; border-radius: 3px; margin: 0.4em 0 0.8em;
+  background: linear-gradient(90deg, #7fb8c9, #9cc58a 40%, #e9c45a 70%, #d9502a); }
+.therm i { position: absolute; top: -3px; bottom: -3px; border: 2px solid var(--text); border-radius: 5px; min-width: 6px; box-sizing: border-box; }
+.tea .desc { font: 14px/1.5 var(--font-ui); margin: 0 0 0.6em; flex: 1; }
+.tea .meta:empty { visibility: hidden; }
+.tea .meta { margin: 0 0 0.6em; padding-top: 0.5em; border-top: 1px solid var(--rule); }
+.tea .steep { align-self: flex-start; }
+.none { font: 15px var(--font-ui); color: var(--muted); }
+body.timing { padding-bottom: 12em; }
+
+.timer { position: fixed; left: 50%; bottom: 0.8em; transform: translateX(-50%); width: min(34em, calc(100% - 1.6em)); box-sizing: border-box;
+  margin: 0; background: var(--panel); box-shadow: 0 6px 24px rgb(0 0 0 / 0.25); z-index: 10; }
+.timer[hidden] { display: none; }
+.timer .what { margin: 0; font: 600 15px var(--font-ui); }
+.timer .step { margin: 0; }
+.timer .clock { font: 600 clamp(36px, 10vw, 52px)/1.1 var(--font-mono); margin: 0.1em 0; font-variant-numeric: tabular-nums; }
+.timer.done .clock { color: var(--good); }
+.timer .bar { height: 5px; border-radius: 3px; background: var(--rule); overflow: hidden; margin: 0 0 0.7em; }
+.timer .bar i { display: block; height: 100%; width: 0; background: var(--link); }
+.timer .row { display: flex; flex-wrap: wrap; gap: 0.4em; }
+.timer .close { position: absolute; top: 0.5em; right: 0.6em; padding: 0.1em 0.55em; }
+</style>
+</head>
+<body class="wide">
+<header><a href="./">mbolding</a> · <a href="coffee.html">Coffee guide</a></header>
+<h1>Tea guide</h1>
+<p class="tagline">How hot, how long and how much leaf for each kind of tea, with a timer that counts you through every infusion. These are starting points; taste, then adjust.</p>
+
+<div class="box basics">
+  <p class="title">The basics</p>
+  <ul>
+    <li>Hotter water and longer steeps make tea stronger and more bitter. If it’s bitter, go cooler or shorter; if it’s thin, add more leaf rather than more time.</li>
+    <li>No thermometer? Just off the boil is about <span data-c="95"></span>. Three parts boiling water to one part cold makes about <span data-c="80"></span>; two parts to one makes about <span data-c="75"></span>.</li>
+    <li>Warm the pot or cup with hot water first, so the tea doesn’t cool as it steeps.</li>
+    <li>Up a mountain water boils cooler, about <span data-c="95"></span> at 1,500 m, so black tea and pu-erh need a little longer.</li>
+    <li>For cold brew, put half as much leaf again in cold water and leave it in the fridge: 6–8 hours for green and white tea, 8–12 for black and oolong. It comes out smooth and never bitter.</li>
+  </ul>
+</div>
+
+<div class="settings">
+  <nav class="tabs" id="styles" aria-label="Brewing style"></nav>
+  <label>Water <input type="number" id="ml" min="30" max="2000" step="10" inputmode="numeric"> ml</label>
+  <nav class="tabs" id="units" aria-label="Temperature units"></nav>
+</div>
+<p class="small style-note" id="style-note"></p>
+
+<div class="filters">
+  <nav class="tabs" id="kinds" aria-label="Kinds of tea"></nav>
+  <input type="search" id="search" placeholder="Find a tea" aria-label="Find a tea">
+</div>
+
+<div class="teas" id="teas"></div>
+<p class="none" id="none" hidden>No tea matches that.</p>
+
+<div class="box timer" id="timer" role="region" aria-label="Steeping timer" hidden>
+  <button type="button" class="close" id="t-close" aria-label="Close the timer">×</button>
+  <p class="what" id="t-what"></p>
+  <p class="small step" id="t-step"></p>
+  <p class="clock" id="t-clock" aria-live="off">0:00</p>
+  <div class="bar"><i id="t-bar"></i></div>
+  <div class="row">
+    <button type="button" class="primary" id="t-go">Start</button>
+    <button type="button" id="t-less" aria-label="15 seconds less">−15 s</button>
+    <button type="button" id="t-more" aria-label="15 seconds more">+15 s</button>
+    <button type="button" id="t-next">Next infusion</button>
+  </div>
+  <p class="small" id="t-said" aria-live="polite" style="margin: 0.5em 0 0"></p>
+</div>
+
+<footer><a href="coffee.html">Coffee guide</a> · <a href="./">Back home</a></footer>
+
+<script>
+'use strict';
+// Each tea: temp in °C as [low, high]; west is a mug or teapot, as {t: first steep [low, high]
+// in seconds, g: grams per 100 ml, re: the steeps after it}; pot is the small-pot (gongfu)
+// way, as {g, times, rinse}, or missing for teas not made that way. cup is the liquor colour.
+const TEAS = [
+    { name: 'Sencha', kind: 'green', temp: [70, 80], cup: '#c9d36a', alt: 'Japan’s everyday green tea',
+      west: { t: [60, 120], g: 1.2, re: [30, 90] }, pot: { g: 4, times: [60, 15, 45, 90] },
+      desc: 'Steamed and rolled into fine needles. Grassy, brisk and a little sweet; too hot and it turns bitter.' },
+    { name: 'Gyokuro', kind: 'green', temp: [50, 60], cup: '#d4dc8a', alt: 'Shade-grown, from Japan',
+      west: { t: [90, 150], g: 2, re: [30, 90] }, pot: { g: 6, times: [120, 20, 60, 120] },
+      desc: 'Shaded for weeks before picking, which makes it sweet and brothy with lots of umami. Cool water and small cups.' },
+    { name: 'Genmaicha', kind: 'green', temp: [80, 85], cup: '#d8c77c', alt: 'Green tea with toasted rice',
+      west: { t: [120, 180], g: 1.2, re: [60] }, pot: { g: 4, times: [45, 20, 60] },
+      desc: 'Sencha or bancha mixed with toasted rice, some of it popped. Nutty, mellow and forgiving.' },
+    { name: 'Hojicha', kind: 'green', temp: [90, 95], cup: '#a65c2e', alt: 'Roasted green tea',
+      west: { t: [60, 120], g: 1.5, re: [60] }, pot: { g: 4, times: [30, 15, 40, 60] },
+      desc: 'Green tea roasted until it’s brown. Toasty, low in caffeine, and good after dinner or as a latte.' },
+    { name: 'Dragon Well', kind: 'green', temp: [75, 80], cup: '#e0dc8f', alt: 'Lóngjǐng, from Hangzhou', vessel: 'glass', leaf: '#8aa64a',
+      west: { t: [120, 180], g: 1, re: [180, 240] }, pot: { g: 4, times: [45, 30, 45, 60, 90] },
+      desc: 'Flat, pan-fired leaves with a toasty, chestnut sweetness. Lovely in a tall glass, where you can watch the leaves sink.' },
+    { name: 'Jasmine pearls', kind: 'green', temp: [75, 85], cup: '#ece7a6', alt: 'Mòlì lóngzhū',
+      west: { t: [120, 180], g: 1.2, re: [180, 240] }, pot: { g: 5, times: [30, 20, 30, 45, 60] },
+      desc: 'Green tea rolled into pearls and laid with fresh jasmine flowers overnight until it takes their scent. The pearls unfurl as they steep.' },
+    { name: 'Matcha', kind: 'green', temp: [70, 80], cup: '#8fb03e', froth: '#b9cf6c', vessel: 'bowl', verb: 'Whisk', ml: 70, alt: 'Powdered green tea',
+      west: { t: [15, 30], g: 3 },
+      desc: 'Whisked, not steeped. Sift the powder into a bowl, add the water, and whisk in quick zigzags until it froths. Drink it all, leaf and everything.' },
+
+    { name: 'Silver Needle', kind: 'white', temp: [75, 85], cup: '#f0e5b2', alt: 'Bái háo yín zhēn',
+      west: { t: [240, 300], g: 1.5, re: [300, 420] }, pot: { g: 5, times: [45, 30, 45, 60, 90, 120] },
+      desc: 'Only the downy buds. Delicate and honeyed, and it wants longer than you’d think.' },
+    { name: 'White Peony', kind: 'white', temp: [80, 90], cup: '#e6cc80', alt: 'Bái mǔdān',
+      west: { t: [180, 300], g: 1.5, re: [300] }, pot: { g: 5, times: [30, 20, 30, 45, 60, 90] },
+      desc: 'Buds with their first two leaves. Fuller than silver needle: hay, melon and flowers. Aged white tea likes hotter water.' },
+    { name: 'Yellow tea', kind: 'white', temp: [75, 80], cup: '#ead377', alt: 'Huáng chá, such as Huoshan Huangya',
+      west: { t: [120, 180], g: 1.2, re: [180] }, pot: { g: 4, times: [40, 25, 40, 60] },
+      desc: 'Made like green tea, then wrapped while warm so it slowly yellows. Smoother and sweeter, with none of the grassy bite. Rare outside China.' },
+
+    { name: 'Tieguanyin', kind: 'oolong', temp: [90, 95], cup: '#e0d07c', alt: 'And other light, rolled oolongs',
+      west: { t: [180, 300], g: 1.2, re: [240, 300] }, pot: { g: 6, rinse: true, times: [30, 20, 25, 30, 40, 50, 60, 90] },
+      desc: 'Lightly oxidised and rolled into tight balls. Floral and creamy, and the leaves keep opening over many infusions.' },
+    { name: 'High mountain oolong', kind: 'oolong', temp: [90, 95], cup: '#d9d482', alt: 'Gāoshān, from Taiwan',
+      west: { t: [180, 300], g: 1.2, re: [240, 300] }, pot: { g: 6, rinse: true, times: [45, 30, 35, 45, 60, 75, 90] },
+      desc: 'Grown above 1,000 m, where cool mists slow the leaves. Buttery and fresh, with a lingering sweetness.' },
+    { name: 'Oriental Beauty', kind: 'oolong', temp: [85, 90], cup: '#d08a3a', alt: 'Dōngfāng měirén',
+      west: { t: [180, 240], g: 1.2, re: [240] }, pot: { g: 5, times: [30, 20, 30, 45, 60, 90] },
+      desc: 'Heavily oxidised Taiwanese oolong from leaves nibbled by leafhoppers, which makes them sweet. Honey, peach and muscatel. Not too hot.' },
+    { name: 'Da Hong Pao', kind: 'oolong', temp: [95, 100], cup: '#b5602a', alt: 'Big Red Robe, a Wuyi rock tea',
+      west: { t: [180, 240], g: 1.2, re: [240, 300] }, pot: { g: 6, rinse: true, times: [15, 10, 15, 20, 30, 40, 60, 90] },
+      desc: 'Long, twisted, well-roasted leaves from the Wuyi cliffs. Mineral, toasty and a little fruity. Use boiling water.' },
+
+    { name: 'English breakfast', kind: 'black', temp: [95, 100], cup: '#7a3417', alt: 'Assam, Ceylon and Kenyan blends', vessel: 'mug', milk: true,
+      west: { t: [180, 300], g: 1 },
+      desc: 'Strong, malty and brisk, made to stand up to milk and sugar. Squeezing the bag makes it stronger, and more bitter.' },
+    { name: 'Earl Grey', kind: 'black', temp: [95, 100], cup: '#8a3f1c', alt: 'Black tea with bergamot', milk: true,
+      west: { t: [180, 240], g: 1 },
+      desc: 'Scented with oil from the bergamot orange. Bright and citrusy; a slice of lemon or a splash of milk both suit it.' },
+    { name: 'Darjeeling, first flush', kind: 'black', temp: [85, 90], cup: '#d4a046', alt: 'Spring-picked, from the Himalayas',
+      west: { t: [150, 180], g: 1, re: [180] }, pot: { g: 4, times: [30, 20, 30, 45, 60] },
+      desc: 'So lightly oxidised it’s nearly an oolong: light, floral and grapey. Slightly cooler water than other black teas, and no milk.' },
+    { name: 'Yunnan black', kind: 'black', temp: [90, 95], cup: '#9b4a1e', alt: 'Diān hóng', milk: true,
+      west: { t: [180, 240], g: 1, re: [240] }, pot: { g: 5, times: [15, 10, 15, 20, 30, 45, 60] },
+      desc: 'Golden-tipped leaves, malty and peppery with hints of cocoa and sweet potato. Rarely bitter, with or without milk.' },
+    { name: 'Lapsang souchong', kind: 'black', temp: [95, 100], cup: '#7d3a1a', alt: 'Zhèngshān xiǎozhǒng', milk: true,
+      west: { t: [180, 240], g: 1, re: [240] }, pot: { g: 5, times: [15, 15, 20, 30, 45] },
+      desc: 'Dried over pine fires, so it smells like a campfire. Strong enough for milk, and good with cheese or smoked fish.' },
+    { name: 'Masala chai', kind: 'black', temp: [100, 100], cup: '#b8814e', alt: 'Spiced milk tea', vessel: 'mug', verb: 'Simmer', milk: true,
+      west: { t: [300, 600], g: 1.5 },
+      desc: 'Simmer ginger, cardamom, cinnamon, clove and pepper in water, add strong black tea, then milk, then sugar; bring it back up and strain.' },
+
+    { name: 'Ripe pu-erh', kind: 'dark', temp: [95, 100], cup: '#4a1d0e', alt: 'Shú pǔ’ěr',
+      west: { t: [180, 300], g: 1, re: [300, 420] }, pot: { g: 6, rinse: true, times: [10, 10, 15, 20, 25, 30, 40, 60, 90, 120] },
+      desc: 'Fermented in damp heaps, then pressed into cakes. Earthy, smooth and as dark as coffee. Rinse it once or twice before the first cup.' },
+    { name: 'Raw pu-erh', kind: 'dark', temp: [90, 95], cup: '#d1a03a', alt: 'Shēng pǔ’ěr',
+      west: { t: [120, 180], g: 1, re: [180, 240] }, pot: { g: 6, rinse: true, times: [10, 10, 15, 20, 25, 30, 40, 60, 90] },
+      desc: 'Pressed into cakes and left to age on its own. Young ones are bright and bitter; old ones darker, mellower and fruity. Keep infusions short.' },
+
+    { name: 'Rooibos', kind: 'herbal', temp: [100, 100], cup: '#b4421e', alt: 'Red bush, from South Africa', milk: true,
+      west: { t: [300, 420], g: 1.2 },
+      desc: 'Not tea at all, so there’s no caffeine. Sweet and woody, it hardly turns bitter however long you leave it, and takes milk well.' },
+    { name: 'Peppermint', kind: 'herbal', temp: [95, 100], cup: '#c9b45e', alt: 'Mint tea',
+      west: { t: [300, 420], g: 0.8 },
+      desc: 'Cover the cup while it steeps, so the oils stay in the tea and not in the air. Fresh mint works too: a good handful.' },
+    { name: 'Chamomile', kind: 'herbal', temp: [95, 100], cup: '#e8d575', alt: 'Dried flower heads',
+      west: { t: [300, 420], g: 1 },
+      desc: 'Apple and honey, and calming at bedtime. Loose flowers taste much better than the dust in most bags.' },
+    { name: 'Hibiscus', kind: 'herbal', temp: [95, 100], cup: '#b0213a', alt: 'Agua de jamaica, karkadé',
+      west: { t: [300, 600], g: 1 },
+      desc: 'Tart and cranberry-red. Sweeten it to taste; it’s just as good poured over ice.' },
+    { name: 'Yerba mate', kind: 'herbal', temp: [70, 80], cup: '#a6a24c', alt: 'From South America', vessel: 'gourd',
+      west: { t: [180, 300], g: 1.5 },
+      desc: 'Holly leaves with about as much caffeine as coffee. Traditionally sipped through a metal straw from a gourd, topped up again and again with hot, never boiling, water.' },
+];
+
+const KINDS = [['all', 'All'], ['green', 'Green'], ['white', 'White and yellow'], ['oolong', 'Oolong'], ['black', 'Black'], ['dark', 'Pu-erh'], ['herbal', 'Herbal']];
+const STYLES = [['west', 'Mug or teapot'], ['pot', 'Small pot (gongfu)']];
+const STYLE_NOTES = {
+    west: 'About a gram of leaf per 100 ml, a few minutes, and one or two more infusions from the same leaf.',
+    pot: 'Lots of leaf in a 100–150 ml gaiwan, kyusu or small teapot, poured off after seconds rather than minutes, many times over. Teas not made this way show their mug times.',
+};
+
+// Cups: the inside as a path (the tea is clipped to it), the rim's height and the lowest
+// point inside, and lines for handles, saucers and straws.
+const VESSELS = {
+    cup: { inside: 'M24 44 L96 44 C96 74 84 90 60 90 C36 90 24 74 24 44 Z', top: 44, bottom: 90,
+        extras: ['M95 52 C111 50 111 76 89 74', 'M12 97 Q60 103 108 97'] },
+    mug: { inside: 'M32 34 L84 34 L84 90 Q84 96 78 96 L38 96 Q32 96 32 90 Z', top: 34, bottom: 96,
+        extras: ['M84 46 C103 46 103 80 84 80'] },
+    glass: { inside: 'M38 14 L82 14 L78 96 Q77.6 100 73 100 L47 100 Q42.4 100 42 96 Z', top: 14, bottom: 100, glass: true },
+    bowl: { inside: 'M18 46 L102 46 C100 78 86 92 60 92 C34 92 20 78 18 46 Z', top: 46, bottom: 92,
+        extras: ['M44 92 L46 99 L74 99 L76 92'] },
+    gourd: { inside: 'M42 40 L78 40 C94 54 94 96 60 98 C26 96 26 54 42 40 Z', top: 40, bottom: 98,
+        extras: ['M66 50 L82 8', 'M78 9 L86 7'] },
+};
+
+// ---------------------------------------------------------------------------------------
+
+let settings = { style: 'west', units: 'c', ml: { west: 250, pot: 100 } };
+try { Object.assign(settings, JSON.parse(localStorage.getItem('tea')) || {}); } catch (e) {}
+const keep = () => { try { localStorage.setItem('tea', JSON.stringify(settings)); } catch (e) {} };
+
+const $ = (id) => document.getElementById(id);
+const deg = (c) => settings.units === 'f' ? Math.round(c * 9 / 5 + 32) : c;
+const unit = () => settings.units === 'f' ? '°F' : '°C';
+const temps = ([a, b]) => (a === b ? deg(a) : `${deg(a)}–${deg(b)}`) + ' ' + unit();
+
+// 90 → 1½, 75 → 1¼; anything else as minutes and seconds.
+function minutes(s) {
+    const whole = Math.floor(s / 60), part = { 0: '', 15: '¼', 30: '½', 45: '¾' }[s % 60];
+    return part === undefined ? null : (whole || '') + part;
+}
+function time(s) {
+    if (s < 60) return `${s} s`;
+    const m = minutes(s);
+    return m ? `${m} min` : `${Math.floor(s / 60)} min ${s % 60} s`;
+}
+function times([a, b]) {
+    if (a === b) return time(a);
+    if (a >= 60 && minutes(a) && minutes(b)) return `${minutes(a)}–${minutes(b)} min`;
+    if (b < 60) return `${a}–${b} s`;
+    return `${time(a)} – ${time(b)}`;
+}
+const clock = (s) => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`;
+const grams = (g, ml) => {
+    const x = Math.max(0.5, Math.round(g * ml / 100 * 2) / 2);
+    return `${String(x).replace('.5', '½')} g`;
+};
+
+// The way a tea is made in the chosen style, as steps for the timer: [label, seconds].
+function method(tea) {
+    const style = settings.style === 'pot' && tea.pot ? 'pot' : 'west';
+    const ml = tea.ml || settings.ml[style];
+    if (style === 'pot') {
+        const steps = tea.pot.times.map((t, i) => [`Infusion ${i + 1}`, t]);
+        if (tea.pot.rinse) steps.unshift(['Rinse: pour off at once', 5]);
+        return { style, ml, g: tea.pot.g, first: [tea.pot.times[0], tea.pot.times[0]], steps };
+    }
+    const [a, b] = tea.west.t;
+    const mid = Math.round((a + b) / 2 / 15) * 15 || Math.round((a + b) / 2);
+    const steps = [[tea.verb ? tea.verb : 'Infusion 1', mid], ...(tea.west.re || []).map((t, i) => [`Infusion ${i + 2}`, t])];
+    return { style, ml, g: tea.west.g, first: tea.west.t, steps };
+}
+
+function drawing(tea, n) {
+    const V = VESSELS[tea.vessel || 'cup'], id = `clip${n}`;
+    const surface = V.top + (V.bottom - V.top) * 0.12;
+    let inside = `<rect x="0" y="${surface}" width="120" height="${V.bottom - surface + 1}" fill="${tea.cup}"/>`;
+    if (tea.froth) inside += `<rect x="0" y="${surface}" width="120" height="6" fill="${tea.froth}"/>`;
+    if (tea.leaf) {
+        for (const [x, y, r] of [[52, 92, -30], [66, 94, 25], [58, 70, 70], [50, 48, -60], [68, 34, 40]]) {
+            inside += `<ellipse cx="${x}" cy="${y}" rx="7" ry="2.6" transform="rotate(${r} ${x} ${y})" fill="${tea.leaf}"/>`;
+        }
+    }
+    const steam = tea.vessel === 'glass' ? '' : [44, 60, 76].map((x, i) => {
+        const y = V.top - 6 - (i % 2) * 3;
+        return `<path d="M${x} ${y} c-5 -5 5 -9 0 -14 c-5 -5 5 -9 0 -14"/>`;
+    }).join('');
+    const extras = (V.extras || []).map((d) => `<path d="${d}"/>`).join('');
+    return `<svg viewBox="0 0 120 104" role="img" aria-label="${tea.name}">
+        <defs><clipPath id="${id}"><path d="${V.inside}"/></clipPath></defs>
+        ${V.glass ? `<path d="${V.inside}" fill="currentColor" fill-opacity="0.05"/>` : ''}
+        <g clip-path="url(#${id})">${inside}</g>
+        <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.3">${steam}</g>
+        <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"${V.glass ? ' stroke-opacity="0.6"' : ''}>
+            <path d="${V.inside}"/>${extras}
+        </g>
+    </svg>`;
+}
+
+function el(tag, className, text) {
+    const e = document.createElement(tag);
+    if (className) e.className = className;
+    if (text !== undefined) e.textContent = text;
+    return e;
+}
+
+function fact(big, small) {
+    const d = el('div');
+    d.append(el('b', '', big), el('span', '', small));
+    return d;
+}
+
+// The temperature as a mark on a 50–100 °C scale.
+function therm(tea) {
+    const bar = el('div', 'therm');
+    bar.title = temps(tea.temp);
+    const mark = el('i');
+    const at = (c) => (c - 50) / 50 * 100;
+    mark.style.left = `calc(${at(tea.temp[0])}% - 3px)`;
+    mark.style.width = `calc(${at(tea.temp[1]) - at(tea.temp[0])}% + 6px)`;
+    bar.appendChild(mark);
+    return bar;
+}
+
+function afterwards(tea, m) {
+    const parts = [];
+    if (m.style === 'pot') {
+        const t = tea.pot.times;
+        parts.push(`${t.length} infusions: ${t.map(time).join(', ')}`);
+        if (tea.pot.rinse) parts.unshift('Rinse first');
+    } else if (tea.west.re && tea.west.re.length) {
+        parts.push(`Then ${tea.west.re.length === 1 ? 'once more' : `${tea.west.re.length} more`}: ${tea.west.re.map(time).join(', ')}`);
+    } else if (!tea.verb) {
+        parts.push('One infusion');
+    }
+    if (settings.style === 'pot' && !tea.pot) parts.push('made in a mug, not a small pot');
+    if (tea.milk) parts.push('takes milk');
+    const s = parts.join(' · ');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+const host = $('teas');
+function render() {
+    host.replaceChildren();
+    TEAS.forEach((tea, n) => {
+        const m = method(tea);
+        const card = el('article', 'card tea');
+        const art = el('div', 'art');
+        art.innerHTML = drawing(tea, n);
+        const facts = el('div', 'facts');
+        facts.append(
+            fact(temps(tea.temp), 'water'),
+            fact(m.style === 'pot' ? time(m.first[0]) : times(m.first), m.style === 'pot' ? 'first infusion' : (tea.verb || 'steep').toLowerCase()),
+            fact(grams(m.g, m.ml), `in ${m.ml} ml`),
+        );
+        const go = el('button', 'steep', tea.verb ? 'Time it' : 'Steep');
+        go.type = 'button';
+        go.onclick = () => openTimer(tea);
+        card.append(art, el('h3', '', tea.name), el('p', 'alt small', tea.alt || ''), facts, therm(tea),
+            el('p', 'desc', tea.desc), el('p', 'meta small', afterwards(tea, m)), go);
+        card.dataset.kind = tea.kind;
+        card.dataset.text = [tea.name, tea.alt, tea.desc, KINDS.find(([k]) => k === tea.kind)[1], tea.milk && 'milk'].filter(Boolean).join(' ').toLowerCase();
+        host.appendChild(card);
+    });
+    for (const s of document.querySelectorAll('[data-c]')) s.textContent = deg(+s.dataset.c) + ' ' + unit();
+    $('style-note').textContent = STYLE_NOTES[settings.style];
+    $('ml').value = settings.ml[settings.style];
+    filter();
+}
+
+function tabs(host, list, current, choose) {
+    host.replaceChildren(...list.map(([key, label]) => {
+        const b = el('button', key === current() ? 'active' : '', label);
+        b.type = 'button';
+        b.onclick = () => { choose(key); for (const c of host.children) c.classList.toggle('active', c === b); };
+        return b;
+    }));
+}
+
+let kind = 'all';
+const search = $('search');
+function filter() {
+    const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
+    let shown = 0;
+    for (const card of host.children) {
+        const ok = (kind === 'all' || card.dataset.kind === kind) && words.every((w) => card.dataset.text.includes(w));
+        card.hidden = !ok;
+        if (ok) shown++;
+    }
+    $('none').hidden = shown > 0;
+}
+search.addEventListener('input', filter);
+tabs($('kinds'), KINDS, () => kind, (k) => { kind = k; filter(); });
+tabs($('styles'), STYLES, () => settings.style, (s) => { settings.style = s; keep(); render(); });
+tabs($('units'), [['c', '°C'], ['f', '°F']], () => settings.units, (u) => { settings.units = u; keep(); render(); });
+$('ml').addEventListener('change', (e) => {
+    const v = Math.round(+e.target.value);
+    if (v >= 30 && v <= 2000) { settings.ml[settings.style] = v; keep(); render(); }
+    else e.target.value = settings.ml[settings.style];
+});
+
+// ---------------------------------------------------------------------------------------
+// The timer. It counts against the clock rather than by ticks, so a background tab stays
+// right, and the chime is scheduled on the audio clock when it starts, so it sounds on time
+// even when the page's timers are slowed down.
+
+const T = { tea: null, steps: [], step: 0, length: 0, left: 0, endAt: 0, running: false, tick: 0, chime: [] };
+let audio = null;
+
+function openTimer(tea) {
+    stop();
+    const m = method(tea);
+    Object.assign(T, { tea, m, steps: m.steps, step: 0 });
+    load();
+    $('timer').hidden = false;
+    document.body.classList.add('timing');
+    $('t-go').focus();
+}
+
+function load() {
+    const [, secs] = T.steps[T.step];
+    T.length = T.left = secs;
+    $('timer').classList.remove('done');
+    $('t-said').textContent = '';
+    show();
+}
+
+function show() {
+    const [label] = T.steps[T.step], m = T.m;
+    $('t-what').textContent = `${T.tea.name} · ${temps(T.tea.temp)} · ${grams(m.g, m.ml)} in ${m.ml} ml`;
+    const numbered = T.steps.filter(([l]) => l.startsWith('Infusion')).length;
+    $('t-step').textContent = label.startsWith('Infusion') && numbered > 1 ? `${label} of ${numbered}` : label;
+    $('t-clock').textContent = clock(Math.max(0, Math.ceil(T.left)));
+    $('t-bar').style.width = `${T.length ? (1 - T.left / T.length) * 100 : 0}%`;
+    $('t-go').textContent = T.running ? 'Pause' : T.left <= 0 ? 'Again' : T.left < T.length ? 'Resume' : 'Start';
+    $('t-next').hidden = T.step >= T.steps.length - 1;
+    $('t-next').classList.toggle('primary', T.left <= 0);
+    $('t-go').classList.toggle('primary', T.left > 0);
+}
+
+function start() {
+    if (T.left <= 0) T.left = T.length;
+    T.endAt = performance.now() + T.left * 1000;
+    T.running = true;
+    scheduleChime(T.left);
+    clearInterval(T.tick);
+    T.tick = setInterval(update, 200);
+    document.title = 'Tea guide · mbolding';
+    show();
+}
+
+function stop() {
+    if (T.running) T.left = Math.max(0, (T.endAt - performance.now()) / 1000);
+    T.running = false;
+    clearInterval(T.tick);
+    cancelChime();
+    document.title = 'Tea guide · mbolding';
+}
+
+function update() {
+    T.left = (T.endAt - performance.now()) / 1000;
+    if (T.left <= 0) {
+        T.left = 0;
+        stop();
+        $('timer').classList.add('done');
+        const last = T.step >= T.steps.length - 1;
+        $('t-said').textContent = T.steps[T.step][0].startsWith('Rinse') ? 'Pour the rinse away.'
+            : T.tea.verb ? 'Done.' : last ? 'Ready. Pour it all off; that was the last one.' : 'Ready. Pour it all off.';
+        document.title = '🍵 Ready · Tea guide';
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+    }
+    show();
+}
+
+function scheduleChime(delay) {
+    cancelChime();
+    try {
+        audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+        if (audio.state === 'suspended') audio.resume();
+        const at = audio.currentTime + delay;
+        [784, 988, 1175].forEach((f, i) => {
+            const o = audio.createOscillator(), g = audio.createGain();
+            o.type = 'sine';
+            o.frequency.value = f;
+            const t = at + i * 0.22;
+            g.gain.setValueAtTime(0.0001, audio.currentTime);
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(0.25, t + 0.02);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + 1.2);
+            o.connect(g).connect(audio.destination);
+            o.start(t);
+            o.stop(t + 1.3);
+            T.chime.push(o);
+        });
+    } catch (e) {}
+}
+function cancelChime() {
+    for (const o of T.chime) { try { o.stop(0); o.disconnect(); } catch (e) {} }
+    T.chime = [];
+}
+
+function nudge(by) {
+    const left = T.running ? (T.endAt - performance.now()) / 1000 : T.left;
+    const next = Math.max(T.running ? 1 : 5, left + by);
+    T.length = Math.max(5, T.length + (next - left));
+    T.left = next;
+    $('timer').classList.remove('done');
+    $('t-said').textContent = '';
+    if (T.running) { T.endAt = performance.now() + next * 1000; scheduleChime(next); }
+    show();
+}
+
+$('t-go').addEventListener('click', () => { if (T.running) { stop(); show(); } else start(); });
+$('t-less').addEventListener('click', () => nudge(-15));
+$('t-more').addEventListener('click', () => nudge(15));
+$('t-next').addEventListener('click', () => {
+    stop();
+    T.step = Math.min(T.step + 1, T.steps.length - 1);
+    load();
+    $('t-go').focus();
+});
+$('t-close').addEventListener('click', () => {
+    stop();
+    $('timer').hidden = true;
+    document.body.classList.remove('timing');
+});
+addEventListener('keydown', (e) => {
+    if ($('timer').hidden || e.target.matches('input, textarea, select')) return;
+    if (e.key === 'Escape') $('t-close').click();
+});
+
+render();
+</script>
+</body>
+</html>
