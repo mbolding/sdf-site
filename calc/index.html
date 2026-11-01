@@ -6,16 +6,1025 @@
 <title>Calc · mbolding</title>
 <link rel="stylesheet" href="../style.css">
 <script src="../theme.js"></script>
+<style>
+.modes { margin: 0.4em 0 1.4em; }
+/* Simple and Scientific */
+.calc-layout { display: grid; grid-template-columns: minmax(0, 24em) minmax(0, 1fr); gap: 2em; align-items: start; }
+.sci .calc-layout { grid-template-columns: minmax(0, 36em) minmax(0, 1fr); }
+@media (max-width: 760px) { .calc-layout, .sci .calc-layout { grid-template-columns: minmax(0, 1fr); } }
+.display { margin: 0 0 0.6em; text-align: right; min-height: 5.2em; }
+.display .expr { font: 14px/1.4 var(--font-mono); color: var(--muted); min-height: 1.4em; overflow-wrap: anywhere; }
+.display .result { font: 600 2em/1.25 var(--font-mono); overflow-wrap: anywhere; }
+.display .result.preview { color: var(--muted); }
+.display .result.bad { font: 15px/1.5 var(--font-ui); color: var(--bad); padding-top: 0.6em; }
+#expr { width: 100%; font: 17px var(--font-mono); margin-bottom: 0.7em; }
+.keys { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.8em; }
+.sci .keys { grid-template-columns: minmax(0, 3fr) minmax(0, 4fr); }
+.keypad { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.4em; }
+.keypad.fns { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.keypad button { font-size: 18px; padding: 0.6em 0; touch-action: manipulation; }
+.keypad.fns button { font-size: 15px; }
+.keypad button.op { background: var(--surface); }
+.keypad .eq { grid-column: span 3; }
+.sci-only { display: none; }
+.sci .sci-only { display: revert; }
+.sci .sci-only.row { display: flex; }
+.sci .keypad.sci-only { display: grid; }
+@media (max-width: 520px) { .sci .keys { grid-template-columns: minmax(0, 1fr); } .keypad.fns { grid-template-columns: repeat(6, minmax(0, 1fr)); } .keypad.fns button { padding: 0.5em 0; } }
+.vars { font: 14px/1.6 var(--font-mono); color: var(--muted); }
+.vars button { font: 13px var(--font-mono); padding: 0.1em 0.45em; }
+.past { list-style: none; padding: 0; margin: 0; max-height: 26em; overflow-y: auto; }
+.past li { display: flex; justify-content: space-between; gap: 1em; padding: 0.35em 0.2em; border-bottom: 1px solid var(--rule);
+  font: 14px/1.4 var(--font-mono); cursor: pointer; }
+.past li:hover { background: var(--panel); }
+.past li span:first-child { color: var(--muted); overflow-wrap: anywhere; }
+.past li span:last-child { white-space: nowrap; }
+.history h2:first-child, .help h2 { margin-top: 0; }
+.help { margin-top: 1.6em; }
+.help code { font-size: 13px; white-space: normal; }
+
+/* The modes made of cards: each a few inputs and what follows from them, worked out as you type. */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(19em, 1fr)); gap: 1em; align-items: start; }
+@media (min-width: 900px) { .cards .wide { grid-column: span 2; } }
+.cards .card { margin: 0; }
+.cards h3 { margin: 0 0 0.7em; }
+.fields { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 0.4em 0.6em; align-items: center; font: 14px/1.3 var(--font-ui); }
+.fields > label { display: contents; }
+.fields .unit { color: var(--muted); }
+.fields input, .fields select, .fields textarea { width: 100%; font-size: 15px; padding: 0.3em 0.5em; }
+.fields .unit select { width: auto; font-size: 14px; padding: 0.25em 0.3em; }
+.fields .full { grid-column: 1 / -1; }
+.fields textarea { font: 14px/1.4 var(--font-mono); resize: vertical; }
+[aria-invalid="true"] { border-color: var(--bad) !important; }
+.out table { margin: 0.9em 0 0; font-size: 14px; }
+.out td { padding: 0.3em 0.5em; }
+.out td.v { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.out td.u { color: var(--muted); width: 1%; white-space: nowrap; }
+.out .bad { font: 14px/1.5 var(--font-ui); margin: 0.8em 0 0; }
+.out .nuclei td:not(:first-child), .out .nuclei th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.card .note { font-size: 13px; margin: 0.7em 0 0; }
+
+/* Units and Programmer */
+.convert { display: flex; flex-wrap: wrap; gap: 0.5em; align-items: center; margin-bottom: 1em; }
+.convert input { width: 10em; font: 16px var(--font-mono); }
+#u-table td:last-child { text-align: right; font-family: var(--font-mono); }
+#u-table tr.from td { font-weight: 600; }
+#u-table td:first-child { color: var(--muted); width: 1%; white-space: nowrap; }
+.prog { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0.5em 0.8em; align-items: center; max-width: 46em; font: 15px var(--font-ui); }
+.prog > label { display: contents; }
+.prog input { font: 16px var(--font-mono); width: 100%; }
+.prog select { justify-self: start; }
+#p-info { max-width: 46em; margin-top: 1em; }
+#p-info td:last-child { font-family: var(--font-mono); overflow-wrap: anywhere; }
+</style>
 </head>
-<body>
+<body class="wide">
 <header><a href="../">mbolding</a></header>
 <h1>Calc</h1>
 
-<ul class="links">
-  <li><a href="ya_simple_math.html">Math expression evaluator</a> <span class="small">remembers what you worked out</span></li>
-  <li><a href="simple_math.html">The first version</a></li>
-</ul>
+<nav class="tabs modes" id="modes" aria-label="Modes"></nav>
+
+<section id="mode-calc">
+  <div class="calc-layout">
+    <div class="calc">
+      <div class="display box" aria-live="polite">
+        <div class="expr" id="shown"></div>
+        <div class="result" id="result">0</div>
+      </div>
+      <input type="text" id="expr" autocomplete="off" spellcheck="false" autocapitalize="off" placeholder="Type a sum, like 2 + 3 × 4">
+      <div class="row sci-only">
+        <button type="button" id="angle"></button>
+        <span class="vars" id="vars"></span>
+      </div>
+      <div class="keys">
+        <div class="keypad fns sci-only" id="fn-keys"></div>
+        <div class="keypad" id="keys"></div>
+      </div>
+    </div>
+    <div>
+      <div class="history">
+        <h2>History</h2>
+        <ul class="past" id="past"></ul>
+        <p class="note" id="no-past">Sums you work out appear here; click one to use it again.</p>
+        <button type="button" id="clear-past">Clear history</button>
+      </div>
+      <div class="help sci-only">
+        <h2>Typing</h2>
+        <p class="note">
+          <code>^</code> powers, <code>!</code> factorials, <code>%</code> divides by 100. <code>2pi</code> and <code>3(4+1)</code> multiply.
+          Functions: <code>sin cos tan asin acos atan atan2 sinh cosh tanh sqrt cbrt abs exp ln log log2 floor ceil round min max hypot mod nCr nPr gcd lcm</code>.
+          Constants: <code>pi e tau phi</code>, and <code>ans</code> for the last answer.
+          Save a value with <code>x = 2.5</code> and use it later.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="mode-cards" hidden>
+  <div class="cards" id="cards"></div>
+</section>
+
+<section id="mode-units" hidden>
+  <div class="convert">
+    <select id="u-kind" aria-label="Kind of unit"></select>
+    <input type="text" id="u-value" value="1" aria-label="Amount" autocomplete="off" spellcheck="false">
+    <select id="u-from" aria-label="Unit"></select>
+  </div>
+  <table id="u-table"></table>
+</section>
+
+<section id="mode-programmer" hidden>
+  <div class="prog">
+    <label for="p-dec">Decimal</label><input type="text" id="p-dec" data-base="10" autocomplete="off" spellcheck="false">
+    <label for="p-hex">Hex</label><input type="text" id="p-hex" data-base="16" autocomplete="off" spellcheck="false">
+    <label for="p-oct">Octal</label><input type="text" id="p-oct" data-base="8" autocomplete="off" spellcheck="false">
+    <label for="p-bin">Binary</label><input type="text" id="p-bin" data-base="2" autocomplete="off" spellcheck="false">
+    <label for="p-width">Width</label>
+    <select id="p-width"><option>8</option><option>16</option><option selected>32</option><option>64</option></select>
+  </div>
+  <table id="p-info"></table>
+</section>
 
 <footer><a href="../">Back home</a></footer>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+
+// What's kept between visits: the mode, Scientific's angle unit and saved values, and
+// every card's inputs. History has its own key, shared with the old evaluator.
+const store = (() => {
+    try { return JSON.parse(localStorage.getItem('calc')) || {}; } catch (e) { return {}; }
+})();
+store.cards = store.cards || {};
+function save() {
+    try { localStorage.setItem('calc', JSON.stringify(store)); } catch (e) {}
+}
+
+// ---------------------------------------------------------------------------------------
+// Reading sums. A small parser rather than eval, so a sum can only ever be arithmetic.
+
+let degrees = store.angle === 'deg';
+const vars = new Map(store.vars || []);
+let ans = 0;
+const toRad = (x) => degrees ? x * Math.PI / 180 : x;
+const fromRad = (x) => degrees ? x * 180 / Math.PI : x;
+
+function fact(n) {
+    if (n < 0 || n !== Math.floor(n)) throw new Error('Factorials need a whole number');
+    if (n > 170) return Infinity;
+    let r = 1;
+    for (let i = 2; i <= n; i++) r *= i;
+    return r;
+}
+function choose(n, k) {
+    if (k < 0 || k > n || n !== Math.floor(n) || k !== Math.floor(k)) return 0;
+    k = Math.min(k, n - k);
+    let r = 1;
+    for (let i = 1; i <= k; i++) r = r * (n - k + i) / i;
+    return Math.round(r);
+}
+const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; };
+
+const FUNCS = {
+    sin: (x) => Math.sin(toRad(x)), cos: (x) => Math.cos(toRad(x)), tan: (x) => Math.tan(toRad(x)),
+    asin: (x) => fromRad(Math.asin(x)), acos: (x) => fromRad(Math.acos(x)), atan: (x) => fromRad(Math.atan(x)),
+    atan2: (y, x) => fromRad(Math.atan2(y, x)),
+    sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh, asinh: Math.asinh, acosh: Math.acosh, atanh: Math.atanh,
+    sqrt: Math.sqrt, cbrt: Math.cbrt, abs: Math.abs, exp: Math.exp, sign: Math.sign,
+    ln: Math.log, log: (x, b) => b === undefined ? Math.log10(x) : Math.log(x) / Math.log(b), log2: Math.log2, log10: Math.log10,
+    floor: Math.floor, ceil: Math.ceil, trunc: Math.trunc,
+    round: (x, d = 0) => Math.round(x * 10 ** d) / 10 ** d,
+    min: Math.min, max: Math.max, hypot: Math.hypot,
+    mod: (a, b) => ((a % b) + b) % b,
+    nCr: choose, nPr: (n, k) => choose(n, k) * fact(k),
+    gcd: gcd, lcm: (a, b) => Math.abs(a * b) / gcd(a, b), fact: fact,
+};
+const CONSTS = { pi: Math.PI, e: Math.E, tau: 2 * Math.PI, phi: (1 + Math.sqrt(5)) / 2 };
+
+function tokenize(src) {
+    src = src.replace(/[×·∙]/g, '*').replace(/÷/g, '/').replace(/[−–]/g, '-').replace(/π/g, ' pi ')
+        .replace(/√/g, ' sqrt ').replace(/²/g, '^2').replace(/³/g, '^3');
+    const re = /\s*(?:((?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?)|([A-Za-z_]\w*)|(\*\*|[-+*/^%(),=!]))/y;
+    const toks = [];
+    while (re.lastIndex < src.length && /\S/.test(src.slice(re.lastIndex))) {
+        const at = re.lastIndex;
+        const m = re.exec(src);
+        if (!m) { re.lastIndex = at; throw new Error(`I can’t read “${src.slice(at).trim()[0]}”`); }
+        if (m[1] !== undefined) toks.push({ t: 'num', v: parseFloat(m[1]) });
+        else if (m[2] !== undefined) toks.push({ t: 'id', v: m[2] });
+        else toks.push({ t: 'op', v: m[3] === '**' ? '^' : m[3] });
+    }
+    return toks;
+}
+
+/** Works out a sum. Returns its value, and the name it's to be saved under for "x = …". */
+function evaluate(src) {
+    const toks = tokenize(src.replace(/=\s*$/, ''));
+    let p = 0;
+    const is = (v) => p < toks.length && toks[p].t === 'op' && toks[p].v === v;
+    const startsOperand = () => p < toks.length && (toks[p].t !== 'op' || toks[p].v === '(');
+    const close = () => {
+        if (is(')')) p++;
+        else if (p < toks.length) throw new Error(`Expected “)” before “${toks[p].v}”`);
+    };
+
+    function sum() {
+        let x = product();
+        while (is('+') || is('-')) {
+            const op = toks[p++].v, y = product();
+            x = op === '+' ? x + y : x - y;
+        }
+        return x;
+    }
+    function product() {
+        let x = unary();
+        for (;;) {
+            if (is('*') || is('/')) {
+                const op = toks[p++].v, y = unary();
+                x = op === '*' ? x * y : x / y;
+            } else if (startsOperand()) {
+                x *= unary();              // 2pi, 3(4 + 1)
+            } else {
+                return x;
+            }
+        }
+    }
+    function unary() {
+        if (is('-')) { p++; return -unary(); }
+        if (is('+')) { p++; return unary(); }
+        return power();
+    }
+    function power() {
+        const base = postfix();
+        if (is('^')) { p++; return base ** unary(); }
+        return base;
+    }
+    function postfix() {
+        let x = primary();
+        for (;;) {
+            if (is('!')) { p++; x = fact(x); }
+            else if (is('%')) { p++; x /= 100; }
+            else return x;
+        }
+    }
+    function primary() {
+        if (p >= toks.length) throw new Error('Something’s missing at the end');
+        const t = toks[p++];
+        if (t.t === 'num') return t.v;
+        if (t.t === 'op' && t.v === '(') { const x = sum(); close(); return x; }
+        if (t.t === 'id') {
+            if (own(FUNCS, t.v)) {
+                let args;
+                if (is('(')) {
+                    p++;
+                    args = [];
+                    if (!is(')')) {
+                        args.push(sum());
+                        while (is(',')) { p++; args.push(sum()); }
+                    }
+                    close();
+                } else {
+                    args = [power()];      // sin 30, √2
+                }
+                return FUNCS[t.v](...args);
+            }
+            if (own(CONSTS, t.v)) return CONSTS[t.v];
+            if (t.v === 'ans') return ans;
+            if (vars.has(t.v)) return vars.get(t.v);
+            throw new Error(`I don’t know “${t.v}”`);
+        }
+        throw new Error(`Unexpected “${t.v}”`);
+    }
+
+    let name = null;
+    if (toks.length > 2 && toks[0].t === 'id' && toks[1].t === 'op' && toks[1].v === '=') {
+        name = toks[0].v;
+        if (own(FUNCS, name) || own(CONSTS, name) || name === 'ans') throw new Error(`“${name}” is taken`);
+        p = 2;
+    }
+    if (!toks.length) throw new Error('Nothing to work out');
+    const value = sum();
+    if (p < toks.length) throw new Error(`Unexpected “${toks[p].v}”`);
+    return { value, name };
+}
+
+// Numbers for people: up to 12 figures in the calculator, 6 on the cards, and powers of ten
+// written out when they'd be long.
+const SUP = { '-': '⁻', 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
+function fmt(x, sig = 6) {
+    if (typeof x !== 'number') return String(x);
+    if (Number.isNaN(x)) return '—';
+    if (!Number.isFinite(x)) return x > 0 ? '∞' : '−∞';
+    if (x === 0) return '0';
+    const a = Math.abs(x);
+    if (a >= 10 ** (sig + 3) || a < 1e-4) {
+        const [m, e] = x.toExponential(sig - 1).split('e');
+        return `${String(parseFloat(m)).replace('-', '−')} × 10${String(+e).replace(/./g, (c) => SUP[c])}`;
+    }
+    return String(parseFloat(x.toPrecision(sig))).replace('-', '−');
+}
+
+// ---------------------------------------------------------------------------------------
+// Simple and Scientific
+
+const exprBox = $('expr'), result = $('result'), shown = $('shown');
+let past = (() => { try { return JSON.parse(localStorage.getItem('mathHistory')) || []; } catch (e) { return []; } })();
+let justDone = false;
+
+const BASIC = [
+    ['C', 'clear'], ['⌫', 'back'], ['(', '('], [')', ')'],
+    ['7'], ['8'], ['9'], ['÷', '÷', 'op'],
+    ['4'], ['5'], ['6'], ['×', '×', 'op'],
+    ['1'], ['2'], ['3'], ['−', '−', 'op'],
+    ['0'], ['.'], ['%', '%', 'op'], ['+', '+', 'op'],
+    ['ans', 'ans'], ['=', 'equals', 'primary eq'],
+];
+const FUNCTION_KEYS = [
+    ['sin', 'sin('], ['cos', 'cos('], ['tan', 'tan('],
+    ['sin⁻¹', 'asin('], ['cos⁻¹', 'acos('], ['tan⁻¹', 'atan('],
+    ['ln', 'ln('], ['log', 'log('], ['eˣ', 'exp('],
+    ['√', '√('], ['x²', '²'], ['xʸ', '^'],
+    ['π', 'π'], ['e', 'e'], ['n!', '!'],
+    ['|x|', 'abs('], ['1/x', '1/('], [',', ','],
+];
+function makeKeys(host, keys) {
+    for (const [label, does = label, cls = ''] of keys) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = label;
+        b.className = cls;
+        b.dataset.does = does;
+        host.appendChild(b);
+    }
+    // Keep the focus where it was, so a phone's keyboard doesn't pop up for every key.
+    host.addEventListener('pointerdown', (e) => { if (e.target.closest('button')) e.preventDefault(); });
+    host.addEventListener('click', (e) => {
+        const b = e.target.closest('button');
+        if (b) press(b.dataset.does);
+    });
+}
+makeKeys($('keys'), BASIC);
+makeKeys($('fn-keys'), FUNCTION_KEYS);
+
+const STARTS_WITH_OPERATOR = /^[-+×÷−*/^%!²)]/;
+function press(does) {
+    if (does === 'equals') return run();
+    if (does === 'clear') { exprBox.value = ''; justDone = false; return preview(); }
+    if (does === 'back') {
+        const s = exprBox.selectionStart, e = exprBox.selectionEnd;
+        if (s !== e) exprBox.setRangeText('', s, e, 'end');
+        else if (s > 0) exprBox.setRangeText('', s - 1, s, 'end');
+        justDone = false;
+        return preview();
+    }
+    insert(does);
+}
+/** Puts text in at the cursor. Straight after an answer, an operator carries on from it and anything else starts afresh. */
+function insert(text) {
+    if (justDone) {
+        exprBox.value = STARTS_WITH_OPERATOR.test(text) ? 'ans' + text : text;
+        exprBox.setSelectionRange(exprBox.value.length, exprBox.value.length);
+        justDone = false;
+    } else {
+        exprBox.setRangeText(text, exprBox.selectionStart, exprBox.selectionEnd, 'end');
+    }
+    preview();
+}
+
+function preview() {
+    const src = exprBox.value.trim();
+    shown.textContent = '';
+    result.className = 'result preview';
+    if (!src) { result.textContent = fmt(ans, 12); return; }
+    try {
+        result.textContent = '= ' + fmt(evaluate(src).value, 12);
+    } catch (e) {
+        result.textContent = '';
+    }
+}
+
+function run() {
+    const src = exprBox.value.trim();
+    if (!src) return;
+    try {
+        const { value, name } = evaluate(src);
+        if (name) {
+            vars.set(name, value);
+            store.vars = [...vars];
+            save();
+            showVars();
+        }
+        ans = value;
+        shown.textContent = src + ' =';
+        result.className = 'result';
+        result.textContent = fmt(value, 12);
+        past.unshift({ expression: src, result: fmt(value, 12) });
+        past = past.slice(0, 50);
+        try { localStorage.setItem('mathHistory', JSON.stringify(past)); } catch (e) {}
+        showPast();
+        justDone = true;
+        if (document.activeElement === exprBox) exprBox.select();
+    } catch (e) {
+        shown.textContent = src;
+        result.className = 'result bad';
+        result.textContent = e.message;
+    }
+}
+
+exprBox.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); return run(); }
+    if (e.key === 'Escape') { exprBox.value = ''; justDone = false; return preview(); }
+    if (justDone && e.key.length === 1 && STARTS_WITH_OPERATOR.test(e.key) && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        insert(e.key);
+    }
+});
+exprBox.addEventListener('input', () => { justDone = false; preview(); });
+
+function showPast() {
+    const list = $('past');
+    list.replaceChildren(...past.map((item) => {
+        const li = document.createElement('li');
+        const a = document.createElement('span'), b = document.createElement('span');
+        a.textContent = item.expression;
+        b.textContent = item.result;
+        li.append(a, b);
+        li.title = 'Use this again';
+        li.onclick = () => { exprBox.value = item.expression; justDone = false; preview(); exprBox.focus(); };
+        return li;
+    }));
+    $('no-past').hidden = past.length > 0;
+    $('clear-past').hidden = !past.length;
+}
+$('clear-past').onclick = () => {
+    past = [];
+    try { localStorage.removeItem('mathHistory'); } catch (e) {}
+    showPast();
+};
+
+function showAngle() { $('angle').textContent = degrees ? 'Degrees' : 'Radians'; }
+$('angle').onclick = () => {
+    degrees = !degrees;
+    store.angle = degrees ? 'deg' : 'rad';
+    save(); showAngle(); preview();
+};
+function showVars() {
+    const host = $('vars');
+    host.replaceChildren();
+    for (const [k, v] of vars) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = `${k} = ${fmt(v, 8)}`;
+        b.title = `Put ${k} in the sum; right-click to forget it`;
+        b.onclick = () => insert(k);
+        b.oncontextmenu = (e) => { e.preventDefault(); vars.delete(k); store.vars = [...vars]; save(); showVars(); };
+        host.append(b, ' ');
+    }
+}
+
+// ---------------------------------------------------------------------------------------
+// Cards. Each lists its inputs and a function from their values to rows of results:
+// [label, value, unit], or a {head, body} table. Number inputs take sums too, like 2*64.
+
+const G1H = 42.577478;   // ¹H, MHz per tesla
+// Nuclei: name, spin, natural abundance %, Ξ (frequency as a % of ¹H's, IUPAC 2001), negative γ
+const NUCLEI = [
+    ['1H', '1/2', 99.9885, 100], ['2H', '1', 0.0115, 15.350609], ['3He', '1/2', 0.000134, 76.179437, true],
+    ['7Li', '3/2', 92.41, 38.863797], ['11B', '3/2', 80.1, 32.083974], ['13C', '1/2', 1.07, 25.14502],
+    ['15N', '1/2', 0.368, 10.136767, true], ['17O', '5/2', 0.038, 13.556457, true], ['19F', '1/2', 100, 94.094011],
+    ['23Na', '3/2', 100, 26.4519], ['27Al', '5/2', 100, 26.056859], ['29Si', '1/2', 4.6832, 19.867187, true],
+    ['31P', '1/2', 100, 40.480742], ['39K', '3/2', 93.2581, 4.666373], ['77Se', '1/2', 7.63, 19.071513],
+    ['113Cd', '1/2', 12.22, 22.193175, true], ['119Sn', '1/2', 8.59, 37.290632, true],
+    ['129Xe', '1/2', 26.4006, 27.810186, true], ['195Pt', '1/2', 33.832, 21.496784],
+];
+const nucleus = (name) => NUCLEI.find((n) => n[0] === name);
+const pretty = (name) => name.replace(/^\d+/, (d) => d.replace(/./g, (c) => SUP[c]));
+const gamma = (name) => nucleus(name)[3] / 100 * G1H;   // MHz per tesla, as a size
+const NUCLEUS_OPTIONS = NUCLEI.map((n) => [n[0], pretty(n[0])]);
+
+function larmorCard(id, unit, value, names) {
+    return {
+        id, title: 'Larmor frequencies', wide: true,
+        inputs: [{ k: 'x', label: 'Field', v: value, units: { k: 'unit', v: unit, options: [['T', 'tesla'], ['MHz', 'MHz of ¹H']] } }],
+        calc: (v) => {
+            const B = v.unit === 'T' ? v.x : v.x / G1H;
+            return [
+                ['Field', B, 'T'],
+                ['¹H frequency', B * G1H, 'MHz'],
+                { cls: 'nuclei', head: ['Nucleus', 'Spin', 'Abundance %', 'MHz'],
+                  body: NUCLEI.filter((n) => names.includes(n[0])).map((n) =>
+                      [pretty(n[0]) + (n[4] ? ' *' : ''), n[1], fmt(n[2], 4), fmt(n[3] / 100 * G1H * B, 7)]) },
+            ];
+        },
+        note: 'Each nucleus at its reference compound’s frequency, from IUPAC’s Ξ ratios, with ¹H at 42.5775 MHz/T. * marks a negative γ.',
+    };
+}
+
+const MODES = [
+    ['simple', 'Simple'], ['scientific', 'Scientific'], ['everyday', 'Everyday'], ['units', 'Units'],
+    ['dates', 'Dates'], ['stats', 'Stats'], ['programmer', 'Programmer'], ['nmr', 'NMR'], ['mri', 'MRI'],
+];
+
+const pad2 = (n) => String(n).padStart(2, '0');
+const isoToday = () => { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; };
+const DAY = 86400000;
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+/** A YYYY-MM-DD date as a count of days since 1970, so time zones and clock changes stay out of it. */
+function dayNumber(s) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    if (!m) throw new Error('Pick a date');
+    return Date.UTC(+m[1], m[2] - 1, +m[3]) / DAY;
+}
+const fromDayNumber = (n) => new Date(n * DAY).toISOString().slice(0, 10);
+const weekday = (n) => WEEKDAYS[((n % 7) + 11) % 7];   // day 0 was a Thursday
+function isoWeek(n) {
+    const d = new Date(n * DAY);
+    const dow = (d.getUTCDay() + 6) % 7;
+    d.setUTCDate(d.getUTCDate() - dow + 3);
+    const thursday = d.valueOf();
+    d.setUTCMonth(0, 1);
+    if (d.getUTCDay() !== 4) d.setUTCMonth(0, 1 + ((4 - d.getUTCDay()) + 7) % 7);
+    return 1 + Math.ceil((thursday - d) / (7 * DAY));
+}
+
+function numbers(text) {
+    const parts = text.split(/[\s,;]+/).filter(Boolean);
+    return parts.map((s) => {
+        const x = Number(s);
+        if (!Number.isFinite(x)) throw new Error(`“${s}” isn’t a number`);
+        return x;
+    });
+}
+function summary(xs) {
+    const n = xs.length, mean = xs.reduce((a, b) => a + b, 0) / n;
+    const ss = xs.reduce((a, b) => a + (b - mean) ** 2, 0);
+    return { n, mean, ss, sd: n > 1 ? Math.sqrt(ss / (n - 1)) : NaN };
+}
+// Student's t: the two-sided p comes from the regularised incomplete beta function.
+function lgamma(x) {
+    const c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
+        12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) return Math.log(Math.PI / Math.abs(Math.sin(Math.PI * x))) - lgamma(1 - x);
+    x -= 1;
+    let a = c[0];
+    const t = x + 7.5;
+    for (let i = 1; i < 9; i++) a += c[i] / (x + i);
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+}
+function betacf(a, b, x) {
+    const TINY = 1e-300;
+    let c = 1, d = 1 - (a + b) * x / (a + 1);
+    if (Math.abs(d) < TINY) d = TINY;
+    d = 1 / d;
+    let h = d;
+    for (let m = 1; m <= 300; m++) {
+        const m2 = 2 * m;
+        let aa = m * (b - m) * x / ((a - 1 + m2) * (a + m2));
+        d = 1 + aa * d; if (Math.abs(d) < TINY) d = TINY;
+        c = 1 + aa / c; if (Math.abs(c) < TINY) c = TINY;
+        d = 1 / d; h *= d * c;
+        aa = -(a + m) * (a + b + m) * x / ((a + m2) * (a + 1 + m2));
+        d = 1 + aa * d; if (Math.abs(d) < TINY) d = TINY;
+        c = 1 + aa / c; if (Math.abs(c) < TINY) c = TINY;
+        d = 1 / d;
+        const del = d * c;
+        h *= del;
+        if (Math.abs(del - 1) < 3e-14) break;
+    }
+    return h;
+}
+function ibeta(a, b, x) {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    const front = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    return x < (a + 1) / (a + b + 2) ? front * betacf(a, b, x) / a : 1 - front * betacf(b, a, 1 - x) / b;
+}
+const tTwoSided = (t, df) => ibeta(df / 2, 0.5, df / (df + t * t));
+function minutesSeconds(s) {
+    if (!Number.isFinite(s)) return '—';
+    const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, sec = Math.round(s % 60);
+    return h ? `${h} h ${pad2(m)} min ${pad2(sec)} s` : `${m} min ${pad2(sec)} s`;
+}
+
+const CARDS = {
+    everyday: [
+        { id: 'pct-of', title: 'Percent of', inputs: [{ k: 'p', label: 'Percent', v: '15', unit: '%' }, { k: 'x', label: 'Of', v: '80' }],
+          calc: (v) => [['Answer', v.p / 100 * v.x], ['Added on', v.x * (1 + v.p / 100)], ['Taken off', v.x * (1 - v.p / 100)]] },
+        { id: 'pct-what', title: 'What percent?', inputs: [{ k: 'a', label: 'Part', v: '12' }, { k: 'b', label: 'Of the whole', v: '80' }],
+          calc: (v) => [['Part of the whole', 100 * v.a / v.b, '%']] },
+        { id: 'pct-change', title: 'Percent change', inputs: [{ k: 'a', label: 'From', v: '80' }, { k: 'b', label: 'To', v: '100' }],
+          calc: (v) => [['Change', 100 * (v.b - v.a) / Math.abs(v.a), '%'], ['Difference', v.b - v.a], ['Ratio', v.b / v.a, '×']] },
+        { id: 'tip', title: 'Tip and split', inputs: [{ k: 'bill', label: 'Bill', v: '64.50' }, { k: 'tip', label: 'Tip', v: '18', unit: '%' }, { k: 'n', label: 'People', v: '2' }],
+          calc: (v) => { const tip = v.bill * v.tip / 100; return [['Tip', tip.toFixed(2)], ['Total', (v.bill + tip).toFixed(2)], ['Each', ((v.bill + tip) / v.n).toFixed(2)]]; } },
+        { id: 'three', title: 'Rule of three', inputs: [{ k: 'a', label: 'If', v: '3' }, { k: 'b', label: 'gives', v: '4' }, { k: 'c', label: 'then', v: '9' }],
+          calc: (v) => [['gives', v.b * v.c / v.a]], note: 'Scales in proportion: c × b ÷ a.' },
+        { id: 'loan', title: 'Loan payment', inputs: [{ k: 'p', label: 'Amount', v: '20000' }, { k: 'r', label: 'Yearly rate', v: '6', unit: '%' }, { k: 'y', label: 'Years', v: '5' }],
+          calc: (v) => {
+              const n = Math.round(v.y * 12), r = v.r / 1200;
+              const pay = r ? v.p * r / (1 - (1 + r) ** -n) : v.p / n;
+              return [['Monthly', pay.toFixed(2)], ['Payments', n], ['Total paid', (pay * n).toFixed(2)], ['Interest', (pay * n - v.p).toFixed(2)]];
+          }, note: 'Fixed monthly payments, interest compounded monthly.' },
+        { id: 'unit-price', title: 'Which is cheaper?', inputs: [{ k: 'p1', label: 'Price A', v: '3.49' }, { k: 'q1', label: 'Amount A', v: '12' }, { k: 'p2', label: 'Price B', v: '5.29' }, { k: 'q2', label: 'Amount B', v: '20' }],
+          calc: (v) => { const a = v.p1 / v.q1, b = v.p2 / v.q2; return [['A each', a, ''], ['B each', b, ''], ['Cheaper', a < b ? `A, by ${fmt(100 * (b - a) / b, 3)}%` : a > b ? `B, by ${fmt(100 * (a - b) / a, 3)}%` : 'the same']]; } },
+    ],
+    dates: [
+        { id: 'between', title: 'Days between', inputs: [{ k: 'a', label: 'From', type: 'date', v: isoToday }, { k: 'b', label: 'To', type: 'date', v: () => `${new Date().getFullYear() + 1}-01-01` }],
+          calc: (v) => {
+              let a = dayNumber(v.a), b = dayNumber(v.b);
+              const sign = b < a ? -1 : 1;
+              if (sign < 0) [a, b] = [b, a];
+              let work = 0;
+              for (let d = a; d < b && d - a < 400000; d++) { const w = ((d % 7) + 11) % 7; if (w > 0 && w < 6) work++; }
+              const [ay, am, ad] = fromDayNumber(a).split('-').map(Number), [by, bm, bd] = fromDayNumber(b).split('-').map(Number);
+              let y = by - ay, m = bm - am, d = bd - ad;
+              if (d < 0) { m--; d += new Date(Date.UTC(by, bm - 1, 0)).getUTCDate(); }
+              if (m < 0) { y--; m += 12; }
+              return [['Days', sign * (b - a)], ['Weeks', `${Math.floor((b - a) / 7)} and ${(b - a) % 7} days`],
+                  ['Calendar', `${y} y ${m} m ${d} d`], ['Weekdays (Mon–Fri)', work]];
+          } },
+        { id: 'add', title: 'Add days', inputs: [{ k: 'a', label: 'Date', type: 'date', v: isoToday }, { k: 'n', label: 'Days', v: '90' }],
+          calc: (v) => { const d = dayNumber(v.a) + Math.round(v.n); return [['Date', fromDayNumber(d)], ['Day', weekday(d)]]; },
+          note: 'Use a minus sign to go back.' },
+        { id: 'day', title: 'About a date', inputs: [{ k: 'a', label: 'Date', type: 'date', v: isoToday }],
+          calc: (v) => {
+              const d = dayNumber(v.a), y = +v.a.slice(0, 4), start = Date.UTC(y, 0, 1) / DAY, len = (Date.UTC(y + 1, 0, 1) / DAY) - start;
+              return [['Day', weekday(d)], ['Day of the year', `${d - start + 1} of ${len}`], ['ISO week', isoWeek(d)], ['Unix time (UTC midnight)', d * 86400, '', 12]];
+          } },
+        { id: 'unix', title: 'Unix time', inputs: [{ k: 't', label: 'Seconds', v: () => String(Math.floor(Date.now() / 1000)) }],
+          calc: (v) => { const d = new Date(v.t * 1000); if (isNaN(d)) throw new Error('Out of range'); return [['UTC', d.toISOString().replace('T', ' ').replace('.000Z', '')], ['Here', d.toLocaleString()]]; },
+          note: 'Seconds since 1 January 1970, UTC. Milliseconds? Divide by 1000.' },
+    ],
+    stats: [
+        { id: 'summary', title: 'Summary', wide: true, inputs: [{ k: 'xs', label: 'Numbers', type: 'area', v: '4.1 3.9 5.2 4.8 4.4 5.0 4.6' }],
+          calc: (v) => {
+              const xs = numbers(v.xs);
+              if (!xs.length) throw new Error('Type some numbers');
+              const s = summary(xs), sorted = [...xs].sort((a, b) => a - b), n = s.n;
+              const q = (f) => { const i = (n - 1) * f, lo = Math.floor(i); return sorted[lo] + (sorted[Math.ceil(i)] - sorted[lo]) * (i - lo); };
+              return [['Count', n], ['Sum', xs.reduce((a, b) => a + b, 0)], ['Mean', s.mean], ['Median', q(0.5)],
+                  ['Standard deviation (sample)', s.sd], ['Standard deviation (population)', Math.sqrt(s.ss / n)],
+                  ['Standard error', s.sd / Math.sqrt(n)], ['Coefficient of variation', 100 * s.sd / s.mean, '%'],
+                  ['Min', sorted[0]], ['Quartiles', `${fmt(q(0.25))}, ${fmt(q(0.75))}`], ['Max', sorted[n - 1]], ['Range', sorted[n - 1] - sorted[0]]];
+          }, note: 'Separate numbers with spaces, commas or new lines, or paste a column from a spreadsheet.' },
+        { id: 'ttest', title: 'Two groups (Welch’s t-test)', inputs: [{ k: 'a', label: 'Group A', type: 'area', v: '4.1 3.9 5.2 4.8 4.4' }, { k: 'b', label: 'Group B', type: 'area', v: '5.6 5.1 6.0 5.4 5.9' }],
+          calc: (v) => {
+              const a = summary(numbers(v.a)), b = summary(numbers(v.b));
+              if (a.n < 2 || b.n < 2) throw new Error('Each group needs two or more numbers');
+              const va = a.sd ** 2 / a.n, vb = b.sd ** 2 / b.n, t = (a.mean - b.mean) / Math.sqrt(va + vb);
+              const df = (va + vb) ** 2 / (va ** 2 / (a.n - 1) + vb ** 2 / (b.n - 1));
+              return [['Mean A', a.mean], ['Mean B', b.mean], ['Difference', a.mean - b.mean], ['t', t], ['Degrees of freedom', df], ['p (two-sided)', tTwoSided(t, df), '', 4]];
+          } },
+        { id: 'fit', title: 'Straight-line fit', inputs: [{ k: 'x', label: 'x', type: 'area', v: '1 2 3 4 5' }, { k: 'y', label: 'y', type: 'area', v: '2.1 3.9 6.2 7.8 10.1' }],
+          calc: (v) => {
+              const x = numbers(v.x), y = numbers(v.y);
+              if (x.length !== y.length) throw new Error(`${x.length} x values but ${y.length} y values`);
+              if (x.length < 2) throw new Error('Two or more points, please');
+              const sx = summary(x), sy = summary(y);
+              const sxy = x.reduce((acc, xi, i) => acc + (xi - sx.mean) * (y[i] - sy.mean), 0);
+              const slope = sxy / sx.ss;
+              return [['Slope', slope], ['Intercept', sy.mean - slope * sx.mean], ['r', sxy / Math.sqrt(sx.ss * sy.ss)], ['r²', sxy ** 2 / (sx.ss * sy.ss)], ['Points', x.length]];
+          }, note: 'Least squares: y = slope × x + intercept.' },
+    ],
+    nmr: [
+        larmorCard('nmr-larmor', 'MHz', '400', NUCLEI.map((n) => n[0])),
+        { id: 'ppm', title: 'ppm and Hz', inputs: [{ k: 'f', label: 'Observe frequency', v: '400', unit: 'MHz' }, { k: 'ppm', label: 'Shift', v: '1', unit: 'ppm' }, { k: 'hz', label: 'Or a gap', v: '7.2', unit: 'Hz' }],
+          calc: (v, raw) => [[`${raw.ppm} ppm`, v.ppm * v.f, 'Hz'], [`${raw.hz} Hz`, v.hz / v.f, 'ppm']], note: 'Hz = ppm × spectrometer MHz.' },
+        { id: 'acq', title: 'Acquisition', inputs: [{ k: 'f', label: 'Observe frequency', v: '400', unit: 'MHz' }, { k: 'sw', label: 'Spectral width', v: '20', unit: 'ppm' }, { k: 'n', label: 'Complex points', v: '32768' }],
+          calc: (v) => { const sw = v.sw * v.f; return [['Spectral width', sw, 'Hz'], ['Dwell time', 1e6 / sw, 'µs'], ['Acquisition time', v.n / sw, 's'],
+              ['Digital resolution', sw / v.n, 'Hz/pt'], ['… zero-filled to 2×', sw / v.n / 2, 'Hz/pt'], ['Bruker TD', 2 * v.n], ['Bruker DW', 1e6 / sw / 2, 'µs']]; },
+          note: 'AQ = points ÷ SW. Bruker counts real and imaginary points separately, so its TD is twice the complex points and its DW half the dwell.' },
+        { id: 't1', title: 'T₁ and repetition', inputs: [{ k: 't1', label: 'T₁', v: '1.5', unit: 's' }, { k: 'd', label: 'Repetition (AQ + D1)', v: '3', unit: 's' }],
+          calc: (v) => [['Recovered each scan', 100 * (1 - Math.exp(-v.d / v.t1)), '%'], ['5 × T₁ (99.3 %)', 5 * v.t1, 's'],
+              ['Inversion-recovery null', v.t1 * Math.LN2, 's'], ['Ernst angle', Math.acos(Math.exp(-v.d / v.t1)) * 180 / Math.PI, '°']],
+          note: 'Recovery 1 − e^(−t/T₁); the null at T₁ ln 2 assumes full relaxation between scans; Ernst angle cos α = e^(−TR/T₁).' },
+        { id: 'pulse', title: 'Pulses and B₁', inputs: [{ k: 'nuc', label: 'Nucleus', type: 'select', options: NUCLEUS_OPTIONS, v: '1H' }, { k: 't90', label: '90° pulse', v: '10', unit: 'µs' }, { k: 'p', label: 'Another pulse', v: '3', unit: 'µs' }],
+          calc: (v, raw) => { const nu = 1e6 / (4 * v.t90); return [['Nutation frequency', nu / 1000, 'kHz'], ['B₁', nu / gamma(v.nuc), 'µT'],
+              ['180° pulse', 2 * v.t90, 'µs'], [`Flip of ${raw.p} µs`, 90 * v.p / v.t90, '°']]; },
+          note: 'γB₁/2π = 1 / (4 × t₉₀).' },
+        { id: 'lw', title: 'Linewidth and T₂*', inputs: [{ k: 't2', label: 'T₂*', v: '100', unit: 'ms' }, { k: 'lw', label: 'Or a linewidth', v: '1', unit: 'Hz' }],
+          calc: (v, raw) => [[`Linewidth for ${raw.t2} ms`, 1000 / (Math.PI * v.t2), 'Hz'], [`T₂* for ${raw.lw} Hz`, 1000 / (Math.PI * v.lw), 'ms']],
+          note: 'Lorentzian: Δν½ = 1 / (π T₂*).' },
+        { id: 'conc', title: 'Sample concentration', inputs: [{ k: 'mg', label: 'Mass', v: '5', unit: 'mg' }, { k: 'mw', label: 'Molar mass', v: '180.16', unit: 'g/mol' }, { k: 'ml', label: 'Volume', v: '0.6', unit: 'mL' }],
+          calc: (v) => [['Amount', 1000 * v.mg / v.mw, 'µmol'], ['Concentration', 1000 * v.mg / v.mw / v.ml, 'mM']] },
+    ],
+    mri: [
+        larmorCard('mri-larmor', 'T', '3', ['1H', '2H', '3He', '7Li', '13C', '17O', '19F', '23Na', '31P', '39K', '129Xe']),
+        { id: 'protocol', title: 'Resolution, time and SNR', wide: true,
+          inputs: [{ k: 'fx', label: 'FOV, read', v: '220', unit: 'mm' }, { k: 'fy', label: 'FOV, phase', v: '220', unit: 'mm' },
+              { k: 'nx', label: 'Matrix, read', v: '256' }, { k: 'ny', label: 'Matrix, phase', v: '256' },
+              { k: 'dz', label: 'Slice or partition', v: '3', unit: 'mm' }, { k: 'nz', label: 'Partitions (3D; 1 for 2D)', v: '1' },
+              { k: 'tr', label: 'TR', v: '500', unit: 'ms' }, { k: 'nex', label: 'Averages', v: '1' }, { k: 'etl', label: 'Echo train', v: '1' },
+              { k: 'bw', label: 'Bandwidth', v: '200', unit: 'Hz/px' }, { k: 'b0', label: 'Field', v: '3', unit: 'T' }],
+          calc: (v) => {
+              const dx = v.fx / v.nx, dy = v.fy / v.ny, vol = dx * dy * v.dz, total = v.bw * v.nx;
+              return [['Voxel', `${fmt(dx, 3)} × ${fmt(dy, 3)} × ${fmt(v.dz, 3)}`, 'mm'], ['Voxel volume', vol, 'mm³'],
+                  ['Receiver bandwidth', total / 1000, 'kHz (± ' + fmt(total / 2000, 4) + ')'], ['Dwell', 1e6 / total, 'µs'], ['Readout', 1000 / v.bw, 'ms'],
+                  ['Scan time', minutesSeconds(v.tr * v.ny * v.nz * v.nex / v.etl / 1000)],
+                  ['Fat–water shift', 3.4e-6 * G1H * 1e6 * v.b0 / v.bw, 'px'],
+                  ['Relative SNR', vol * Math.sqrt(v.ny * v.nz * v.nex / v.bw) * v.b0, 'a.u.']];
+          },
+          note: 'Time = TR × phase steps × partitions × averages ÷ echo train (slices of a 2D scan share the TR). Relative SNR ∝ voxel × √(phase steps × partitions × averages ÷ bandwidth per pixel) × B₀: only for comparing settings.' },
+        { id: 'fatwater', title: 'Fat and water', inputs: [{ k: 'b0', label: 'Field', v: '3', unit: 'T' }, { k: 'ppm', label: 'Fat shift', v: '3.4', unit: 'ppm' }],
+          calc: (v) => { const df = v.ppm * G1H * v.b0; return [['Frequency difference', df, 'Hz'], ['First opposed-phase TE', 1000 / (2 * df), 'ms'], ['First in-phase TE', 1000 / df, 'ms']]; },
+          note: 'The main fat peak; phases repeat every in-phase TE.' },
+        { id: 'se', title: 'Spin-echo contrast', inputs: [{ k: 'tr', label: 'TR', v: '500', unit: 'ms' }, { k: 'te', label: 'TE', v: '15', unit: 'ms' },
+              { k: 't1a', label: 'Tissue A T₁', v: '1000', unit: 'ms' }, { k: 't2a', label: 'Tissue A T₂', v: '70', unit: 'ms' },
+              { k: 't1b', label: 'Tissue B T₁', v: '1600', unit: 'ms' }, { k: 't2b', label: 'Tissue B T₂', v: '100', unit: 'ms' }],
+          calc: (v) => { const s = (t1, t2) => (1 - Math.exp(-v.tr / t1)) * Math.exp(-v.te / t2), a = s(v.t1a, v.t2a), b = s(v.t1b, v.t2b);
+              return [['Signal A', a], ['Signal B', b], ['Contrast (A − B)', a - b], ['Ratio (A ÷ B)', b ? a / b : NaN]]; },
+          note: 'S = (1 − e^(−TR/T₁)) e^(−TE/T₂), proton density 1. Rough 3 T values in ms (T₁/T₂): white matter 1000/70, grey matter 1600/100, CSF 4000/2000, fat 380/70, muscle 1400/40. Published values vary.' },
+        { id: 'gre', title: 'Spoiled gradient echo', inputs: [{ k: 't1', label: 'T₁', v: '1000', unit: 'ms' }, { k: 't2', label: 'T₂*', v: '50', unit: 'ms' },
+              { k: 'tr', label: 'TR', v: '20', unit: 'ms' }, { k: 'te', label: 'TE', v: '5', unit: 'ms' }, { k: 'a', label: 'Flip angle', v: '15', unit: '°' }],
+          calc: (v) => {
+              const e1 = Math.exp(-v.tr / v.t1), t2 = Math.exp(-v.te / v.t2);
+              const sig = (deg) => { const a = deg * Math.PI / 180; return Math.sin(a) * (1 - e1) / (1 - Math.cos(a) * e1) * t2; };
+              const ernst = Math.acos(e1) * 180 / Math.PI;
+              return [['Signal', sig(v.a)], ['Ernst angle', ernst, '°'], ['Signal at the Ernst angle', sig(ernst)]];
+          }, note: 'S = sin α (1 − E₁) / (1 − cos α E₁) · e^(−TE/T₂*), E₁ = e^(−TR/T₁).' },
+        { id: 'ir', title: 'Inversion time to null', inputs: [{ k: 't1', label: 'T₁', v: '4000', unit: 'ms' }, { k: 'tr', label: 'TR', v: '9000', unit: 'ms' }],
+          calc: (v) => [['TI to null', v.t1 * Math.log(2 / (1 + Math.exp(-v.tr / v.t1))), 'ms'], ['With a very long TR', v.t1 * Math.LN2, 'ms']],
+          note: 'TI = T₁ ln(2 / (1 + e^(−TR/T₁))). CSF for FLAIR ≈ 4000 ms at 3 T; fat for STIR ≈ 380 ms.' },
+        { id: 'grad', title: 'Gradients', inputs: [{ k: 'bw', label: 'Receiver bandwidth', v: '50', unit: 'kHz' }, { k: 'fov', label: 'FOV, read', v: '220', unit: 'mm' },
+              { k: 'rf', label: 'RF pulse bandwidth', v: '1000', unit: 'Hz' }, { k: 'dz', label: 'Slice', v: '3', unit: 'mm' }],
+          calc: (v) => [['Readout gradient', v.bw * 1e3 / (G1H * 1e6 * v.fov / 1000) * 1000, 'mT/m'], ['Slice-select gradient', v.rf / (G1H * 1e6 * v.dz / 1000) * 1000, 'mT/m']],
+          note: 'G = bandwidth ÷ (γ̄ × distance), for ¹H.' },
+        { id: 'bval', title: 'Diffusion b-value', inputs: [{ k: 'g', label: 'Gradient', v: '40', unit: 'mT/m' }, { k: 'd', label: 'δ (duration)', v: '20', unit: 'ms' }, { k: 'D', label: 'Δ (separation)', v: '40', unit: 'ms' }],
+          calc: (v) => { const g = 2 * Math.PI * G1H * 1e6, q = g * v.g / 1000 * v.d / 1000; return [['b', q * q * (v.D / 1000 - v.d / 3000) / 1e6, 's/mm²']]; },
+          note: 'Stejskal–Tanner, rectangular lobes: b = γ²G²δ²(Δ − δ/3).' },
+        { id: 'adc', title: 'ADC from two b-values', inputs: [{ k: 'b1', label: 'b₁', v: '0', unit: 's/mm²' }, { k: 's1', label: 'Signal at b₁', v: '1000' }, { k: 'b2', label: 'b₂', v: '1000', unit: 's/mm²' }, { k: 's2', label: 'Signal at b₂', v: '400' }],
+          calc: (v) => [['ADC', 1000 * Math.log(v.s1 / v.s2) / (v.b2 - v.b1), '× 10⁻³ mm²/s']], note: 'ADC = ln(S₁/S₂) / (b₂ − b₁).' },
+        { id: 't2fit', title: 'T₂ from two echoes', inputs: [{ k: 'te1', label: 'TE₁', v: '10', unit: 'ms' }, { k: 's1', label: 'Signal at TE₁', v: '1000' }, { k: 'te2', label: 'TE₂', v: '60', unit: 'ms' }, { k: 's2', label: 'Signal at TE₂', v: '400' }],
+          calc: (v) => { const t2 = (v.te2 - v.te1) / Math.log(v.s1 / v.s2); return [['T₂', t2, 'ms'], ['R₂', 1000 / t2, 's⁻¹']]; },
+          note: 'T₂ = (TE₂ − TE₁) / ln(S₁/S₂). With gradient echoes it gives T₂*.' },
+    ],
+};
+
+function defaultOf(f) { return typeof f.v === 'function' ? f.v() : f.v; }
+
+function renderCards(mode) {
+    const host = $('cards');
+    host.replaceChildren();
+    for (const card of CARDS[mode]) {
+        const key = `${mode}.${card.id}`;
+        const saved = store.cards[key] || {};
+        const el = document.createElement('section');
+        el.className = 'card' + (card.wide ? ' wide' : '');
+        const h = document.createElement('h3');
+        h.textContent = card.title;
+        const fields = document.createElement('div');
+        fields.className = 'fields';
+        const controls = {};
+
+        const control = (f) => {
+            let c;
+            if (f.type === 'select' || f.options) {
+                c = document.createElement('select');
+                for (const [value, label] of f.options) c.add(new Option(label, value));
+            } else if (f.type === 'area') {
+                c = document.createElement('textarea');
+                c.rows = 3;
+                c.spellcheck = false;
+            } else {
+                c = document.createElement('input');
+                c.type = f.type === 'date' ? 'date' : 'text';
+                c.autocomplete = 'off';
+                c.spellcheck = false;
+            }
+            c.value = own(saved, f.k) ? saved[f.k] : defaultOf(f);
+            if (f.type === 'select' && !c.value) c.value = defaultOf(f);
+            controls[f.k] = { el: c, f };
+            c.addEventListener('input', () => {
+                store.cards[key] = Object.fromEntries(Object.entries(controls).map(([k, x]) => [k, x.el.value]));
+                save();
+                update();
+            });
+            return c;
+        };
+
+        for (const f of card.inputs) {
+            const id = `${key}.${f.k}`;
+            const label = document.createElement('label');
+            const name = document.createElement('span');
+            name.textContent = f.label;
+            const c = control(f);
+            c.id = id;
+            label.htmlFor = id;
+            const unit = document.createElement('span');
+            unit.className = 'unit';
+            if (f.units) unit.appendChild(control({ ...f.units, type: 'select' }));
+            else unit.textContent = f.unit || '';
+            if (f.type === 'area') { name.className = 'full'; c.classList.add('full'); fields.append(name, c); }
+            else { label.append(name); fields.append(label, c, unit); }
+        }
+
+        const out = document.createElement('div');
+        out.className = 'out';
+        el.append(h, fields, out);
+        if (card.note) {
+            const note = document.createElement('p');
+            note.className = 'note';
+            note.textContent = card.note;
+            el.append(note);
+        }
+        host.appendChild(el);
+
+        function update() {
+            const v = {}, raw = {};
+            let missing = false;
+            for (const [k, { el: c, f }] of Object.entries(controls)) {
+                raw[k] = c.value.trim();
+                if (f.type || c.tagName === 'SELECT') { v[k] = raw[k]; continue; }
+                let x = NaN;
+                try { x = evaluate(raw[k]).value; } catch (e) {}
+                c.setAttribute('aria-invalid', !Number.isFinite(x));
+                if (!Number.isFinite(x)) missing = true;
+                v[k] = x;
+            }
+            if (missing) return message('Fill in each box with a number.');
+            let rows;
+            try { rows = card.calc(v, raw); } catch (e) { return message(e.message); }
+            const parts = [];
+            const table = document.createElement('table');
+            for (const row of rows) {
+                if (!Array.isArray(row)) {
+                    const t = document.createElement('table');
+                    t.className = row.cls || '';
+                    const head = t.createTHead().insertRow();
+                    for (const hcell of row.head) { const th = document.createElement('th'); th.textContent = hcell; head.appendChild(th); }
+                    const body = t.createTBody();
+                    for (const r of row.body) { const tr = body.insertRow(); for (const cell of r) tr.insertCell().textContent = cell; }
+                    parts.push(t);
+                    continue;
+                }
+                const [label, value, unit = '', sig] = row;
+                const tr = table.insertRow();
+                tr.insertCell().textContent = label;
+                const vc = tr.insertCell();
+                vc.className = 'v';
+                vc.textContent = fmt(value, sig);
+                const uc = tr.insertCell();
+                uc.className = 'u';
+                uc.textContent = unit;
+            }
+            if (table.rows.length) parts.unshift(table);
+            out.replaceChildren(...parts);
+        }
+        function message(text) {
+            const p = document.createElement('p');
+            p.className = 'bad';
+            p.textContent = text;
+            out.replaceChildren(p);
+        }
+        update();
+    }
+}
+
+// ---------------------------------------------------------------------------------------
+// Units: every unit of a kind against the one you're converting from.
+
+const UNITS = {
+    Length: [['m', 1, 'metre'], ['km', 1e3, 'kilometre'], ['cm', 1e-2, 'centimetre'], ['mm', 1e-3, 'millimetre'], ['µm', 1e-6, 'micrometre'],
+        ['nm', 1e-9, 'nanometre'], ['Å', 1e-10, 'ångström'], ['in', 0.0254, 'inch'], ['ft', 0.3048, 'foot'], ['yd', 0.9144, 'yard'],
+        ['mi', 1609.344, 'mile'], ['nmi', 1852, 'nautical mile']],
+    Area: [['m²', 1, 'square metre'], ['cm²', 1e-4, 'square centimetre'], ['mm²', 1e-6, 'square millimetre'], ['km²', 1e6, 'square kilometre'],
+        ['ha', 1e4, 'hectare'], ['acre', 4046.8564224, 'acre'], ['ft²', 0.09290304, 'square foot'], ['in²', 0.00064516, 'square inch'], ['mi²', 2589988.110336, 'square mile']],
+    Volume: [['L', 1, 'litre'], ['mL', 1e-3, 'millilitre'], ['µL', 1e-6, 'microlitre'], ['m³', 1000, 'cubic metre'], ['cm³', 1e-3, 'cubic centimetre'],
+        ['gal', 3.785411784, 'US gallon'], ['qt', 0.946352946, 'US quart'], ['cup', 0.2365882365, 'US cup'], ['fl oz', 0.0295735295625, 'US fluid ounce'],
+        ['tbsp', 0.01478676478125, 'tablespoon'], ['tsp', 0.00492892159375, 'teaspoon'], ['imp gal', 4.54609, 'imperial gallon'], ['imp pt', 0.56826125, 'imperial pint']],
+    Mass: [['kg', 1, 'kilogram'], ['g', 1e-3, 'gram'], ['mg', 1e-6, 'milligram'], ['µg', 1e-9, 'microgram'], ['t', 1000, 'tonne'],
+        ['lb', 0.45359237, 'pound'], ['oz', 0.028349523125, 'ounce'], ['st', 6.35029318, 'stone']],
+    Time: [['s', 1, 'second'], ['ms', 1e-3, 'millisecond'], ['µs', 1e-6, 'microsecond'], ['ns', 1e-9, 'nanosecond'], ['min', 60, 'minute'],
+        ['h', 3600, 'hour'], ['d', 86400, 'day'], ['wk', 604800, 'week'], ['yr', 31557600, 'year (365.25 days)']],
+    Speed: [['m/s', 1, 'metre a second'], ['km/h', 1 / 3.6, 'kilometre an hour'], ['mph', 0.44704, 'mile an hour'], ['kn', 1852 / 3600, 'knot'], ['ft/s', 0.3048, 'foot a second']],
+    Temperature: [['°C', null, 'Celsius'], ['°F', null, 'Fahrenheit'], ['K', null, 'kelvin'], ['°R', null, 'Rankine']],
+    Pressure: [['Pa', 1, 'pascal'], ['kPa', 1e3, 'kilopascal'], ['MPa', 1e6, 'megapascal'], ['bar', 1e5, 'bar'], ['mbar', 100, 'millibar'],
+        ['atm', 101325, 'atmosphere'], ['Torr', 101325 / 760, 'torr'], ['mmHg', 133.322387415, 'millimetre of mercury'], ['psi', 6894.757293168, 'pound per square inch'], ['cmH₂O', 98.0665, 'centimetre of water']],
+    Energy: [['J', 1, 'joule'], ['kJ', 1e3, 'kilojoule'], ['cal', 4.184, 'calorie'], ['kcal', 4184, 'kilocalorie'], ['Wh', 3600, 'watt-hour'],
+        ['kWh', 3.6e6, 'kilowatt-hour'], ['eV', 1.602176634e-19, 'electronvolt'], ['BTU', 1055.05585262, 'British thermal unit'], ['erg', 1e-7, 'erg']],
+    Power: [['W', 1, 'watt'], ['kW', 1e3, 'kilowatt'], ['MW', 1e6, 'megawatt'], ['mW', 1e-3, 'milliwatt'], ['hp', 745.69987158227, 'horsepower'], ['BTU/h', 0.29307107, 'BTU an hour']],
+    'Magnetic field': [['T', 1, 'tesla'], ['mT', 1e-3, 'millitesla'], ['µT', 1e-6, 'microtesla'], ['nT', 1e-9, 'nanotesla'], ['G', 1e-4, 'gauss'], ['mG', 1e-7, 'milligauss']],
+    Frequency: [['Hz', 1, 'hertz'], ['kHz', 1e3, 'kilohertz'], ['MHz', 1e6, 'megahertz'], ['GHz', 1e9, 'gigahertz'], ['rpm', 1 / 60, 'turns a minute'], ['rad/s', 1 / (2 * Math.PI), 'radians a second']],
+    Angle: [['°', Math.PI / 180, 'degree'], ['rad', 1, 'radian'], ['grad', Math.PI / 200, 'gradian'], ['turn', 2 * Math.PI, 'turn'], ['′', Math.PI / 10800, 'arcminute'], ['″', Math.PI / 648000, 'arcsecond']],
+    Concentration: [['M', 1, 'molar'], ['mM', 1e-3, 'millimolar'], ['µM', 1e-6, 'micromolar'], ['nM', 1e-9, 'nanomolar'], ['pM', 1e-12, 'picomolar']],
+    Data: [['B', 1, 'byte'], ['bit', 1 / 8, 'bit'], ['kB', 1e3, 'kilobyte'], ['MB', 1e6, 'megabyte'], ['GB', 1e9, 'gigabyte'], ['TB', 1e12, 'terabyte'],
+        ['KiB', 1024, 'kibibyte'], ['MiB', 1024 ** 2, 'mebibyte'], ['GiB', 1024 ** 3, 'gibibyte'], ['TiB', 1024 ** 4, 'tebibyte']],
+};
+const toKelvin = { '°C': (x) => x + 273.15, '°F': (x) => (x - 32) * 5 / 9 + 273.15, K: (x) => x, '°R': (x) => x * 5 / 9 };
+const fromKelvin = { '°C': (k) => k - 273.15, '°F': (k) => (k - 273.15) * 9 / 5 + 32, K: (k) => k, '°R': (k) => k * 9 / 5 };
+
+const uKind = $('u-kind'), uFrom = $('u-from'), uValue = $('u-value');
+for (const kind of Object.keys(UNITS)) uKind.add(new Option(kind, kind));
+store.units = store.units || { kind: 'Length', from: 'm', value: '1' };
+function unitOptions() {
+    uFrom.replaceChildren(...UNITS[uKind.value].map(([sym, , name]) => new Option(`${name} (${sym})`, sym)));
+}
+uKind.value = UNITS[store.units.kind] ? store.units.kind : 'Length';
+unitOptions();
+uFrom.value = store.units.from;
+if (!uFrom.value) uFrom.selectedIndex = 0;
+uValue.value = store.units.value;
+function convertUnits() {
+    store.units = { kind: uKind.value, from: uFrom.value, value: uValue.value };
+    save();
+    const table = $('u-table');
+    let x = NaN;
+    try { x = evaluate(uValue.value).value; } catch (e) {}
+    uValue.setAttribute('aria-invalid', !Number.isFinite(x));
+    const list = UNITS[uKind.value];
+    const from = list.find((u) => u[0] === uFrom.value);
+    table.replaceChildren(...list.map(([sym, factor, name]) => {
+        const tr = document.createElement('tr');
+        if (sym === uFrom.value) tr.className = 'from';
+        let y;
+        if (factor === null) y = fromKelvin[sym](toKelvin[from[0]](x));
+        else y = x * from[1] / factor;
+        tr.insertCell().textContent = sym;
+        tr.insertCell().textContent = name;
+        tr.insertCell().textContent = Number.isFinite(x) ? fmt(y, 8) : '—';
+        return tr;
+    }));
+}
+uKind.addEventListener('change', () => { unitOptions(); convertUnits(); });
+uFrom.addEventListener('change', convertUnits);
+uValue.addEventListener('input', convertUnits);
+
+// ---------------------------------------------------------------------------------------
+// Programmer: one whole number in four bases, cut to a width for its two's complement.
+
+const PROG = ['p-dec', 'p-hex', 'p-oct', 'p-bin'].map($);
+let pv = BigInt(store.prog || '255');
+const group = (s, n) => s.replace(new RegExp(`\\B(?=(.{${n}})+$)`, 'g'), ' ');
+function showProgrammer(except) {
+    const w = BigInt($('p-width').value), u = BigInt.asUintN(Number(w), pv), s = BigInt.asIntN(Number(w), pv);
+    const digits = { 16: Number(w) / 4, 8: Math.ceil(Number(w) / 3), 2: Number(w) };
+    for (const field of PROG) {
+        if (field === except) continue;
+        const base = +field.dataset.base;
+        field.value = base === 10 ? pv.toString() : group(u.toString(base).toUpperCase().padStart(digits[base], '0'), base === 8 ? 3 : 4);
+        field.setAttribute('aria-invalid', 'false');
+    }
+    const rows = [[`Unsigned, ${w} bits`, u.toString()], [`Signed, ${w} bits`, s.toString()],
+        ['Bits set', [...u.toString(2)].filter((c) => c === '1').length]];
+    if (pv !== u && pv !== s) rows.unshift(['Note', `Doesn’t fit in ${w} bits; the other bases show the lowest ${w}.`]);
+    if (u < 0x110000n && u >= 32n && !(u >= 0xd800n && u <= 0xdfffn)) rows.push(['Character', `${String.fromCodePoint(Number(u))}  (U+${u.toString(16).toUpperCase().padStart(4, '0')})`]);
+    $('p-info').replaceChildren(...rows.map(([k, v]) => { const tr = document.createElement('tr'); tr.insertCell().textContent = k; tr.insertCell().textContent = v; return tr; }));
+    store.prog = pv.toString();
+    save();
+}
+for (const field of PROG) {
+    field.addEventListener('input', () => {
+        const base = +field.dataset.base;
+        let raw = field.value.replace(/[\s_]/g, '').toLowerCase();
+        const neg = base === 10 && raw.startsWith('-');
+        if (neg) raw = raw.slice(1);
+        raw = raw.replace(/^0[xob]/, '');
+        const ok = { 10: /^\d+$/, 16: /^[0-9a-f]+$/, 8: /^[0-7]+$/, 2: /^[01]+$/ }[base].test(raw);
+        field.setAttribute('aria-invalid', !ok);
+        if (!ok) return;
+        const prefix = { 10: '', 16: '0x', 8: '0o', 2: '0b' }[base];
+        pv = BigInt(prefix + raw) * (neg ? -1n : 1n);
+        showProgrammer(field);
+    });
+}
+$('p-width').addEventListener('change', () => showProgrammer(null));
+
+// ---------------------------------------------------------------------------------------
+// Modes
+
+let mode = MODES.some(([m]) => '#' + m === location.hash) ? location.hash.slice(1) : (store.mode || 'simple');
+if (!MODES.some(([m]) => m === mode)) mode = 'simple';
+for (const [m, label] of MODES) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.mode = m;
+    b.textContent = label;
+    b.onclick = () => setMode(m);
+    $('modes').appendChild(b);
+}
+function setMode(m) {
+    mode = m;
+    store.mode = m;
+    save();
+    history.replaceState(null, '', m === 'simple' ? location.pathname : '#' + m);
+    for (const b of $('modes').children) b.classList.toggle('active', b.dataset.mode === m);
+    const calc = m === 'simple' || m === 'scientific';
+    $('mode-calc').hidden = !calc;
+    document.body.classList.toggle('sci', m === 'scientific');
+    $('mode-cards').hidden = !CARDS[m];
+    $('mode-units').hidden = m !== 'units';
+    $('mode-programmer').hidden = m !== 'programmer';
+    if (CARDS[m]) renderCards(m);
+    if (m === 'units') convertUnits();
+    if (m === 'programmer') showProgrammer(null);
+    if (calc && matchMedia('(hover: hover)').matches) exprBox.focus();
+}
+addEventListener('hashchange', () => { const m = location.hash.slice(1); if (MODES.some(([x]) => x === m)) setMode(m); });
+
+showPast(); showAngle(); showVars(); preview();
+setMode(mode);
+</script>
 </body>
 </html>
