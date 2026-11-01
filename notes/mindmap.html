@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mind map · mbolding</title>
+<link rel="stylesheet" href="../style.css">
+<script src="../theme.js"></script>
+<style>
+.toolbar { display: flex; flex-wrap: wrap; gap: 0.4em; align-items: center; margin: 0 0 0.7em; }
+.toolbar button { font-size: 14px; padding: 0.3em 0.7em; }
+.toolbar .gap { flex: 1; }
+.stage { position: relative; height: clamp(22em, 68vh, 50em); background: var(--surface); border: 1px solid var(--rule);
+  border-radius: var(--radius); overflow: hidden; touch-action: none; }
+.stage canvas { display: block; width: 100%; height: 100%; cursor: grab; outline: none; }
+.stage canvas:focus-visible { box-shadow: inset 0 0 0 2px var(--link); }
+.stage canvas.dragging { cursor: grabbing; }
+.stage canvas.linking { cursor: crosshair; }
+#edit { position: absolute; display: none; text-align: center; font: 15px var(--font-ui); padding: 0.25em 0.5em; z-index: 2; }
+.help { font: 14px/1.6 var(--font-ui); color: var(--muted); margin: 0.7em 0 0; }
+.help kbd { font-size: 12px; }
+.export { margin-top: 1.4em; }
+#mermaid-out { width: 100%; min-height: 10em; font: 13px/1.45 var(--font-mono); }
+</style>
+</head>
+<body class="wide">
+<header><a href="../">mbolding</a> · <a href="./">Notes</a></header>
+<h1>Mind map</h1>
+
+<div class="toolbar">
+  <button type="button" id="add" title="A new idea joined to the selected one (Tab)">Add idea</button>
+  <button type="button" id="link" aria-pressed="false" title="Join or unjoin two ideas (or Shift-click)">Join</button>
+  <button type="button" id="rename" title="Rename the selected idea (Enter)">Rename</button>
+  <button type="button" id="delete" title="Delete the selected idea (Delete)">Delete</button>
+  <button type="button" id="undo" title="Undo (⌘Z or Ctrl+Z)">Undo</button>
+  <span class="gap"></span>
+  <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+  <button type="button" id="fit">Fit</button>
+  <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+  <button type="button" id="png">PNG</button>
+  <button type="button" id="to-mermaid">Mermaid</button>
+  <button type="button" id="clear">Start over</button>
+</div>
+
+<div class="stage" id="stage">
+  <canvas id="map" tabindex="0" aria-label="Mind map. Tab adds an idea, Enter renames, Delete removes, arrow keys move between ideas."></canvas>
+  <input type="text" id="edit" aria-label="Idea" autocomplete="off">
+</div>
+<p class="help">
+  Double-click empty space for a new idea, joined to the one you had selected; double-click an idea to rename it.
+  Drag ideas to move them and the background to look around; pinch, <kbd>Ctrl</kbd>-scroll or the buttons zoom.
+  Shift-click, or <b>Join</b>, links two ideas or unlinks them.
+  Keys: <kbd>Tab</kbd> new idea, <kbd>Enter</kbd> rename, <kbd>Delete</kbd> remove, arrows to move between ideas.
+  The map is saved in this browser as you go.
+</p>
+
+<div class="export" id="export" hidden>
+  <h2>As Mermaid</h2>
+  <textarea id="mermaid-out" readonly spellcheck="false"></textarea>
+  <div class="row">
+    <button type="button" class="primary" id="open-mermaid">Open in the Mermaid page</button>
+    <button type="button" id="copy-mermaid">Copy</button>
+  </div>
+</div>
+
+<footer><a href="./">Notes</a> · <a href="../">Back home</a></footer>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const stage = $('stage'), canvas = $('map'), ctx = canvas.getContext('2d'), editBox = $('edit');
+const css = (name) => getComputedStyle(document.documentElement).getPropertyValue('--' + name).trim();
+
+// The map: ideas with a position in map units, and links between their ids. The first idea
+// is the centre one and is drawn filled. view turns map units into screen pixels:
+// screen = map × k + (x, y).
+function blank() { return { nodes: [{ id: 1, x: 0, y: 0, text: 'Main idea' }], links: [], next: 2 }; }
+function load() {
+    try {
+        const m = JSON.parse(localStorage.getItem('mindmap'));
+        if (m && Array.isArray(m.nodes) && Array.isArray(m.links)) return m;
+    } catch (e) {}
+    return blank();
+}
+let map = load();
+let view = { x: 0, y: 0, k: 1 };
+let W = 0, H = 0;
+let selected = null, linkMode = false, pointerAt = null;
+const undoStack = [];
+
+function save() { try { localStorage.setItem('mindmap', JSON.stringify(map)); } catch (e) {} }
+function remember() { undoStack.push(JSON.stringify(map)); if (undoStack.length > 100) undoStack.shift(); }
+function undo() {
+    if (!undoStack.length) return;
+    map = JSON.parse(undoStack.pop());
+    selected = map.nodes.find((n) => n.id === selected?.id) || null;
+    save(); draw();
+}
+
+const byId = (id) => map.nodes.find((n) => n.id === id);
+const isRoot = (n) => n === map.nodes[0];
+const neighbours = (n) => map.links.filter((l) => l.includes(n.id)).map(([a, b]) => byId(a === n.id ? b : a)).filter(Boolean);
+const linked = (a, b) => map.links.findIndex(([x, y]) => (x === a.id && y === b.id) || (x === b.id && y === a.id));
+
+function font(n) { return `${isRoot(n) ? 600 : 400} ${isRoot(n) ? 17 : 15}px ${css('font-ui')}`; }
+function box(n, c = ctx) {
+    c.font = font(n);
+    return { w: Math.max(64, c.measureText(n.text || ' ').width + (isRoot(n) ? 36 : 28)), h: isRoot(n) ? 44 : 36 };
+}
+function hit(p) {
+    for (let i = map.nodes.length - 1; i >= 0; i--) {
+        const n = map.nodes[i], b = box(n);
+        if (Math.abs(p.x - n.x) <= b.w / 2 && Math.abs(p.y - n.y) <= b.h / 2) return n;
+    }
+    return null;
+}
+const toMap = (e) => {
+    const r = canvas.getBoundingClientRect();
+    return { x: (e.clientX - r.left - view.x) / view.k, y: (e.clientY - r.top - view.y) / view.k };
+};
+
+// ---------------------------------------------------------------------------------------
+// Drawing, to the screen or, for a PNG, to a bigger canvas of its own.
+
+function paint(c, v, width, height, forExport) {
+    c.clearRect(0, 0, width, height);
+    if (forExport) { c.fillStyle = css('surface'); c.fillRect(0, 0, width, height); }
+    c.save();
+    c.translate(v.x, v.y);
+    c.scale(v.k, v.k);
+    c.lineCap = 'round';
+    c.strokeStyle = css('muted');
+    c.lineWidth = 2;
+    for (const [a, b] of map.links) {
+        const na = byId(a), nb = byId(b);
+        if (!na || !nb) continue;
+        c.beginPath();
+        // A gentle S-curve reads better than a straight line in a busy map.
+        const mx = (na.x + nb.x) / 2;
+        c.moveTo(na.x, na.y);
+        c.bezierCurveTo(mx, na.y, mx, nb.y, nb.x, nb.y);
+        c.stroke();
+    }
+    if (!forExport && linkMode && selected && pointerAt) {
+        c.setLineDash([6, 6]);
+        c.strokeStyle = css('link');
+        c.beginPath();
+        c.moveTo(selected.x, selected.y);
+        c.lineTo(pointerAt.x, pointerAt.y);
+        c.stroke();
+        c.setLineDash([]);
+    }
+    for (const n of map.nodes) {
+        const b = box(n, c), root = isRoot(n);
+        c.beginPath();
+        c.roundRect(n.x - b.w / 2, n.y - b.h / 2, b.w, b.h, b.h / 2);
+        c.fillStyle = root ? css('link') : css('panel');
+        c.fill();
+        c.lineWidth = 1.5;
+        c.strokeStyle = root ? css('link') : css('rule');
+        c.stroke();
+        if (!forExport && n === selected) {
+            c.beginPath();
+            c.roundRect(n.x - b.w / 2 - 4, n.y - b.h / 2 - 4, b.w + 8, b.h + 8, b.h / 2 + 4);
+            c.lineWidth = 2.5;
+            c.strokeStyle = linkMode ? css('warn') : css('link');
+            c.stroke();
+        }
+        c.fillStyle = root ? css('on-link') : css('text');
+        c.font = font(n);
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText(n.text, n.x, n.y + 1);
+    }
+    c.restore();
+}
+function draw() {
+    paint(ctx, view, W, H, false);
+    $('delete').disabled = $('rename').disabled = !selected;
+    $('undo').disabled = !undoStack.length;
+}
+
+function resize() {
+    const dpr = window.devicePixelRatio || 1, oldW = W, oldH = H;
+    W = stage.clientWidth; H = stage.clientHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (oldW) { view.x += (W - oldW) / 2; view.y += (H - oldH) / 2; }
+    draw();
+}
+
+function bounds() {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const n of map.nodes) {
+        const b = box(n);
+        x0 = Math.min(x0, n.x - b.w / 2); x1 = Math.max(x1, n.x + b.w / 2);
+        y0 = Math.min(y0, n.y - b.h / 2); y1 = Math.max(y1, n.y + b.h / 2);
+    }
+    return { x0, y0, x1, y1 };
+}
+function fit() {
+    if (!map.nodes.length) { view = { x: W / 2, y: H / 2, k: 1 }; return draw(); }
+    const b = bounds(), pad = 40;
+    const k = Math.min(1.4, (W - 2 * pad) / Math.max(1, b.x1 - b.x0), (H - 2 * pad) / Math.max(1, b.y1 - b.y0));
+    view = { k, x: W / 2 - (b.x0 + b.x1) / 2 * k, y: H / 2 - (b.y0 + b.y1) / 2 * k };
+    draw();
+}
+function zoom(factor, sx = W / 2, sy = H / 2) {
+    const k = Math.min(3, Math.max(0.2, view.k * factor));
+    view.x = sx - (sx - view.x) * k / view.k;
+    view.y = sy - (sy - view.y) * k / view.k;
+    view.k = k;
+    draw();
+}
+
+// ---------------------------------------------------------------------------------------
+// Changing the map
+
+function addNode(x, y, text, parent) {
+    const n = { id: map.next++, x, y, text };
+    map.nodes.push(n);
+    if (parent) map.links.push([parent.id, n.id]);
+    return n;
+}
+/** Somewhere free near a parent, fanning out away from where the parent itself hangs. */
+function spotFor(parent) {
+    const others = neighbours(parent);
+    const grand = isRoot(parent) ? null : others[0];
+    const away = grand ? Math.atan2(parent.y - grand.y, parent.x - grand.x) : -Math.PI / 2;
+    const tries = [0, 0.7, -0.7, 1.4, -1.4, 2.1, -2.1, 2.8, -2.8, 3.14];
+    const r = isRoot(parent) ? 170 : 150;
+    for (const da of tries) {
+        const a = away + da, x = parent.x + Math.cos(a) * r, y = parent.y + Math.sin(a) * r * 0.75;
+        if (!map.nodes.some((n) => Math.abs(n.x - x) < 90 && Math.abs(n.y - y) < 45)) return { x, y };
+    }
+    return { x: parent.x + r, y: parent.y + (others.length - 2) * 50 };
+}
+function addChild() {
+    const parent = selected || map.nodes[0];
+    remember();
+    let n;
+    if (!parent) n = addNode(0, 0, '', null);
+    else { const p = spotFor(parent); n = addNode(p.x, p.y, '', parent); }
+    select(n);
+    save();
+    ensureVisible(n);
+    startEdit(n, true);
+}
+function removeNode(n) {
+    remember();
+    map.nodes = map.nodes.filter((x) => x !== n);
+    map.links = map.links.filter((l) => !l.includes(n.id));
+    if (selected === n) selected = null;
+    save(); draw();
+}
+function toggleLink(a, b) {
+    remember();
+    const i = linked(a, b);
+    if (i >= 0) map.links.splice(i, 1);
+    else map.links.push([a.id, b.id]);
+    save();
+}
+function select(n) { selected = n; draw(); }
+function setLinkMode(on) {
+    linkMode = on;
+    $('link').setAttribute('aria-pressed', on);
+    $('link').classList.toggle('active', on);
+    canvas.classList.toggle('linking', on);
+    draw();
+}
+function ensureVisible(n) {
+    const sx = n.x * view.k + view.x, sy = n.y * view.k + view.y;
+    if (sx < 60 || sx > W - 60 || sy < 40 || sy > H - 40) { view.x += W / 2 - sx; view.y += H / 2 - sy; draw(); }
+}
+
+// Renaming, in a box laid over the idea.
+let editing = null;
+function startEdit(n, isNew) {
+    editing = { n, isNew, before: n.text };
+    const b = box(n);
+    editBox.style.display = 'block';
+    editBox.style.width = Math.max(140, b.w * view.k + 30) + 'px';
+    editBox.value = n.text;
+    const r = editBox.getBoundingClientRect();
+    editBox.style.left = (n.x * view.k + view.x - r.width / 2) + 'px';
+    editBox.style.top = (n.y * view.k + view.y - r.height / 2) + 'px';
+    editBox.focus();
+    editBox.select();
+}
+function endEdit(keep) {
+    if (!editing) return;
+    const { n, isNew, before } = editing;
+    editing = null;
+    editBox.style.display = 'none';
+    const text = editBox.value.trim();
+    if (!keep && isNew) {
+        // A new idea left unnamed goes away again.
+        map.nodes = map.nodes.filter((x) => x !== n);
+        map.links = map.links.filter((l) => !l.includes(n.id));
+        undoStack.pop();
+        selected = null;
+    } else if (keep && text !== before) {
+        if (!isNew) remember();
+        n.text = text || 'Idea';
+    } else if (isNew) {
+        n.text = text || 'Idea';
+    }
+    save(); draw();
+    canvas.focus();
+}
+editBox.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); endEdit(true); }
+    if (e.key === 'Escape') { e.preventDefault(); endEdit(false); }
+    if (e.key === 'Tab') { e.preventDefault(); endEdit(true); addChild(); }
+});
+editBox.addEventListener('blur', () => endEdit(true));
+
+// ---------------------------------------------------------------------------------------
+// Pointers: mouse, pen and fingers. Two fingers pinch to zoom.
+
+const pointers = new Map();
+let drag = null, lastTap = null, pinch = null;
+
+canvas.addEventListener('pointerdown', (e) => {
+    if (editing) endEdit(true);
+    canvas.focus({ preventScroll: true });
+    canvas.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), k: view.k };
+        drag = null;
+        return;
+    }
+    if (e.button === 2) return;
+    const p = toMap(e), n = hit(p);
+    // A second tap close by and soon after is a double-click, for fingers as well as mice.
+    // A new idea joins the one selected before the first tap, which cleared the selection.
+    const now = performance.now(), prev = lastTap;
+    const double = prev && now - prev.t < 350 && Math.hypot(e.clientX - prev.x, e.clientY - prev.y) < 14;
+    lastTap = double ? null : { t: now, x: e.clientX, y: e.clientY, had: selected };
+
+    if (double) {
+        drag = null;
+        if (n) return startEdit(n, false);
+        remember();
+        const m = addNode(p.x, p.y, '', prev.had && map.nodes.includes(prev.had) ? prev.had : null);
+        select(m);
+        return startEdit(m, true);
+    }
+    if (n && (e.shiftKey || linkMode) && selected && selected !== n) {
+        toggleLink(selected, n);
+        select(n);
+        drag = null;
+        return;
+    }
+    if (n) {
+        select(n);
+        drag = { node: n, dx: p.x - n.x, dy: p.y - n.y, moved: false };
+    } else {
+        select(null);
+        drag = { pan: true, sx: e.clientX - view.x, sy: e.clientY - view.y };
+        canvas.classList.add('dragging');
+    }
+});
+
+canvas.addEventListener('pointermove', (e) => {
+    if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinch && pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        const r = canvas.getBoundingClientRect();
+        zoom(pinch.k * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d / view.k, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
+        return;
+    }
+    const p = toMap(e);
+    if (linkMode) { pointerAt = p; draw(); }
+    if (!drag) return;
+    if (drag.node) {
+        if (!drag.moved) { remember(); drag.moved = true; }
+        drag.node.x = p.x - drag.dx;
+        drag.node.y = p.y - drag.dy;
+        draw();
+    } else if (drag.pan) {
+        view.x = e.clientX - drag.sx;
+        view.y = e.clientY - drag.sy;
+        draw();
+    }
+});
+function release(e) {
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinch = null;
+    if (drag?.moved) save();
+    drag = null;
+    canvas.classList.remove('dragging');
+}
+canvas.addEventListener('pointerup', release);
+canvas.addEventListener('pointercancel', release);
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const r = canvas.getBoundingClientRect();
+    if (e.ctrlKey || e.metaKey) zoom(Math.exp(-e.deltaY / 200), e.clientX - r.left, e.clientY - r.top);
+    else { view.x -= e.deltaX; view.y -= e.deltaY; draw(); }
+}, { passive: false });
+
+// Keys, while the map has focus.
+canvas.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); return undo(); }
+    if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); return addChild(); }
+    if ((e.key === 'Enter' || e.key === 'F2') && selected) { e.preventDefault(); return startEdit(selected, false); }
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selected) { e.preventDefault(); return removeNode(selected); }
+    if (e.key === 'Escape') { setLinkMode(false); return select(null); }
+    const dirs = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+    if (dirs[e.key]) {
+        e.preventDefault();
+        const from = selected || map.nodes[0];
+        if (!from) return;
+        if (!selected) { select(from); return ensureVisible(from); }
+        // The nearest idea roughly in that direction.
+        const [dx, dy] = dirs[e.key];
+        let best = null, bestScore = Infinity;
+        for (const n of map.nodes) {
+            if (n === from) continue;
+            const vx = n.x - from.x, vy = n.y - from.y, along = vx * dx + vy * dy;
+            if (along <= 0) continue;
+            const score = along + 2 * Math.abs(vx * dy - vy * dx);
+            if (score < bestScore) { best = n; bestScore = score; }
+        }
+        if (best) { select(best); ensureVisible(best); }
+    }
+});
+
+// ---------------------------------------------------------------------------------------
+// The toolbar
+
+$('add').onclick = addChild;
+$('link').onclick = () => setLinkMode(!linkMode);
+$('rename').onclick = () => selected && startEdit(selected, false);
+$('delete').onclick = () => selected && removeNode(selected);
+$('undo').onclick = undo;
+$('fit').onclick = fit;
+$('zoom-in').onclick = () => zoom(1.25);
+$('zoom-out').onclick = () => zoom(0.8);
+$('clear').onclick = () => {
+    if (!confirm('Clear the map and start again? (Undo can bring it back.)')) return;
+    remember();
+    map = blank();
+    selected = null;
+    save(); fit();
+};
+
+$('png').onclick = () => {
+    if (!map.nodes.length) return;
+    const b = bounds(), pad = 30, scale = 2;
+    const w = (b.x1 - b.x0 + 2 * pad), h = (b.y1 - b.y0 + 2 * pad);
+    const c = document.createElement('canvas');
+    c.width = Math.ceil(w * scale);
+    c.height = Math.ceil(h * scale);
+    const cx = c.getContext('2d');
+    cx.setTransform(scale, 0, 0, scale, 0, 0);
+    paint(cx, { x: pad - b.x0, y: pad - b.y0, k: 1 }, w, h, true);
+    c.toBlob((blob) => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'mind-map.png';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+};
+
+function mermaidText() {
+    const label = (t) => '"' + t.replace(/"/g, '#quot;') + '"';
+    const lines = ['graph LR'];
+    for (const n of map.nodes) lines.push(`    n${n.id}${isRoot(n) ? `((${label(n.text)}))` : `(${label(n.text)})`}`);
+    for (const [a, b] of map.links) lines.push(`    n${a} --- n${b}`);
+    return lines.join('\n');
+}
+$('to-mermaid').onclick = () => {
+    $('mermaid-out').value = mermaidText();
+    $('export').hidden = false;
+    $('export').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+};
+$('open-mermaid').onclick = () => {
+    try { sessionStorage.setItem('mermaid-import', mermaidText()); } catch (e) {}
+    location.href = 'mermaid.html';
+};
+$('copy-mermaid').onclick = async (e) => {
+    try { await navigator.clipboard.writeText($('mermaid-out').value); e.target.textContent = 'Copied'; }
+    catch (err) { e.target.textContent = 'Couldn’t copy'; }
+    setTimeout(() => { e.target.textContent = 'Copy'; }, 1200);
+};
+
+addEventListener('storage', (e) => { if (e.key === 'mindmap') { map = load(); selected = null; draw(); } });
+window.addEventListener('themechange', draw);
+new ResizeObserver(resize).observe(stage);
+resize();
+fit();
+</script>
+</body>
+</html>

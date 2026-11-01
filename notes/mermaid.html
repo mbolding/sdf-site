@@ -8,165 +8,278 @@
 <script src="../theme.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
 <style>
-#input { height: 200px; font-family: var(--font-mono); }
-#output { overflow-x: auto; }
-#output:empty { display: none; }
-.popup { display: none; position: fixed; inset: 0; background: color-mix(in srgb, var(--bg) 75%, transparent); z-index: 1000; }
-.popup-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(40em, 90%); max-height: 80%; overflow-y: auto;
-                 background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 1em 1.4em; }
-.close { position: absolute; top: 0.3em; right: 0.6em; font-size: 24px; line-height: 1; cursor: pointer; color: var(--muted); }
-.close:hover { color: var(--text); }
-.cheatsheet h2 { margin-top: 0.6em; }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 1.2em; align-items: start; }
+@media (max-width: 820px) { .split { grid-template-columns: minmax(0, 1fr); } }
+#input { width: 100%; min-height: 24em; resize: vertical; font: 14px/1.5 var(--font-mono); tab-size: 4; }
+.status { font: 14px/1.5 var(--font-ui); min-height: 1.5em; margin: 0.4em 0 0; color: var(--muted); }
+.status.bad { color: var(--bad); }
+.preview { margin: 0; min-height: 24em; overflow: auto; display: flex; align-items: flex-start; justify-content: center; }
+.preview.stale svg { opacity: 0.35; }
+.preview svg { max-width: 100%; height: auto; }
+.preview .empty { font: 15px var(--font-ui); color: var(--muted); align-self: center; }
+.top { display: flex; flex-wrap: wrap; gap: 0.6em; align-items: center; margin: 0 0 0.8em; }
+.top label { font: 14px var(--font-ui); display: flex; gap: 0.5em; align-items: center; }
+.cheats { margin-top: 2em; }
+.cheats summary { cursor: pointer; font: 600 15px var(--font-ui); }
+.cheats table td:first-child { font-family: var(--font-mono); font-size: 13px; white-space: nowrap; }
 </style>
 </head>
-<body>
+<body class="wide">
 <header><a href="../">mbolding</a> · <a href="./">Notes</a></header>
 <h1>Mermaid diagrams</h1>
-<textarea id="input" placeholder="Enter your Mermaid diagram code here... Press Shift+Enter to render"></textarea>
-<div class="row">
-  <button class="primary" id="render-btn">Render Diagram</button>
-  <button id="cheatsheet-btn">Show Cheatsheet</button>
+<p class="tagline">Type <a href="https://mermaid.js.org/intro/">Mermaid</a> on the left and the diagram draws itself on the right. Your diagram is kept in this browser.</p>
+
+<div class="top">
+  <label>Start from an example
+    <select id="examples"><option value="">Choose…</option></select>
+  </label>
+  <span style="margin-left: auto" class="row" >
+    <button type="button" id="copy" disabled>Copy SVG</button>
+    <button type="button" id="svg" disabled>Download SVG</button>
+    <button type="button" id="png" disabled>Download PNG</button>
+  </span>
 </div>
-<div id="output" class="box"></div>
 
-<div id="cheatsheet-popup" class="popup">
-        <div class="popup-content">
-            <span class="close">&times;</span>
-            <div class="cheatsheet">
-                <h2>Mermaid Syntax Cheatsheet</h2>
+<div class="split">
+  <div>
+    <textarea id="input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Mermaid source"></textarea>
+    <p class="status" id="status" aria-live="polite"></p>
+  </div>
+  <div class="preview box" id="output"><p class="empty">The diagram appears here.</p></div>
+</div>
 
-                <h3>Flowchart</h3>
-                <pre>
-graph TD
-    A[Start] --> B{Decision}
-    B -->|Yes| C[Result 1]
-    B -->|No| D[Result 2]
-                </pre>
+<details class="cheats">
+  <summary>Syntax reminders</summary>
+  <table>
+    <tr><td>graph TD</td><td>A flowchart, top down; LR goes left to right</td></tr>
+    <tr><td>A[Box] --> B(Round) --> C{Choice}</td><td>Shapes, joined by arrows</td></tr>
+    <tr><td>C -->|yes| D</td><td>An arrow with a label; <code>---</code> is a plain line, <code>-.-></code> dotted, <code>==></code> thick</td></tr>
+    <tr><td>subgraph Name … end</td><td>A box around a group</td></tr>
+    <tr><td>sequenceDiagram</td><td><code>A->>B: message</code>, <code>B-->>A: reply</code>, <code>Note over A: text</code></td></tr>
+    <tr><td>classDiagram</td><td><code>Animal &lt;|-- Duck</code>, <code>Duck : +swim()</code></td></tr>
+    <tr><td>stateDiagram-v2</td><td><code>[*] --> Still</code>, <code>Still --> Moving : push</code></td></tr>
+    <tr><td>erDiagram</td><td><code>CUSTOMER ||--o{ ORDER : places</code></td></tr>
+    <tr><td>gantt</td><td><code>dateFormat YYYY-MM-DD</code>, <code>Task :a1, 2026-01-05, 7d</code>, <code>after a1</code></td></tr>
+    <tr><td>pie</td><td><code>"Label" : 42</code></td></tr>
+    <tr><td>mindmap</td><td>An outline: each idea indented under its parent</td></tr>
+    <tr><td>%% comment</td><td>A line Mermaid ignores</td></tr>
+  </table>
+  <p class="note">More in <a href="https://mermaid.js.org/intro/syntax-reference.html">Mermaid’s own reference</a>.</p>
+</details>
 
-                <h3>Sequence Diagram</h3>
-                <pre>
-sequenceDiagram
-    participant A as Alice
-    participant B as Bob
-    A->>B: Hello Bob, how are you?
-    B->>A: Great!
-                </pre>
-
-                <h3>Class Diagram</h3>
-                <pre>
-classDiagram
-    Animal <|-- Duck
-    Animal <|-- Fish
-    Animal : +int age
-    Animal : +String gender
-    Animal: +isMammal()
-    Animal: +mate()
-    class Duck{
-      +String beakColor
-      +swim()
-      +quack()
-    }
-    class Fish{
-      -int sizeInFeet
-      -canEat()
-    }
-                </pre>
-
-                <h3>Gantt Chart</h3>
-                <pre>
-gantt
-    title A Gantt Diagram
-    dateFormat  YYYY-MM-DD
-    section Section
-    A task           :a1, 2014-01-01, 30d
-    Another task     :after a1, 20d
-    section Another
-    Task in sec      :2014-01-12, 12d
-    Another task     :24d
-                </pre>
-
-                <h3>State Diagram</h3>
-                <pre>
-stateDiagram-v2
-    [*] --> Still
-    Still --> [*]
-    Still --> Moving
-    Moving --> Still
-    Moving --> Crash
-    Crash --> [*]
-                </pre>
-            </div>
-        </div>
-    </div>
+<footer><a href="./">Notes</a> · <a href="../">Back home</a></footer>
 
 <script>
-    // Mermaid's 'base' theme, filled in from the site's theme colours.
-    function setUpMermaid(startOnLoad) {
-        const c = SiteTheme.color;
-        mermaid.initialize({
-            startOnLoad,
-            theme: 'base',
-            themeVariables: {
-                darkMode: SiteTheme.isDark(),
-                background: c('bg'),
-                fontFamily: c('font-ui'),
-                primaryColor: c('surface'),
-                primaryTextColor: c('text'),
-                primaryBorderColor: c('link'),
-                secondaryColor: c('panel'),
-                tertiaryColor: c('panel'),
-                lineColor: c('muted'),
-                textColor: c('text'),
-                edgeLabelBackground: c('surface'),
-                clusterBkg: c('panel'),
-                clusterBorder: c('rule'),
-            },
-        });
+'use strict';
+const $ = (id) => document.getElementById(id);
+const input = $('input'), output = $('output'), status = $('status');
+
+const EXAMPLES = {
+    Flowchart: `graph TD
+    A[Idea] --> B{Worth doing?}
+    B -->|Yes| C[Plan it]
+    B -->|No| D[Write it down anyway]
+    C --> E((Done))
+    D -.-> A`,
+    Sequence: `sequenceDiagram
+    participant Me
+    participant SDF
+    Me->>SDF: ssh mbolding@sdf.org
+    SDF-->>Me: Welcome to SDF
+    Me->>SDF: git commit
+    Note over SDF: Page is live`,
+    Class: `classDiagram
+    Drink <|-- Espresso
+    Drink <|-- Latte
+    Drink : +int ml
+    Drink : +serve()
+    class Latte {
+      +String milk
+      +pourArt()
+    }`,
+    State: `stateDiagram-v2
+    [*] --> Idle
+    Idle --> Brewing : press
+    Brewing --> Ready : done
+    Ready --> Idle : drink
+    Ready --> [*]`,
+    'Entity relationship': `erDiagram
+    AUTHOR ||--o{ POST : writes
+    POST ||--o{ COMMENT : has
+    POST }o--o{ TAG : "tagged with"`,
+    Gantt: `gantt
+    title A small project
+    dateFormat YYYY-MM-DD
+    section Plan
+    Sketch ideas      :a1, 2026-11-02, 3d
+    Pick one          :after a1, 1d
+    section Build
+    Make it           :b1, 2026-11-06, 5d
+    Put it online     :after b1, 1d`,
+    Pie: `pie title Where the time goes
+    "Thinking" : 40
+    "Typing" : 25
+    "Fixing typos" : 35`,
+    'Mind map': `mindmap
+  root((Website))
+    Notes
+      Notepad
+      Mind map
+      Mermaid
+    Toys
+      Stipple
+      Minesweeper
+    Calc`,
+    Timeline: `timeline
+    title Unix-ish history
+    1969 : Unix at Bell Labs
+    1987 : SDF goes online
+    1991 : Linux and Gopher
+    2019 : Gemini`,
+};
+for (const name of Object.keys(EXAMPLES)) $('examples').add(new Option(name, name));
+
+// Mermaid's 'base' theme, filled in from the site's theme colours. Labels are drawn as SVG
+// text rather than HTML so a diagram can be turned into a PNG.
+function setUpMermaid() {
+    const c = SiteTheme.color;
+    mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: 'strict',
+        htmlLabels: false,
+        flowchart: { htmlLabels: false },
+        theme: 'base',
+        themeVariables: {
+            darkMode: SiteTheme.isDark(),
+            background: c('surface'),
+            fontFamily: c('font-ui'),
+            primaryColor: c('panel'),
+            primaryTextColor: c('text'),
+            primaryBorderColor: c('link'),
+            secondaryColor: c('surface'),
+            tertiaryColor: c('bg'),
+            lineColor: c('muted'),
+            textColor: c('text'),
+            noteBkgColor: c('panel'),
+            noteTextColor: c('text'),
+            edgeLabelBackground: c('surface'),
+            clusterBkg: c('bg'),
+            clusterBorder: c('rule'),
+        },
+    });
+}
+setUpMermaid();
+
+let lastSvg = '', renders = 0, timer = 0;
+
+async function render() {
+    const text = input.value;
+    try { localStorage.setItem('mermaid-draft', text); } catch (e) {}
+    const n = ++renders, id = 'diagram' + n;
+    if (!text.trim()) {
+        output.innerHTML = '<p class="empty">The diagram appears here.</p>';
+        output.classList.remove('stale');
+        setStatus('');
+        return setReady(false);
     }
-    setUpMermaid(true);
-
-    window.addEventListener('themechange', () => {
-        setUpMermaid(false);
-        if (document.querySelector('#output .mermaid')) renderDiagram();
-    });
-
-    function renderDiagram() {
-        const input = document.getElementById('input').value;
-        const output = document.getElementById('output');
-
-        const div = document.createElement('div');
-        div.className = 'mermaid';
-        div.textContent = input;
-        output.replaceChildren(div);
-        mermaid.init(undefined, '.mermaid');
+    try {
+        await mermaid.parse(text);
+        const { svg } = await mermaid.render(id, text);
+        if (n !== renders) return;   // a newer render has started
+        output.innerHTML = svg;
+        output.classList.remove('stale');
+        lastSvg = svg;
+        setStatus('');
+        setReady(true);
+    } catch (e) {
+        document.getElementById('d' + id)?.remove();   // Mermaid leaves its error drawing behind
+        if (n !== renders) return;
+        output.classList.add('stale');
+        setStatus(String(e.message || e).split('\n')[0].replace(/:\s*$/, '') + '.', true);
     }
+}
+function setStatus(text, bad) {
+    status.textContent = text;
+    status.classList.toggle('bad', !!bad);
+}
+function setReady(ok) {
+    for (const id of ['copy', 'svg', 'png']) $(id).disabled = !ok;
+}
+input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(render, 350); });
+input.addEventListener('keydown', (e) => {
+    // Tab indents, as Mermaid's nesting needs it; Escape then Tab leaves the box.
+    if (e.key === 'Tab' && !e.shiftKey && !input.dataset.escaped) {
+        e.preventDefault();
+        input.setRangeText('    ', input.selectionStart, input.selectionEnd, 'end');
+        input.dispatchEvent(new Event('input'));
+    }
+    input.dataset.escaped = e.key === 'Escape' ? '1' : '';
+});
 
-    document.getElementById('render-btn').addEventListener('click', renderDiagram);
+$('examples').addEventListener('change', (e) => {
+    const name = e.target.value;
+    e.target.value = '';
+    if (!name) return;
+    const current = input.value.trim();
+    if (current && !Object.values(EXAMPLES).includes(current) && !confirm('Replace your diagram with the example?')) return;
+    input.value = EXAMPLES[name];
+    render();
+});
 
-    document.getElementById('input').addEventListener('keydown', function(event) {
-        if (event.key === 'Enter' && event.shiftKey) {
-            event.preventDefault();
-            renderDiagram();
-        }
-    });
+// Saving: the SVG as it is, or drawn onto a canvas at twice its size for a PNG.
+function svgText() {
+    const el = output.querySelector('svg');
+    const copy = el.cloneNode(true);
+    const vb = el.viewBox.baseVal;
+    copy.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    copy.setAttribute('width', vb.width);
+    copy.setAttribute('height', vb.height);
+    copy.style.maxWidth = '';
+    copy.style.backgroundColor = SiteTheme.color('surface');
+    return { text: new XMLSerializer().serializeToString(copy), width: vb.width, height: vb.height };
+}
+function download(name, blob) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const fileName = () => (input.value.trim().split(/\s/)[0] || 'diagram').replace(/[^\w-]/g, '') || 'diagram';
+$('svg').addEventListener('click', () => download(fileName() + '.svg', new Blob([svgText().text], { type: 'image/svg+xml' })));
+$('copy').addEventListener('click', async (e) => {
+    try { await navigator.clipboard.writeText(svgText().text); e.target.textContent = 'Copied'; }
+    catch (err) { e.target.textContent = 'Couldn’t copy'; }
+    setTimeout(() => { e.target.textContent = 'Copy SVG'; }, 1200);
+});
+$('png').addEventListener('click', () => {
+    const { text, width, height } = svgText();
+    const img = new Image();
+    img.onload = () => {
+        const scale = 2, c = document.createElement('canvas');
+        c.width = Math.ceil(width * scale);
+        c.height = Math.ceil(height * scale);
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = SiteTheme.color('surface');
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        try { c.toBlob((blob) => download(fileName() + '.png', blob), 'image/png'); }
+        catch (err) { setStatus('This diagram can’t be made into a PNG here; download the SVG instead.', true); }
+    };
+    img.onerror = () => setStatus('This diagram can’t be made into a PNG here; download the SVG instead.', true);
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(text);
+});
 
-    const cheatsheetPopup = document.getElementById('cheatsheet-popup');
-    const cheatsheetBtn = document.getElementById('cheatsheet-btn');
-    const closeBtn = document.querySelector('.close');
+window.addEventListener('themechange', () => { setUpMermaid(); render(); });
 
-    cheatsheetBtn.addEventListener('click', function() {
-        cheatsheetPopup.style.display = 'block';
-    });
-
-    closeBtn.addEventListener('click', function() {
-        cheatsheetPopup.style.display = 'none';
-    });
-
-    window.addEventListener('click', function(event) {
-        if (event.target === cheatsheetPopup) {
-            cheatsheetPopup.style.display = 'none';
-        }
-    });
+// A diagram sent over from the mind map wins over the saved one.
+let start = '';
+try {
+    start = sessionStorage.getItem('mermaid-import') || localStorage.getItem('mermaid-draft') || '';
+    sessionStorage.removeItem('mermaid-import');
+} catch (e) {}
+input.value = start || EXAMPLES.Flowchart;
+render();
 </script>
 </body>
 </html>

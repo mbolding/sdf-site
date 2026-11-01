@@ -7,95 +7,230 @@
 <link rel="stylesheet" href="../style.css">
 <script src="../theme.js"></script>
 <style>
-#note-content { height: 150px; resize: vertical; }
-.saved-note { position: relative; padding-right: 5.5em; }
-.saved-note p { margin: 0 0 0.3em; }
-.note-controls { position: absolute; top: 0.6em; right: 0.6em; }
-.note-controls button { font-size: 13px; padding: 0.2em 0.6em; }
+#draft { min-height: 8em; resize: vertical; font: 16px/1.5 var(--font-body); }
+.bar { display: flex; flex-wrap: wrap; gap: 0.6em; align-items: center; margin: 0.6em 0 1.4em; }
+.bar .small { margin-right: auto; }
+#find { flex: 0 1 16em; }
+.note-card { margin: 0 0 0.8em; }
+.note-card.pinned { border-color: var(--link); }
+.note-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.note-card textarea { min-height: 8em; resize: vertical; font: 16px/1.5 var(--font-body); }
+.note-foot { display: flex; flex-wrap: wrap; gap: 0.4em 0.8em; align-items: center; justify-content: space-between; margin-top: 0.6em; }
+.actions { display: flex; flex-wrap: wrap; gap: 0.35em; }
+.actions button { font-size: 13px; padding: 0.2em 0.6em; }
+.tools { margin-top: 2em; }
+.toast { position: fixed; left: 50%; bottom: 1.2em; transform: translateX(-50%); display: flex; gap: 0.8em; align-items: center;
+  background: var(--text); color: var(--bg); padding: 0.5em 0.6em 0.5em 1em; border-radius: var(--radius); font: 14px var(--font-ui);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.25); }
+.toast button { font-size: 13px; padding: 0.2em 0.7em; }
 </style>
 </head>
 <body>
 <header><a href="../">mbolding</a> · <a href="./">Notes</a></header>
 <h1>Notepad</h1>
+<p class="tagline">Notes kept in this browser and nowhere else. Download a copy now and then to keep them safe.</p>
 
-<textarea id="note-content" placeholder="Write your note here..."></textarea>
-<div class="row">
-  <button class="primary" id="save-btn">Save Note</button>
-  <button id="clear-btn">Clear</button>
+<textarea id="draft" placeholder="Write a note…" aria-label="New note"></textarea>
+<div class="bar">
+  <button type="button" class="primary" id="save">Save note</button>
+  <span class="small" id="shortcut"></span>
+  <input type="search" id="find" placeholder="Search notes" aria-label="Search notes">
 </div>
-<div id="notes-container"></div>
+
+<div id="list"></div>
+<p class="note" id="empty" hidden></p>
+
+<div class="row tools">
+  <button type="button" id="export-text">Download as text</button>
+  <button type="button" id="export-json">Back up</button>
+  <button type="button" id="import">Restore a backup…</button>
+  <input type="file" id="import-file" accept=".json,application/json" hidden>
+</div>
+
+<div class="toast" id="toast" role="status" hidden><span id="toast-text"></span><button type="button" id="undo">Undo</button></div>
+
+<footer><a href="../">Back home</a></footer>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const noteContent = document.getElementById('note-content');
-    const saveBtn = document.getElementById('save-btn');
-    const clearBtn = document.getElementById('clear-btn');
-    const notesContainer = document.getElementById('notes-container');
+'use strict';
+// Notes live in localStorage under 'notes', as they always have: {id, content, date}, where
+// id is the time made and date its local rendering. Newer notes also carry when they were
+// edited and whether they're pinned.
+const $ = (id) => document.getElementById(id);
+const draft = $('draft'), list = $('list'), find = $('find');
+const mac = /Mac|iPhone|iPad/.test(navigator.platform);
+$('shortcut').textContent = (mac ? '⌘' : 'Ctrl') + ' + Enter saves';
 
-    // Load saved notes from localStorage
-    loadNotes();
+function getNotes() {
+    try { return JSON.parse(localStorage.getItem('notes')) || []; } catch (e) { return []; }
+}
+function putNotes(notes) {
+    try { localStorage.setItem('notes', JSON.stringify(notes)); }
+    catch (e) { alert('This browser wouldn’t store the notes: it may be full, or in private mode.'); }
+}
+let notes = getNotes();
 
-    saveBtn.addEventListener('click', function() {
-        if (noteContent.value.trim() !== '') {
-            saveNote(noteContent.value);
-            noteContent.value = '';
+// The note being written is kept as you type, so a closed tab doesn't lose it.
+try { draft.value = localStorage.getItem('notes-draft') || ''; } catch (e) {}
+draft.addEventListener('input', () => { try { localStorage.setItem('notes-draft', draft.value); } catch (e) {} });
+
+function saveDraft() {
+    const content = draft.value.trim();
+    if (!content) return draft.focus();
+    const now = Date.now();
+    notes.push({ id: now, content, date: new Date(now).toLocaleString() });
+    putNotes(notes);
+    draft.value = '';
+    try { localStorage.removeItem('notes-draft'); } catch (e) {}
+    render();
+    draft.focus();
+}
+$('save').addEventListener('click', saveDraft);
+draft.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); saveDraft(); }
+});
+
+const when = (ms) => new Date(ms).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+
+function render() {
+    const words = find.value.toLowerCase().split(/\s+/).filter(Boolean);
+    const shown = notes
+        .filter((n) => words.every((w) => n.content.toLowerCase().includes(w)))
+        .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0) || b.id - a.id);
+    list.replaceChildren(...shown.map(card));
+    $('empty').hidden = shown.length > 0;
+    $('empty').textContent = notes.length ? 'No note has that in it.' : 'No notes yet. Write one above.';
+    for (const id of ['export-text', 'export-json']) $(id).disabled = !notes.length;
+}
+find.addEventListener('input', render);
+
+function button(label, onclick, title) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    if (title) b.title = title;
+    b.onclick = onclick;
+    return b;
+}
+
+function card(note) {
+    const el = document.createElement('article');
+    el.className = 'card note-card' + (note.pinned ? ' pinned' : '');
+    const text = document.createElement('p');
+    text.className = 'note-text';
+    text.textContent = note.content;
+    const foot = document.createElement('div');
+    foot.className = 'note-foot';
+    const stamp = document.createElement('span');
+    stamp.className = 'small';
+    stamp.textContent = when(note.id) + (note.edited ? ` · edited ${when(note.edited)}` : '') + (note.pinned ? ' · pinned' : '');
+    const actions = document.createElement('span');
+    actions.className = 'actions';
+    actions.append(
+        button('Edit', () => edit(el, note)),
+        button('Copy', async (e) => {
+            try { await navigator.clipboard.writeText(note.content); e.target.textContent = 'Copied'; }
+            catch (err) { e.target.textContent = 'Couldn’t copy'; }
+            setTimeout(() => { e.target.textContent = 'Copy'; }, 1200);
+        }),
+        button(note.pinned ? 'Unpin' : 'Pin', () => { note.pinned = !note.pinned; putNotes(notes); render(); }, 'Keep it at the top'),
+        button('Delete', () => remove(note)),
+    );
+    foot.append(stamp, actions);
+    el.append(text, foot);
+    return el;
+}
+
+function edit(el, note) {
+    const box = document.createElement('textarea');
+    box.value = note.content;
+    box.setAttribute('aria-label', 'Edit note');
+    const actions = document.createElement('div');
+    actions.className = 'row';
+    const done = () => {
+        const content = box.value.trim();
+        if (content && content !== note.content) {
+            note.content = content;
+            note.edited = Date.now();
+            putNotes(notes);
         }
+        render();
+    };
+    const save = button('Save', done);
+    save.className = 'primary';
+    actions.append(save, button('Cancel', render));
+    box.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); done(); }
+        if (e.key === 'Escape') render();
     });
+    el.replaceChildren(box, actions);
+    box.focus();
+    box.setSelectionRange(box.value.length, box.value.length);
+}
 
-    clearBtn.addEventListener('click', function() {
-        noteContent.value = '';
-    });
+// Deleting is undoable for a few seconds.
+let lastDeleted = null, toastTimer = 0;
+function remove(note) {
+    notes = notes.filter((n) => n !== note);
+    putNotes(notes);
+    lastDeleted = note;
+    render();
+    toast('Note deleted.', true);
+}
+$('undo').addEventListener('click', () => {
+    if (lastDeleted) { notes.push(lastDeleted); putNotes(notes); lastDeleted = null; render(); }
+    $('toast').hidden = true;
+});
+function toast(text, undoable) {
+    $('toast-text').textContent = text;
+    $('undo').hidden = !undoable;
+    $('toast').hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { $('toast').hidden = true; lastDeleted = null; }, 6000);
+}
 
-    function saveNote(content) {
-        const notes = getNotes();
-        const newNote = {
-            id: Date.now(),
-            content: content,
-            date: new Date().toLocaleString()
-        };
-
-        notes.push(newNote);
-        localStorage.setItem('notes', JSON.stringify(notes));
-        displayNote(newNote);
-    }
-
-    function getNotes() {
-        return JSON.parse(localStorage.getItem('notes') || '[]');
-    }
-
-    function loadNotes() {
-        const notes = getNotes();
-        notes.forEach(note => {
-            displayNote(note);
-        });
-    }
-
-    function displayNote(note) {
-        const noteElement = document.createElement('div');
-        noteElement.className = 'card saved-note';
-        noteElement.dataset.id = note.id;
-
-        noteElement.innerHTML = `
-            <div class="note-controls">
-                <button class="delete-btn">Delete</button>
-            </div>
-            <p>${note.content.replace(/\n/g, '<br>')}</p>
-            <span class="small">${note.date}</span>
-        `;
-
-        notesContainer.prepend(noteElement);
-
-        noteElement.querySelector('.delete-btn').addEventListener('click', function() {
-            deleteNote(note.id);
-            noteElement.remove();
-        });
-    }
-
-    function deleteNote(id) {
-        const notes = getNotes().filter(note => note.id !== id);
-        localStorage.setItem('notes', JSON.stringify(notes));
+// Downloads and restoring.
+function download(name, type, text) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type }));
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+const today = () => new Date().toISOString().slice(0, 10);
+$('export-text').addEventListener('click', () => {
+    const text = [...notes].sort((a, b) => b.id - a.id).map((n) => `${when(n.id)}\n\n${n.content}`).join('\n\n----------\n\n');
+    download(`notes-${today()}.txt`, 'text/plain', text + '\n');
+});
+$('export-json').addEventListener('click', () => download(`notes-${today()}.json`, 'application/json', JSON.stringify(notes, null, 2)));
+$('import').addEventListener('click', () => $('import-file').click());
+$('import-file').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+        const incoming = JSON.parse(await file.text());
+        if (!Array.isArray(incoming)) throw new Error();
+        const have = new Set(notes.map((n) => n.id));
+        let added = 0;
+        for (const n of incoming) {
+            if (!n || typeof n.content !== 'string' || typeof n.id !== 'number' || have.has(n.id)) continue;
+            notes.push({ id: n.id, content: n.content, date: n.date || new Date(n.id).toLocaleString(), edited: n.edited, pinned: !!n.pinned });
+            have.add(n.id);
+            added++;
+        }
+        putNotes(notes);
+        render();
+        toast(added ? `Restored ${added} note${added === 1 ? '' : 's'}.` : 'Those notes are all here already.', false);
+    } catch (err) {
+        toast('That isn’t a notes backup.', false);
     }
 });
+
+// Another tab may change the notes too.
+addEventListener('storage', (e) => { if (e.key === 'notes') { notes = getNotes(); render(); } });
+
+render();
 </script>
 </body>
 </html>
