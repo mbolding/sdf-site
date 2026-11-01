@@ -1,531 +1,566 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cute Minesweeper · mbolding</title>
-    <link rel="stylesheet" href="../style.css">
-    <script src="../theme.js"></script>
-    <style>
-        :root {
-            /* number colours, all taken from the theme */
-            --n1: var(--link);
-            --n2: var(--good);
-            --n3: var(--bad);
-            --n4: color-mix(in srgb, var(--link) 50%, var(--bad));
-            --n5: var(--warn);
-            --n6: color-mix(in srgb, var(--bad) 55%, var(--surface));
-            --n7: color-mix(in srgb, var(--link) 50%, var(--good));
-            --n8: var(--text);
-            --soft: calc(var(--radius) * 2);
-        }
-        .game {
-            width: 100%;
-            max-width: calc(var(--cols, 9) * 2.8rem + 2rem);
-            margin: 0 auto;
-        }
-        .game h1 {
-            text-align: center;
-            margin-bottom: 0.8em;
-        }
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 0.6em;
-            margin-bottom: 1.2em;
-        }
-        .topbar .controls {
-            display: flex;
-            gap: 0.5em;
-        }
-        .topbar button, .topbar select {
-            border-radius: var(--soft);
-        }
-        .stat {
-            background: var(--panel);
-            border: 1px solid var(--rule);
-            border-radius: var(--soft);
-            padding: 0.3em 1em;
-            text-align: center;
-            font-family: var(--font-ui);
-        }
-        .stat-label {
-            font-size: 13px;
-            color: var(--muted);
-        }
-        .stat-value {
-            font-size: 1.25em;
-            font-weight: bold;
-        }
-        #game-container {
-            background: color-mix(in srgb, var(--link) 14%, var(--surface));
-            border-radius: var(--soft);
-            padding: 1rem;
-        }
-        #game-board {
-            display: grid;
-            grid-template-columns: repeat(var(--cols, 9), minmax(0, 1fr));
-            gap: 4px;
-        }
-        .cell {
-            aspect-ratio: 1 / 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font: 700 clamp(11px, 2.2vw, 18px)/1 var(--font-ui);
-            user-select: none;
-            cursor: pointer;
-            background: var(--surface);
-            border-bottom: 2px solid var(--rule);
-            border-radius: var(--radius);
-            transition: background-color 0.15s;
-        }
-        .cell:not(.revealed):hover {
-            background: color-mix(in srgb, var(--link) 8%, var(--surface));
-        }
-        .cell.revealed {
-            background: var(--panel);
-            border-bottom-color: transparent;
-            cursor: default;
-        }
-        .cell.boom, .cell.wrong {
-            background: color-mix(in srgb, var(--bad) 30%, var(--surface));
-        }
-        .n1 { color: var(--n1); } .n2 { color: var(--n2); } .n3 { color: var(--n3); } .n4 { color: var(--n4); }
-        .n5 { color: var(--n5); } .n6 { color: var(--n6); } .n7 { color: var(--n7); } .n8 { color: var(--n8); }
-        #game-message {
-            margin-top: 1em;
-            text-align: center;
-        }
-        #message-text {
-            font: bold 1.25em/1.4 var(--font-ui);
-            margin-bottom: 0.5em;
-        }
-        #play-again-btn {
-            border-radius: var(--soft);
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minesweeper · mbolding</title>
+<link rel="stylesheet" href="../style.css">
+<script src="../theme.js"></script>
+<style>
+/* The page takes the site theme. The board wears one of five looks on top of it: Plain
+   and Cute draw in the theme's colours, Classic, Garden and Neon keep their own. */
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 15.5em; gap: 1.4em; align-items: start; }
+@media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.play .tabs { margin: 0 0 0.8em; justify-content: center; }
+.custom { justify-content: center; margin: -0.2em 0 0.9em; }
+.custom[hidden] { display: none; }
+.custom label { font-size: 14px; display: flex; gap: 0.4em; align-items: center; }
+.game { display: flex; justify-content: center; }
+.tray { max-width: 100%; }
+.bar { display: flex; justify-content: space-between; align-items: center; gap: 0.6em; margin-bottom: 0.7em; }
+.counter { font: bold 20px/1 var(--font-mono); font-variant-numeric: tabular-nums; padding: 0.3em 0.5em; white-space: nowrap;
+  background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); }
+.counter .icon { font-size: 15px; margin-right: 0.3em; }
+.face { font-size: 22px; line-height: 1; padding: 0.2em 0.35em; }
+.scroller { overflow: auto; }
+.board { display: grid; grid-template-columns: repeat(var(--cols, 9), var(--cell, 32px)); grid-auto-rows: var(--cell, 32px);
+  width: max-content; outline: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.cell { display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer;
+  font: 700 calc(var(--cell, 32px) * 0.55)/1 var(--font-ui); }
+.cell.open { cursor: default; }
+.n1 { color: var(--n1); } .n2 { color: var(--n2); } .n3 { color: var(--n3); } .n4 { color: var(--n4); }
+.n5 { color: var(--n5); } .n6 { color: var(--n6); } .n7 { color: var(--n7); } .n8 { color: var(--n8); }
+.board:focus-visible .cell.cursor { outline: 2px solid var(--focus, var(--link)); outline-offset: -3px; }
+.under { justify-content: center; margin: 0.8em 0 0; }
+.status { font: 14px/1.5 var(--font-ui); color: var(--muted); text-align: center; min-height: 1.5em; margin: 0.5em 0 0; }
+.panel h2:first-child { margin-top: 0; }
+.panel .tabs { margin: 0.5em 0; }
+.check { display: flex; gap: 0.5em; align-items: baseline; margin: 0.5em 0; font: 14px/1.4 var(--font-ui); }
+.panel table { font-size: 14px; margin: 0.4em 0 0.6em; }
+.panel td:nth-child(2) { font-variant-numeric: tabular-nums; }
+.panel .note { margin: 0.4em 0; }
+
+/* Plain: a ruled grid in the theme's colours. */
+[data-skin="plain"], [data-skin="cute"] {
+  --n1: var(--link); --n2: var(--good); --n3: var(--bad); --n4: color-mix(in srgb, var(--link) 50%, var(--bad));
+  --n5: var(--warn); --n6: color-mix(in srgb, var(--link) 50%, var(--good)); --n7: var(--text); --n8: var(--muted);
+}
+[data-skin="plain"] .tray { background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); padding: 0.8em; }
+[data-skin="plain"] .scroller { border: 1px solid var(--rule); }
+[data-skin="plain"] .board { gap: 1px; background: var(--rule); }
+[data-skin="plain"] .cell { background: var(--surface); }
+[data-skin="plain"] .cell:not(.open):hover { background: color-mix(in srgb, var(--link) 10%, var(--surface)); }
+[data-skin="plain"] .cell.open { background: var(--panel); }
+[data-skin="plain"] .cell.boom, [data-skin="plain"] .cell.wrong { background: color-mix(in srgb, var(--bad) 30%, var(--surface)); }
+
+/* Cute: soft tiles on a tinted tray. */
+[data-skin="cute"] .tray { background: color-mix(in srgb, var(--link) 14%, var(--surface)); border-radius: calc(var(--radius) * 2 + 4px); padding: 1em; }
+[data-skin="cute"] .counter, [data-skin="cute"] .face { border-radius: 99px; }
+[data-skin="cute"] .board { gap: 4px; }
+[data-skin="cute"] .cell { background: var(--surface); border-bottom: 3px solid var(--rule); border-radius: calc(var(--radius) + 2px); }
+[data-skin="cute"] .cell:not(.open):hover { background: color-mix(in srgb, var(--link) 10%, var(--surface)); }
+[data-skin="cute"] .cell.open { background: color-mix(in srgb, var(--surface) 55%, transparent); border-bottom-color: transparent; }
+[data-skin="cute"] .cell.boom, [data-skin="cute"] .cell.wrong { background: color-mix(in srgb, var(--bad) 30%, var(--surface)); }
+
+/* Classic: grey bevels and red figures on black. */
+[data-skin="classic"] {
+  --n1: #0000ff; --n2: #008000; --n3: #ff0000; --n4: #000080; --n5: #800000; --n6: #008080; --n7: #000; --n8: #808080;
+  --focus: #000; --up: #fff #808080 #808080 #fff; --down: #808080 #fff #fff #808080;
+}
+[data-skin="classic"] .tray { background: #c0c0c0; padding: 8px; border: 3px solid; border-color: var(--up); }
+[data-skin="classic"] .bar { border: 2px solid; border-color: var(--down); padding: 5px 7px; margin-bottom: 8px; }
+[data-skin="classic"] .counter { background: #000; color: #f00; border: 1px solid; border-color: var(--down); border-radius: 0; font-size: 24px; padding: 2px 4px; letter-spacing: 1px; }
+[data-skin="classic"] .counter .icon { display: none; }
+[data-skin="classic"] .face { background: #c0c0c0; border: 3px solid; border-color: var(--up); border-radius: 0; color: #000; }
+[data-skin="classic"] .face:active { border-color: var(--down); }
+[data-skin="classic"] .scroller { border: 3px solid; border-color: var(--down); }
+[data-skin="classic"] .cell { background: #c0c0c0; border: 3px solid; border-color: var(--up); }
+[data-skin="classic"] .cell.open { border: 0; box-shadow: inset 1px 1px 0 #808080; }
+[data-skin="classic"] .cell.boom { background: #f00; }
+
+/* Garden: a lawn to mow, with bees in it. */
+[data-skin="garden"] {
+  --n1: #1e6fd0; --n2: #2f8a2f; --n3: #d0342c; --n4: #7a2fa0; --n5: #c76a00; --n6: #138a8f; --n7: #3d3d3d; --n8: #8a8a8a;
+  --focus: #fff;
+}
+[data-skin="garden"] .tray { background: #3f6b2a; border-radius: 12px; padding: 10px; }
+[data-skin="garden"] .counter { background: none; border: 0; color: #fff; }
+[data-skin="garden"] .face { background: #4e8234; border-color: #5f9a40; border-radius: 99px; }
+[data-skin="garden"] .scroller { border-radius: 6px; }
+[data-skin="garden"] .cell { background: #9ccf55; }
+[data-skin="garden"] .cell.alt { background: #8cc248; }
+[data-skin="garden"] .cell:not(.open):hover { background: #b6e276; }
+[data-skin="garden"] .cell.open { background: #ead6ae; }
+[data-skin="garden"] .cell.open.alt { background: #e0c99c; }
+[data-skin="garden"] .cell.boom, [data-skin="garden"] .cell.wrong { background: #e98d78; }
+
+/* Neon: lit outlines on the dark. */
+[data-skin="neon"] {
+  --n1: #44ccff; --n2: #44ff99; --n3: #ff4477; --n4: #cc77ff; --n5: #ffdd44; --n6: #44ffff; --n7: #fff; --n8: #aaa;
+  --focus: #ff44dd;
+}
+[data-skin="neon"] .tray { background: #0b0b1a; border: 1px solid #3a2a6a; border-radius: 14px; padding: 12px; box-shadow: 0 0 24px rgb(120 60 255 / 0.25); }
+[data-skin="neon"] .counter { background: none; border: 0; color: #ff44dd; text-shadow: 0 0 8px #ff44dd; }
+[data-skin="neon"] .counter .icon { display: none; }
+[data-skin="neon"] .face { background: #14142b; border-color: #3a2a6a; border-radius: 10px; }
+[data-skin="neon"] .board { gap: 3px; }
+[data-skin="neon"] .cell { background: #15152e; border: 1px solid #2e2e5c; border-radius: 4px; text-shadow: 0 0 6px currentColor; }
+[data-skin="neon"] .cell.flag, [data-skin="neon"] .cell.mark { color: #ffdd44; }
+[data-skin="neon"] .cell:not(.open):hover { border-color: #44ffff; box-shadow: 0 0 8px rgb(68 255 255 / 0.5); }
+[data-skin="neon"] .cell.open { background: #0b0b1a; border-color: #1a1a36; }
+[data-skin="neon"] .cell.mine, [data-skin="neon"] .cell.boom, [data-skin="neon"] .cell.wrong { color: #ff4477; }
+[data-skin="neon"] .cell.boom { background: #3a0f22; border-color: #ff4477; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .tray.shake { animation: shake 0.45s ease-in-out; }
+  [data-skin="cute"] .cell.open, [data-skin="neon"] .cell.open { animation: pop 0.2s ease-out; }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+  @keyframes pop { from { transform: scale(0.85); } to { transform: scale(1); } }
+}
+</style>
 </head>
 <body class="wide">
-    <header><a href="../">mbolding</a> · <a href="./">Toys</a></header>
-    <div class="game">
-        <h1>✨ Cute Minesweeper ✨</h1>
-        
-        <div class="topbar">
-            <div class="stat">
-                <div class="stat-label">Mines</div>
-                <div id="mine-count" class="stat-value">10</div>
-            </div>
-            
-            <div class="controls">
-                <button id="new-game-btn" class="primary">
-                    New Game
-                </button>
-                <select id="difficulty">
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                </select>
-            </div>
-            
-            <div class="stat">
-                <div class="stat-label">Time</div>
-                <div id="timer" class="stat-value">0</div>
-            </div>
-        </div>
-        
-        <div id="game-container">
-            <div id="game-board"></div>
-        </div>
-        
-        <div id="game-message" class="hidden">
-            <div id="message-text"></div>
-            <button id="play-again-btn" class="primary">
-                Play Again
-            </button>
-        </div>
+<header><a href="../">mbolding</a></header>
+<h1>Minesweeper</h1>
+
+<div class="layout">
+  <div class="play" id="play">
+    <div class="tabs" id="levels"></div>
+    <div class="row custom" id="custom" hidden>
+      <label>Rows <input type="number" id="rows" min="5" max="30"></label>
+      <label>Columns <input type="number" id="cols" min="5" max="40"></label>
+      <label>Mines <input type="number" id="mines" min="1"></label>
     </div>
 
-    <script>
-        // Game variables
-        let board = [];
-        let rows = 9;
-        let cols = 9;
-        let mineCount = 10;
-        let flagCount = 0;
-        let cellsRevealed = 0;
-        let gameOver = false;
-        let timerInterval;
-        let seconds = 0;
-        
-        // Cute emoji set
-        const emojis = {
-            mine: '💣',
-            flag: '🚩',
-            exploded: '💥',
-            happy: '😊',
-            sad: '😢',
-            win: '🎉',
-            cool: '😎',
-            heart: '❤️',
-            star: '⭐',
-            numbers: ['', '1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣']
-        };
+    <div class="game" id="game">
+      <div class="tray" id="tray">
+        <div class="bar">
+          <div class="counter" title="Mines left"><span class="icon">💣</span><span id="left">010</span></div>
+          <button type="button" class="face" id="face" aria-label="New game">🙂</button>
+          <div class="counter" title="Seconds"><span class="icon">⏱️</span><span id="time">000</span></div>
+        </div>
+        <div class="scroller" id="scroller">
+          <div class="board" id="board" tabindex="0" role="application" aria-label="Minefield"></div>
+        </div>
+      </div>
+    </div>
 
-        // Game initialization
-        function initGame() {
-            // Reset variables
-            board = [];
-            gameOver = false;
-            flagCount = 0;
-            cellsRevealed = 0;
-            seconds = 0;
-            
-            // Clear board
-            const gameBoard = document.getElementById('game-board');
-            gameBoard.innerHTML = '';
-            
-            // Set difficulty
-            const difficulty = document.getElementById('difficulty').value;
-            if (difficulty === 'easy') {
-                rows = 9;
-                cols = 9;
-                mineCount = 10;
-            } else if (difficulty === 'medium') {
-                rows = 16;
-                cols = 16;
-                mineCount = 40;
-            } else if (difficulty === 'hard') {
-                rows = 24;
-                cols = 24;
-                mineCount = 99;
-            }
-            document.querySelector('.game').style.setProperty('--cols', cols);
-            
-            // Update mine count display
-            document.getElementById('mine-count').textContent = mineCount;
-            
-            // Create board
-            for (let r = 0; r < rows; r++) {
-                let row = [];
-                for (let c = 0; c < cols; c++) {
-                    // Create cell object
-                    let cell = {
-                        row: r,
-                        col: c,
-                        mine: false,
-                        revealed: false,
-                        flagged: false,
-                        adjacentMines: 0
-                    };
-                    row.push(cell);
-                    
-                    // Create cell element
-                    let cellElement = document.createElement('div');
-                    cellElement.className = 'cell';
-                    
-                    // Add event listeners
-                    cellElement.addEventListener('click', () => {
-                        if (!gameOver && !cell.flagged) {
-                            // Start timer on first click
-                            if (cellsRevealed === 0 && !timerInterval) {
-                                startTimer();
-                            }
-                            
-                            // First click should never be a mine
-                            if (cellsRevealed === 0 && cell.mine) {
-                                // Move mine to another position
-                                cell.mine = false;
-                                placeMineElsewhere(r, c);
-                                calculateAdjacentMines();
-                            }
-                            
-                            revealCell(r, c);
-                            updateBoard();
-                        }
-                    });
-                    
-                    cellElement.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        if (!gameOver && !cell.revealed) {
-                            toggleFlag(r, c);
-                            updateBoard();
-                        }
-                    });
-                    
-                    gameBoard.appendChild(cellElement);
-                }
-                board.push(row);
-            }
-            
-            // Place mines randomly
-            placeMines();
-            calculateAdjacentMines();
-            
-            // Reset timer
-            clearInterval(timerInterval);
-            timerInterval = null;
-            document.getElementById('timer').textContent = '0';
-            
-            // Hide game message
-            document.getElementById('game-message').classList.add('hidden');
-            
-            // Update board display
-            updateBoard();
+    <div class="row under">
+      <button type="button" id="mode" aria-pressed="false"></button>
+    </div>
+    <p class="status" id="status" aria-live="polite"></p>
+  </div>
+
+  <aside class="panel">
+    <h2>Look</h2>
+    <div class="tabs" id="skins"></div>
+
+    <h2>Rules</h2>
+    <label class="check"><input type="checkbox" id="opening"> The first click opens a space, not just one safe square</label>
+    <label class="check"><input type="checkbox" id="chord"> Click a number with its flags down to dig all round it</label>
+    <label class="check"><input type="checkbox" id="marks"> Question marks: a second right-click marks a square ?</label>
+
+    <h2>Best times</h2>
+    <table id="best"></table>
+    <button type="button" id="forget">Forget them</button>
+
+    <h2>Playing</h2>
+    <p class="note">Click to dig. Right-click or long-press to plant a flag, or switch taps to flags under the board. On the keyboard: arrows to move, Enter to dig, F to flag, N for a new game.</p>
+  </aside>
+</div>
+
+<footer><a href="../">Back home</a></footer>
+
+<script>
+'use strict';
+const LEVELS = {
+    beginner: { label: 'Beginner', rows: 9, cols: 9, mines: 10 },
+    intermediate: { label: 'Intermediate', rows: 16, cols: 16, mines: 40 },
+    expert: { label: 'Expert', rows: 16, cols: 30, mines: 99 },
+    custom: { label: 'Custom' },
+};
+// faces: playing, a square held down, lost, won
+const SKINS = {
+    classic: { label: 'Classic', mine: '💣', flag: '🚩', boom: '💣', wrong: '❌', mark: '?', faces: ['🙂', '😮', '😵', '😎'] },
+    plain: { label: 'Plain', mine: '💣', flag: '🚩', boom: '💥', wrong: '❌', mark: '?', faces: ['🙂', '😮', '😵', '😎'] },
+    cute: { label: 'Cute', mine: '💣', flag: '🚩', boom: '💥', wrong: '❌', mark: '❓', faces: ['😊', '😯', '😭', '🥳'] },
+    garden: { label: 'Garden', mine: '🐝', flag: '🌼', boom: '💥', wrong: '❌', mark: '?', faces: ['🌱', '👀', '🥀', '🌻'] },
+    neon: { label: 'Neon', mine: '✸', flag: '⚑', boom: '✸', wrong: '✕', mark: '?', faces: ['👾', '😮', '💀', '🚀'] },
+};
+const MIN_CELL = 18, MAX_CELL = 38;
+const HIDDEN = 0, OPEN = 1, FLAG = 2, MARK = 3;
+
+const $ = (id) => document.getElementById(id);
+const play = $('play'), game = $('game'), tray = $('tray'), scroller = $('scroller'), board = $('board');
+
+// Settings and best times, kept in this browser.
+const defaults = { level: 'beginner', skin: 'classic', custom: { rows: 12, cols: 20, mines: 40 },
+    opening: true, chord: true, marks: false, best: {} };
+const settings = load();
+function load() {
+    try {
+        const s = JSON.parse(localStorage.getItem('minesweeper')) || {};
+        return { ...defaults, ...s, custom: { ...defaults.custom, ...s.custom }, best: { ...s.best } };
+    } catch (e) {
+        return { ...defaults, custom: { ...defaults.custom }, best: {} };
+    }
+}
+function save() {
+    try { localStorage.setItem('minesweeper', JSON.stringify(settings)); } catch (e) {}
+}
+if (!LEVELS[settings.level]) settings.level = defaults.level;
+if (!SKINS[settings.skin]) settings.skin = defaults.skin;
+
+// The game.
+let rows, cols, total, mineCount, mine, adj, state, els;
+let started, over, result, opened, flags, boomAt, t0, tick, finalTime;
+let cursor = 0, flagMode = false;
+
+function newGame() {
+    const L = settings.level === 'custom' ? settings.custom : LEVELS[settings.level];
+    rows = L.rows; cols = L.cols;
+    // A wide board that won't fit across a tall, narrow screen is turned upright.
+    if (cols > rows && innerHeight > innerWidth && cols * MIN_CELL > room().width) [rows, cols] = [cols, rows];
+    total = rows * cols;
+    mineCount = Math.min(L.mines, total - 1);
+    mine = new Uint8Array(total); adj = new Uint8Array(total); state = new Uint8Array(total);
+    started = over = false; result = ''; opened = flags = 0; boomAt = -1; finalTime = 0;
+    clearInterval(tick);
+    cursor = Math.min(cursor, total - 1);
+
+    els = [];
+    for (let i = 0; i < total; i++) {
+        const el = document.createElement('div');
+        el.dataset.i = i;
+        els.push(el);
+    }
+    board.replaceChildren(...els);
+    board.style.setProperty('--cols', cols);
+    tray.classList.remove('shake');
+    fit();
+    paintAll();
+    showLeft(); showTime(); setFace(0);
+    setStatus('Click any square to start. The first one is always safe.');
+}
+
+/** The width the board can have, and the gap between its squares, in the current look. */
+function room() {
+    const px = (el, ...props) => { const cs = getComputedStyle(el); return props.reduce((s, p) => s + (parseFloat(cs[p]) || 0), 0); };
+    return {
+        width: play.clientWidth - px(tray, 'paddingLeft', 'paddingRight', 'borderLeftWidth', 'borderRightWidth')
+            - px(scroller, 'borderLeftWidth', 'borderRightWidth'),
+        gap: parseFloat(getComputedStyle(board).columnGap) || 0,
+    };
+}
+
+/** Squares as big as fit, within limits; past the smallest, the board scrolls. */
+function fit() {
+    const { width, gap } = room();
+    const size = Math.floor((width - gap * (cols - 1)) / cols);
+    board.style.setProperty('--cell', Math.max(MIN_CELL, Math.min(MAX_CELL, size)) + 'px');
+}
+
+function neighbours(i) {
+    const r = Math.floor(i / cols), c = i % cols, out = [];
+    for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+            if (!dr && !dc) continue;
+            const rr = r + dr, cc = c + dc;
+            if (rr >= 0 && rr < rows && cc >= 0 && cc < cols) out.push(rr * cols + cc);
         }
-        
-        // Place mines randomly on the board
-        function placeMines() {
-            let minesPlaced = 0;
-            while (minesPlaced < mineCount) {
-                let r = Math.floor(Math.random() * rows);
-                let c = Math.floor(Math.random() * cols);
-                
-                if (!board[r][c].mine) {
-                    board[r][c].mine = true;
-                    minesPlaced++;
-                }
-            }
+    }
+    return out;
+}
+
+/** Lays the mines once the first square is chosen, keeping it (and, for an opening, the squares round it) clear. */
+function layMines(first) {
+    const keep = new Set([first]);
+    if (settings.opening && total - 9 >= mineCount) neighbours(first).forEach(n => keep.add(n));
+    const spots = [];
+    for (let i = 0; i < total; i++) if (!keep.has(i)) spots.push(i);
+    for (let k = 0; k < mineCount; k++) {
+        const j = k + Math.floor(Math.random() * (spots.length - k));
+        [spots[k], spots[j]] = [spots[j], spots[k]];
+        mine[spots[k]] = 1;
+    }
+    for (let i = 0; i < total; i++) adj[i] = neighbours(i).reduce((s, n) => s + mine[n], 0);
+    setStatus('');
+    started = true;
+    t0 = performance.now();
+    tick = setInterval(showTime, 250);
+}
+
+function act(i, how) {
+    if (over) return;
+    if (state[i] === OPEN) {
+        if (settings.chord) chord(i);
+    } else if (how === 'flag') {
+        toggleFlag(i);
+    } else {
+        dig(i);
+    }
+}
+
+function dig(i) {
+    if (state[i] === FLAG || state[i] === OPEN) return;
+    if (!started) layMines(i);
+    if (mine[i]) return lose(i);
+    flood(i);
+    checkWin();
+}
+
+/** Opens a square, and on through every blank one beside it. */
+function flood(i) {
+    const stack = [i];
+    while (stack.length) {
+        const j = stack.pop();
+        if (state[j] === OPEN || state[j] === FLAG) continue;
+        state[j] = OPEN;
+        opened++;
+        paint(j);
+        if (!adj[j]) stack.push(...neighbours(j));
+    }
+}
+
+/** Digs round a number whose flags are all down. */
+function chord(i) {
+    const around = neighbours(i);
+    if (!adj[i] || around.filter(n => state[n] === FLAG).length !== adj[i]) return;
+    let hit = -1;
+    for (const n of around) {
+        if (state[n] === FLAG || state[n] === OPEN) continue;
+        if (mine[n]) hit = n;
+        else flood(n);
+    }
+    if (hit >= 0) lose(hit);
+    else checkWin();
+}
+
+function toggleFlag(i) {
+    if (state[i] === HIDDEN) { state[i] = FLAG; flags++; }
+    else if (state[i] === FLAG) { state[i] = settings.marks ? MARK : HIDDEN; flags--; }
+    else if (state[i] === MARK) state[i] = HIDDEN;
+    paint(i);
+    showLeft();
+}
+
+function lose(i) {
+    over = true; result = 'lost'; boomAt = i;
+    stopClock();
+    for (let j = 0; j < total; j++) if (mine[j] && state[j] !== FLAG) state[j] = OPEN;
+    paintAll();
+    setFace(2);
+    tray.classList.remove('shake');
+    void tray.offsetWidth;
+    tray.classList.add('shake');
+    setStatus(`Boom. ${opened} of ${total - mineCount} safe squares were open.`);
+}
+
+function checkWin() {
+    if (opened < total - mineCount) return;
+    over = true; result = 'won';
+    stopClock();
+    for (let j = 0; j < total; j++) if (mine[j]) state[j] = FLAG;
+    flags = mineCount;
+    paintAll(); showLeft(); setFace(3);
+    const t = Math.round(finalTime * 10) / 10;
+    let note = '';
+    if (settings.level !== 'custom') {
+        const name = LEVELS[settings.level].label, best = settings.best[settings.level];
+        if (!best || t < best.t) {
+            settings.best[settings.level] = { t, d: new Date().toISOString().slice(0, 10) };
+            save(); showBest();
+            note = best ? ` A new best for ${name}!` : ` Your first ${name} win.`;
+        } else {
+            note = ` Your best is ${best.t.toFixed(1)} s.`;
         }
-        
-        // Place a mine elsewhere when the first click is a mine
-        function placeMineElsewhere(avoidRow, avoidCol) {
-            let placed = false;
-            
-            // Try to find an empty spot
-            for (let r = 0; r < rows && !placed; r++) {
-                for (let c = 0; c < cols && !placed; c++) {
-                    if (!board[r][c].mine && !(r === avoidRow && c === avoidCol)) {
-                        board[r][c].mine = true;
-                        placed = true;
-                    }
-                }
-            }
+    }
+    setStatus(`Cleared in ${t.toFixed(1)} s.${note}`);
+}
+
+function stopClock() {
+    clearInterval(tick);
+    finalTime = started ? (performance.now() - t0) / 1000 : 0;
+    showTime();
+}
+
+// Drawing.
+function paint(i) {
+    const skin = SKINS[settings.skin], s = state[i];
+    let cls = 'cell', text = '';
+    if ((Math.floor(i / cols) + i % cols) % 2) cls += ' alt';
+    if (s === OPEN) {
+        cls += ' open';
+        if (mine[i]) {
+            cls += i === boomAt ? ' boom' : ' mine';
+            text = i === boomAt ? skin.boom : skin.mine;
+        } else if (adj[i]) {
+            cls += ' n' + adj[i];
+            text = adj[i];
         }
-        
-        // Calculate adjacent mines for each cell
-        function calculateAdjacentMines() {
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    if (!board[r][c].mine) {
-                        let count = 0;
-                        
-                        // Check all 8 adjacent cells
-                        for (let dr = -1; dr <= 1; dr++) {
-                            for (let dc = -1; dc <= 1; dc++) {
-                                if (dr === 0 && dc === 0) continue;
-                                
-                                let newR = r + dr;
-                                let newC = c + dc;
-                                
-                                if (newR >= 0 && newR < rows && newC >= 0 && newC < cols) {
-                                    if (board[newR][newC].mine) {
-                                        count++;
-                                    }
-                                }
-                            }
-                        }
-                        
-                        board[r][c].adjacentMines = count;
-                    }
-                }
-            }
-        }
-        
-        // Reveal a cell
-        function revealCell(r, c) {
-            if (r < 0 || r >= rows || c < 0 || c >= cols) return;
-            let cell = board[r][c];
-            
-            // Skip if already revealed or flagged
-            if (cell.revealed || cell.flagged) return;
-            
-            cell.revealed = true;
-            cellsRevealed++;
-            
-            // If it's a mine, game over
-            if (cell.mine) {
-                gameOver = true;
-                cell.exploded = true;
-                showAllMines();
-                endGame(false);
-                return;
-            }
-            
-            // If it's an empty cell (0 adjacent mines), reveal adjacent cells
-            if (cell.adjacentMines === 0) {
-                for (let dr = -1; dr <= 1; dr++) {
-                    for (let dc = -1; dc <= 1; dc++) {
-                        if (dr === 0 && dc === 0) continue;
-                        revealCell(r + dr, c + dc);
-                    }
-                }
-            }
-            
-            // Check if player has won
-            checkWin();
-        }
-        
-        // Toggle flag on a cell
-        function toggleFlag(r, c) {
-            let cell = board[r][c];
-            
-            if (!cell.revealed) {
-                if (cell.flagged) {
-                    cell.flagged = false;
-                    flagCount--;
-                } else if (flagCount < mineCount) {
-                    cell.flagged = true;
-                    flagCount++;
-                    
-                    // Start timer on first action
-                    if (cellsRevealed === 0 && !timerInterval) {
-                        startTimer();
-                    }
-                }
-                
-                // Update mine count display (remaining mines)
-                document.getElementById('mine-count').textContent = mineCount - flagCount;
-                
-                // Check if player has won
-                checkWin();
-            }
-        }
-        
-        // Check if the player has won
-        function checkWin() {
-            const totalCells = rows * cols;
-            const nonMineCells = totalCells - mineCount;
-            
-            // Win condition: all non-mine cells are revealed
-            if (cellsRevealed === nonMineCells) {
-                gameOver = true;
-                
-                // Flag all unflagged mines
-                for (let r = 0; r < rows; r++) {
-                    for (let c = 0; c < cols; c++) {
-                        if (board[r][c].mine && !board[r][c].flagged) {
-                            board[r][c].flagged = true;
-                        }
-                    }
-                }
-                
-                // Update mine count display
-                document.getElementById('mine-count').textContent = '0';
-                
-                // End game with win
-                endGame(true);
-            }
-        }
-        
-        // Show all mines when game over
-        function showAllMines() {
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    if (board[r][c].mine) {
-                        board[r][c].revealed = true;
-                    }
-                    // Highlight incorrectly flagged cells
-                    if (board[r][c].flagged && !board[r][c].mine) {
-                        board[r][c].wrongFlag = true;
-                        board[r][c].revealed = true;
-                    }
-                }
-            }
-        }
-        
-        // Start the timer
-        function startTimer() {
-            seconds = 0;
-            document.getElementById('timer').textContent = seconds;
-            
-            timerInterval = setInterval(() => {
-                seconds++;
-                document.getElementById('timer').textContent = seconds;
-            }, 1000);
-        }
-        
-        // End the game
-        function endGame(win) {
-            clearInterval(timerInterval);
-            
-            const messageContainer = document.getElementById('game-message');
-            const messageText = document.getElementById('message-text');
-            
-            messageContainer.classList.remove('hidden');
-            
-            if (win) {
-                messageText.innerHTML = `${emojis.win} You Win! ${emojis.win}<br>Time: ${seconds} seconds`;
-                messageText.classList.add('good');
-                messageText.classList.remove('bad');
-            } else {
-                messageText.innerHTML = `${emojis.sad} Game Over ${emojis.sad}<br>Time: ${seconds} seconds`;
-                messageText.classList.add('bad');
-                messageText.classList.remove('good');
-            }
-        }
-        
-        // Update the board display
-        function updateBoard() {
-            const cells = document.getElementById('game-board').children;
-            
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    const cell = board[r][c];
-                    const cellElement = cells[r * cols + c];
-                    
-                    // Reset classes
-                    cellElement.className = 'cell';
-                    
-                    if (cell.revealed) {
-                        // Revealed cell styling
-                        cellElement.classList.add('revealed');
-                        
-                        // Exploded mine
-                        if (cell.exploded) {
-                            cellElement.textContent = emojis.exploded;
-                            cellElement.classList.add('boom');
-                        }
-                        // Regular mine
-                        else if (cell.mine) {
-                            cellElement.textContent = emojis.mine;
-                        }
-                        // Wrong flag
-                        else if (cell.wrongFlag) {
-                            cellElement.textContent = '❌';
-                            cellElement.classList.add('wrong');
-                        }
-                        // Number, coloured by count (.n1 to .n8)
-                        else if (cell.adjacentMines > 0) {
-                            cellElement.textContent = cell.adjacentMines;
-                            cellElement.classList.add('n' + cell.adjacentMines);
-                        }
-                        // Empty cell
-                        else {
-                            cellElement.textContent = '';
-                        }
-                    } else {
-                        // Flag
-                        if (cell.flagged) {
-                            cellElement.textContent = emojis.flag;
-                        } else {
-                            cellElement.textContent = '';
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Event listeners
-        document.getElementById('new-game-btn').addEventListener('click', initGame);
-        document.getElementById('play-again-btn').addEventListener('click', initGame);
-        document.getElementById('difficulty').addEventListener('change', initGame);
-        
-        // Initialize game
-        initGame();
-    </script>
+    } else if (s === FLAG) {
+        if (result === 'lost' && !mine[i]) { cls += ' open wrong'; text = skin.wrong; }
+        else { cls += ' flag'; text = skin.flag; }
+    } else if (s === MARK) {
+        cls += ' mark'; text = skin.mark;
+    }
+    if (i === cursor) cls += ' cursor';
+    const el = els[i];
+    if (el.className !== cls) el.className = cls;
+    if (el.textContent !== String(text)) el.textContent = text;
+}
+function paintAll() { for (let i = 0; i < total; i++) paint(i); }
+
+const three = (n) => n < 0 ? '-' + String(Math.min(99, -n)).padStart(2, '0') : String(Math.min(999, n)).padStart(3, '0');
+function showLeft() { $('left').textContent = three(mineCount - flags); }
+function showTime() {
+    const secs = over ? finalTime : started ? (performance.now() - t0) / 1000 : 0;
+    $('time').textContent = three(Math.floor(secs));
+}
+function setFace(k) { $('face').textContent = SKINS[settings.skin].faces[k]; }
+function setStatus(text) { $('status').textContent = text; }
+
+function moveCursor(i, scroll) {
+    const old = cursor;
+    cursor = i;
+    paint(old); paint(i);
+    if (scroll) els[i].scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+
+// Mouse, touch and pen. A long press is a right-click; taps can be switched to flags.
+const index = (e) => e.target.closest('.cell') ? +e.target.closest('.cell').dataset.i : -1;
+let press = null, lastPointer = 'mouse';
+
+board.addEventListener('pointerdown', (e) => {
+    lastPointer = e.pointerType;
+    const i = index(e);
+    if (i < 0 || over) return;
+    if (e.button === 0 && state[i] !== OPEN) setFace(1);
+    if (e.pointerType !== 'mouse') {
+        press = { i, x: e.clientX, y: e.clientY, long: false };
+        press.timer = setTimeout(() => {
+            press.long = true;
+            setFace(0);
+            act(i, flagMode ? 'dig' : 'flag');
+            if (navigator.vibrate) navigator.vibrate(15);
+        }, 400);
+    }
+});
+board.addEventListener('pointermove', (e) => {
+    if (press && Math.hypot(e.clientX - press.x, e.clientY - press.y) > 10) { clearTimeout(press.timer); press = null; setFace(0); }
+});
+addEventListener('pointerup', () => { if (press) clearTimeout(press.timer); if (!over) setFace(0); });
+addEventListener('pointercancel', () => { if (press) { clearTimeout(press.timer); press = null; } if (!over) setFace(0); });
+
+board.addEventListener('click', (e) => {
+    const i = index(e);
+    const long = press && press.long;
+    press = null;
+    if (i < 0 || long) return;
+    moveCursor(i, false);
+    act(i, flagMode ? 'flag' : 'dig');
+});
+board.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    const i = index(e);
+    if (i < 0 || lastPointer !== 'mouse') return;   // a long press has already flagged
+    moveCursor(i, false);
+    act(i, flagMode ? 'dig' : 'flag');
+});
+
+board.addEventListener('keydown', (e) => {
+    const r = Math.floor(cursor / cols), c = cursor % cols;
+    let next = -1;
+    switch (e.key) {
+        case 'ArrowUp': next = r > 0 ? cursor - cols : cursor; break;
+        case 'ArrowDown': next = r < rows - 1 ? cursor + cols : cursor; break;
+        case 'ArrowLeft': next = c > 0 ? cursor - 1 : cursor; break;
+        case 'ArrowRight': next = c < cols - 1 ? cursor + 1 : cursor; break;
+        case 'Enter': case ' ': act(cursor, flagMode ? 'flag' : 'dig'); break;
+        case 'f': case 'F': act(cursor, flagMode ? 'dig' : 'flag'); break;
+        default: return;
+    }
+    e.preventDefault();
+    if (next >= 0) moveCursor(next, true);
+});
+addEventListener('keydown', (e) => {
+    if (e.target.closest('input, select, textarea') || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'n' || e.key === 'N' || e.key === 'F2') { e.preventDefault(); newGame(); }
+});
+
+$('face').addEventListener('click', newGame);
+$('mode').addEventListener('click', () => { flagMode = !flagMode; showMode(); });
+function showMode() {
+    $('mode').textContent = flagMode ? '🚩 Taps plant flags' : '⛏️ Taps dig';
+    $('mode').setAttribute('aria-pressed', flagMode);
+}
+
+// The controls.
+for (const [key, L] of Object.entries(LEVELS)) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.level = key;
+    b.textContent = L.label;
+    if (L.rows) b.title = `${L.rows} × ${L.cols}, ${L.mines} mines`;
+    b.onclick = () => { settings.level = key; save(); showLevel(); newGame(); };
+    $('levels').appendChild(b);
+}
+function showLevel() {
+    for (const b of $('levels').children) b.classList.toggle('active', b.dataset.level === settings.level);
+    $('custom').hidden = settings.level !== 'custom';
+}
+
+for (const [key, S] of Object.entries(SKINS)) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.dataset.skin = key;
+    b.textContent = S.label;
+    b.onclick = () => { settings.skin = key; save(); showSkin(); };
+    $('skins').appendChild(b);
+}
+function showSkin() {
+    game.dataset.skin = settings.skin;
+    for (const b of $('skins').children) b.classList.toggle('active', b.dataset.skin === settings.skin);
+    if (els) { fit(); paintAll(); setFace(result === 'lost' ? 2 : result === 'won' ? 3 : 0); }
+}
+
+function showCustom() {
+    $('rows').value = settings.custom.rows;
+    $('cols').value = settings.custom.cols;
+    $('mines').value = settings.custom.mines;
+    $('mines').max = settings.custom.rows * settings.custom.cols - 1;
+}
+for (const id of ['rows', 'cols', 'mines']) {
+    $(id).addEventListener('change', () => {
+        const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(+v) || lo));
+        const c = settings.custom;
+        c.rows = clamp($('rows').value, 5, 30);
+        c.cols = clamp($('cols').value, 5, 40);
+        c.mines = clamp($('mines').value, 1, c.rows * c.cols - 1);
+        save(); showCustom(); newGame();
+    });
+}
+
+for (const id of ['opening', 'chord', 'marks']) {
+    $(id).checked = settings[id];
+    $(id).addEventListener('change', () => { settings[id] = $(id).checked; save(); });
+}
+
+function showBest() {
+    const lines = ['beginner', 'intermediate', 'expert'].map((key) => {
+        const b = settings.best[key];
+        return `<tr><td>${LEVELS[key].label}</td><td>${b ? b.t.toFixed(1) + ' s' : '—'}</td><td class="small">${b ? b.d : ''}</td></tr>`;
+    });
+    $('best').innerHTML = lines.join('');
+    $('forget').disabled = !Object.keys(settings.best).length;
+}
+$('forget').addEventListener('click', () => {
+    if (!confirm('Forget your best times?')) return;
+    settings.best = {}; save(); showBest();
+});
+
+new ResizeObserver(() => { if (els) fit(); }).observe(play);
+
+showLevel(); showSkin(); showCustom(); showBest(); showMode();
+newGame();
+</script>
 </body>
 </html>
-
