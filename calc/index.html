@@ -504,11 +504,17 @@ const nucleus = (name) => NUCLEI.find((n) => n[0] === name);
 const pretty = (name) => name.replace(/^\d+/, (d) => d.replace(/./g, (c) => SUP[c]));
 const gamma = (name) => nucleus(name)[3] / 100 * G1H;   // MHz per tesla, as a size
 const NUCLEUS_OPTIONS = NUCLEI.map((n) => [n[0], pretty(n[0])]);
+// Field presets for the MRI cards. Siemens' "3 T" and "7 T" magnets run a little under:
+// 123.2 MHz and 297.2 MHz for ¹H.
+const SCANNERS = [['', 'Any field'], ['1.5', '1.5 T'], ['2.894', 'Siemens 3 T: Prisma, Skyra, Vida (2.89 T)'],
+    ['3', '3 T: GE, Philips'], ['6.98', 'Siemens 7 T: Terra (6.98 T)'], ['7', '7 T'], ['9.4', '9.4 T'], ['11.7', '11.7 T']];
+const scannerInput = (sets, unitKey) => ({ k: 'scanner', label: 'Scanner', type: 'preset', options: SCANNERS, v: '', sets, unitKey });
 
-function larmorCard(id, unit, value, names) {
+function larmorCard(id, unit, value, names, scanners) {
     return {
         id, title: 'Larmor frequencies', wide: true,
-        inputs: [{ k: 'x', label: 'Field', v: value, units: { k: 'unit', v: unit, options: [['T', 'tesla'], ['MHz', 'MHz of ¹H']] } }],
+        inputs: [...(scanners ? [scannerInput('x', 'unit')] : []),
+            { k: 'x', label: 'Field', v: value, units: { k: 'unit', v: unit, options: [['T', 'tesla'], ['MHz', 'MHz of ¹H']] } }],
         calc: (v) => {
             const B = v.unit === 'T' ? v.x : v.x / G1H;
             return [
@@ -711,9 +717,9 @@ const CARDS = {
           calc: (v) => [['Amount', 1000 * v.mg / v.mw, 'µmol'], ['Concentration', 1000 * v.mg / v.mw / v.ml, 'mM']] },
     ],
     mri: [
-        larmorCard('mri-larmor', 'T', '3', ['1H', '2H', '3He', '7Li', '13C', '17O', '19F', '23Na', '31P', '39K', '129Xe']),
+        larmorCard('mri-larmor', 'T', '3', ['1H', '2H', '3He', '7Li', '13C', '17O', '19F', '23Na', '31P', '39K', '129Xe'], true),
         { id: 'protocol', title: 'Resolution, time and SNR', wide: true,
-          inputs: [{ k: 'fx', label: 'FOV, read', v: '220', unit: 'mm' }, { k: 'fy', label: 'FOV, phase', v: '220', unit: 'mm' },
+          inputs: [scannerInput('b0'), { k: 'fx', label: 'FOV, read', v: '220', unit: 'mm' }, { k: 'fy', label: 'FOV, phase', v: '220', unit: 'mm' },
               { k: 'nx', label: 'Matrix, read', v: '256' }, { k: 'ny', label: 'Matrix, phase', v: '256' },
               { k: 'dz', label: 'Slice or partition', v: '3', unit: 'mm' }, { k: 'nz', label: 'Partitions (3D; 1 for 2D)', v: '1' },
               { k: 'tr', label: 'TR', v: '500', unit: 'ms' }, { k: 'nex', label: 'Averages', v: '1' }, { k: 'etl', label: 'Echo train', v: '1' },
@@ -727,7 +733,7 @@ const CARDS = {
                   ['Relative SNR', vol * Math.sqrt(v.ny * v.nz * v.nex / v.bw) * v.b0, 'a.u.']];
           },
           note: 'Time = TR × phase steps × partitions × averages ÷ echo train (slices of a 2D scan share the TR). Relative SNR ∝ voxel × √(phase steps × partitions × averages ÷ bandwidth per pixel) × B₀: only for comparing settings.' },
-        { id: 'fatwater', title: 'Fat and water', inputs: [{ k: 'b0', label: 'Field', v: '3', unit: 'T' }, { k: 'ppm', label: 'Fat shift', v: '3.4', unit: 'ppm' }],
+        { id: 'fatwater', title: 'Fat and water', inputs: [scannerInput('b0'), { k: 'b0', label: 'Field', v: '3', unit: 'T' }, { k: 'ppm', label: 'Fat shift', v: '3.4', unit: 'ppm' }],
           calc: (v) => { const df = v.ppm * G1H * v.b0; return [['Frequency difference', df, 'Hz'], ['First opposed-phase TE', 1000 / (2 * df), 'ms'], ['First in-phase TE', 1000 / df, 'ms']]; },
           note: 'The main fat peak; phases repeat every in-phase TE.' },
         { id: 'se', title: 'Spin-echo contrast', inputs: [{ k: 'tr', label: 'TR', v: '500', unit: 'ms' }, { k: 'te', label: 'TE', v: '15', unit: 'ms' },
@@ -797,6 +803,11 @@ function renderCards(mode) {
             if (f.type === 'select' && !c.value) c.value = defaultOf(f);
             controls[f.k] = { el: c, f };
             c.addEventListener('input', () => {
+                // A preset fills in the field it's for, in tesla.
+                if (f.type === 'preset' && c.value) {
+                    controls[f.sets].el.value = c.value;
+                    if (f.unitKey) controls[f.unitKey].el.value = 'T';
+                }
                 store.cards[key] = Object.fromEntries(Object.entries(controls).map(([k, x]) => [k, x.el.value]));
                 save();
                 update();
@@ -834,6 +845,14 @@ function renderCards(mode) {
         function update() {
             const v = {}, raw = {};
             let missing = false;
+            // Each preset shows the scanner whose field is in its box, or "Any field".
+            for (const { el: c, f } of Object.values(controls)) {
+                if (f.type !== 'preset') continue;
+                const field = controls[f.sets].el.value.trim();
+                const inTesla = !f.unitKey || controls[f.unitKey].el.value === 'T';
+                const match = f.options.find(([value]) => value && Number(value) === Number(field));
+                c.value = inTesla && match ? match[0] : '';
+            }
             for (const [k, { el: c, f }] of Object.entries(controls)) {
                 raw[k] = c.value.trim();
                 if (f.type || c.tagName === 'SELECT') { v[k] = raw[k]; continue; }
