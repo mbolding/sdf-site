@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coffee guide · mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<style>
+/* The cups are drawn in the theme's text colour; what's in them keeps its own colours. */
+.basics ul { margin: 0.3em 0 0; padding-left: 1.2em; font: 15px/1.6 var(--font-ui); }
+.filters { display: flex; flex-wrap: wrap; gap: 0.6em; align-items: center; margin: 1.4em 0 1em; }
+.filters .tabs { margin: 0; }
+.filters input { flex: 1 1 12em; max-width: 20em; }
+.drinks { display: grid; grid-template-columns: repeat(auto-fill, minmax(16em, 1fr)); gap: 1em; }
+.drink { margin: 0; display: flex; flex-direction: column; }
+.drink[hidden] { display: none; }
+.drink .art { color: var(--text); text-align: center; }
+.drink svg { width: 100%; max-width: 13em; height: auto; display: inline-block; }
+.drink h3 { margin: 0.2em 0 0; text-align: center; }
+.drink .alt { text-align: center; margin: 0.1em 0 0; min-height: 1.5em; }
+.legend { list-style: none; padding: 0; margin: 0.8em 0 0.6em; font: 14px/1.4 var(--font-ui); }
+.legend li { display: grid; grid-template-columns: 1.1em auto; gap: 0.5em; align-items: start; margin: 0.3em 0; }
+.legend .swatch { width: 1.1em; height: 1.1em; border-radius: 3px; border: 1px solid var(--rule); margin-top: 0.1em; }
+.legend .small { display: block; }
+.drink .desc { font: 14px/1.5 var(--font-ui); margin: 0 0 0.6em; flex: 1; }
+.drink .meta { margin: 0; padding-top: 0.5em; border-top: 1px solid var(--rule); }
+.none { font: 15px var(--font-ui); color: var(--muted); }
+</style>
+</head>
+<body class="wide">
+<header><a href="./">mbolding</a></header>
+<h1>Coffee guide</h1>
+<p class="tagline">What goes into each cup, from a ristretto to an espresso tonic. Sizes and splits are typical; every café does them a little differently.</p>
+
+<div class="box basics">
+  <p class="title">The basics</p>
+  <ul>
+    <li>A single shot of espresso is 7–9 g of fine coffee giving 25–30 ml in 25–30 seconds. A double is 14–18 g giving 50–60 ml.</li>
+    <li>Steam milk to 55–65 °C. Any hotter and it loses its sweetness.</li>
+    <li>A cappuccino wants thick, airy foam; a latte or flat white wants thin, glossy microfoam you can pour patterns with.</li>
+    <li>“Brewed coffee” means drip, pour-over, French press and the like, rather than espresso.</li>
+  </ul>
+</div>
+
+<div class="filters">
+  <nav class="tabs" id="tabs" aria-label="Kinds of drink"></nav>
+  <input type="search" id="search" placeholder="Find a drink or what’s in it" aria-label="Find a drink">
+</div>
+
+<div class="drinks" id="drinks"></div>
+<p class="none" id="none" hidden>No drink matches that.</p>
+
+<footer><a href="./">Back home</a></footer>
+
+<script>
+'use strict';
+// [name, colour]
+const INGREDIENTS = {
+    espresso: ['Espresso', '#4b2a17'],
+    crema: ['Crema', '#b9824f'],
+    coffee: ['Brewed coffee', '#6b3f22'],
+    coldbrew: ['Cold brew', '#5c3720'],
+    turkish: ['Unfiltered coffee', '#3d2414'],
+    grounds: ['Grounds', '#24130a'],
+    kopuk: ['Foam', '#a0703f'],
+    water: ['Hot water', '#d4eaf5'],
+    tonic: ['Tonic water', '#e3f2ec'],
+    milk: ['Steamed milk', '#e8d6bd'],
+    coldmilk: ['Cold milk', '#f1e9dc'],
+    halfhalf: ['Steamed half-and-half', '#ecd3ab'],
+    foam: ['Milk foam', '#fbf3e6'],
+    cream: ['Whipped cream', '#fffcf5'],
+    lightcream: ['Lightly whipped cream', '#f6ecd9'],
+    chocolate: ['Chocolate', '#7d3a1e'],
+    condensed: ['Sweetened condensed milk', '#efd9a0'],
+    icecream: ['Vanilla ice cream', '#f6e8c2'],
+    whiskey: ['Irish whiskey', '#c47a28'],
+};
+
+// Each vessel: the inside as a path (the liquid is clipped to it), the rim's height and
+// width, the lowest point inside, and lines for handles, saucers and stems.
+const VESSELS = {
+    demitasse: { inside: 'M40 52 L80 52 L76 82 Q75 88 69 88 L51 88 Q45 88 44 82 Z', top: 52, bottom: 88, rim: 40,
+        extras: ['M79 58 C92 56 92 76 76 74', 'M26 95 Q60 101 94 95'] },
+    cup: { inside: 'M24 36 L96 36 C96 70 84 88 60 88 C36 88 24 70 24 36 Z', top: 36, bottom: 88, rim: 72,
+        extras: ['M95 46 C113 44 113 72 89 70', 'M12 95 Q60 102 108 95'] },
+    mug: { inside: 'M32 28 L84 28 L84 88 Q84 94 78 94 L38 94 Q32 94 32 88 Z', top: 28, bottom: 94, rim: 52,
+        extras: ['M84 40 C103 40 103 76 84 76'] },
+    glass: { inside: 'M38 10 L82 10 L78 96 Q77.6 100 73 100 L47 100 Q42.4 100 42 96 Z', top: 10, bottom: 100, rim: 44, glass: true },
+    tumbler: { inside: 'M36 40 L84 40 L80 94 Q79.6 98 75 98 L45 98 Q40.4 98 40 94 Z', top: 40, bottom: 98, rim: 48, glass: true },
+    stemmed: { inside: 'M36 12 L84 12 L81 56 Q79 70 60 70 Q41 70 39 56 Z', top: 12, bottom: 70, rim: 48, glass: true,
+        extras: ['M60 70 L60 95', 'M44 99 Q60 94 76 99'] },
+    bowl: { inside: 'M16 44 L104 44 C102 76 86 90 60 90 C34 90 18 76 16 44 Z', top: 44, bottom: 90, rim: 88,
+        extras: ['M47 90 L49 97 L71 97 L73 90'] },
+    coupe: { inside: 'M26 46 L94 46 C92 70 80 82 60 82 C40 82 28 70 26 46 Z', top: 46, bottom: 82, rim: 68, glass: true,
+        extras: ['M60 82 L60 97', 'M46 100 Q60 95 74 100'] },
+};
+
+// layers, bottom first: [ingredient, share of the liquid, how much]. fill is how full the
+// vessel is; dome is something piled above the rim; ml is the usual size.
+const DRINKS = [
+    { name: 'Ristretto', vessel: 'demitasse', fill: 0.42, tags: ['black'], ml: [15, 20],
+      layers: [['espresso', 0.85, '15–20 ml from a full dose'], ['crema', 0.15]],
+      desc: 'An espresso stopped early: the same coffee with less water, so it’s thicker, sweeter and less bitter.', note: 'brew ratio about 1 : 1' },
+    { name: 'Espresso', vessel: 'demitasse', fill: 0.58, tags: ['black'], ml: [25, 30], alt: 'Caffè, a single shot',
+      layers: [['espresso', 0.82, '25–30 ml in 25–30 s'], ['crema', 0.18, 'the golden foam on top']],
+      desc: 'Hot water forced through finely ground coffee at about 9 bar. The base of nearly everything below.', note: 'brew ratio about 1 : 2' },
+    { name: 'Doppio', vessel: 'demitasse', fill: 0.86, tags: ['black'], ml: [50, 60], alt: 'A double espresso',
+      layers: [['espresso', 0.86, 'two shots, 50–60 ml'], ['crema', 0.14]],
+      desc: 'Twice the coffee and twice the water. Most cafés now pull doubles as standard.' },
+    { name: 'Lungo', vessel: 'demitasse', fill: 0.95, tags: ['black'], ml: [50, 90], alt: 'Allongé',
+      layers: [['espresso', 0.9, 'one dose pulled long'], ['crema', 0.1]],
+      desc: 'More water run through a single dose. Thinner and more bitter than an Americano, which adds the water afterwards.', note: 'brew ratio 1 : 3–4' },
+    { name: 'Americano', vessel: 'cup', fill: 0.86, tags: ['black'], ml: [150, 250], alt: 'Caffè americano',
+      layers: [['espresso', 0.3, '1–2 shots'], ['water', 0.7, '120–200 ml, added after']],
+      desc: 'Espresso let down with hot water to drip-coffee strength, but with espresso’s flavour.' },
+    { name: 'Long black', vessel: 'cup', fill: 0.78, tags: ['black'], ml: [150, 180],
+      layers: [['water', 0.6, '100–120 ml, in first'], ['espresso', 0.32, 'a double shot on top'], ['crema', 0.08, 'kept whole']],
+      desc: 'An Americano built the other way round, so the crema survives. From Australia and New Zealand.' },
+    { name: 'Macchiato', vessel: 'demitasse', fill: 0.78, tags: ['black', 'milk'], ml: [30, 60], alt: 'Espresso macchiato',
+      layers: [['espresso', 0.65, 'a single or double shot'], ['foam', 0.35, 'a spoonful']],
+      desc: '“Stained” espresso: just a dab of foam to soften it. Not the tall caramel drink of the same name.' },
+    { name: 'Red eye', vessel: 'mug', fill: 0.9, tags: ['black'], ml: [240, 350],
+      layers: [['coffee', 0.8, 'a mug of drip coffee'], ['espresso', 0.2, 'a shot dropped in']],
+      desc: 'For the morning after a night flight. Two shots make a black eye, three a dead eye.' },
+    { name: 'Turkish coffee', vessel: 'demitasse', fill: 0.8, tags: ['black'], ml: [60, 90], alt: 'Türk kahvesi',
+      layers: [['grounds', 0.14, 'settle at the bottom'], ['turkish', 0.7, 'simmered in a cezve'], ['kopuk', 0.16, 'the foam, prized']],
+      desc: 'Powder-fine coffee heated slowly with water, and sugar if you like, then served unfiltered. Let it settle, and stop before the grounds.' },
+    { name: 'Cortado', vessel: 'tumbler', fill: 0.58, tags: ['milk'], ml: [90, 130], alt: 'Gibraltar, in San Francisco',
+      layers: [['espresso', 0.48, 'a double shot'], ['milk', 0.45, 'about as much warm milk'], ['foam', 0.07, 'barely any']],
+      desc: 'Espresso “cut” with an equal part of milk. Strong but smooth. From Spain.' },
+    { name: 'Piccolo', vessel: 'tumbler', fill: 0.5, tags: ['milk'], ml: [80, 100], alt: 'Piccolo latte',
+      layers: [['espresso', 0.3, 'a ristretto'], ['milk', 0.55, 'to fill the glass'], ['foam', 0.15, 'thin microfoam']],
+      desc: 'A tiny latte in a small glass: all the flavour of the coffee, softened.' },
+    { name: 'Flat white', vessel: 'cup', fill: 0.9, tags: ['milk'], ml: [150, 180],
+      layers: [['espresso', 0.32, 'a double or double ristretto'], ['milk', 0.6, 'steamed whole milk'], ['foam', 0.08, 'a thin skin of microfoam']],
+      desc: 'Smaller and stronger than a latte, with velvety milk and almost no foam. Australia and New Zealand both claim it.' },
+    { name: 'Cappuccino', vessel: 'cup', fill: 0.98, tags: ['milk'], ml: [150, 180],
+      layers: [['espresso', 0.3, '1–2 shots'], ['milk', 0.32, 'a third'], ['foam', 0.38, 'a thick cap of foam']],
+      desc: 'Traditionally a third each of espresso, milk and foam. Italians drink it before 11 in the morning.' },
+    { name: 'Latte', vessel: 'glass', fill: 0.92, tags: ['milk'], ml: [240, 350], alt: 'Caffè latte',
+      layers: [['espresso', 0.17, '1–2 shots'], ['milk', 0.7, '200–300 ml steamed milk'], ['foam', 0.13, 'a thin layer']],
+      desc: 'Mostly milk, gentle and creamy. The usual canvas for latte art.' },
+    { name: 'Latte macchiato', vessel: 'glass', fill: 0.92, tags: ['milk'], ml: [250, 300],
+      layers: [['milk', 0.55, 'steamed milk, in first'], ['espresso', 0.17, 'poured in last'], ['foam', 0.28, 'a deep layer']],
+      desc: 'Milk “stained” with espresso: the shot goes in through the foam and settles in a band between milk and foam.' },
+    { name: 'Breve', vessel: 'cup', fill: 0.95, tags: ['milk'], ml: [150, 240], alt: 'Caffè breve',
+      layers: [['espresso', 0.32, '1–2 shots'], ['halfhalf', 0.5, 'in place of milk'], ['foam', 0.18, 'rich foam']],
+      desc: 'A latte made with half milk, half cream. Very rich. American.' },
+    { name: 'Café au lait', vessel: 'bowl', fill: 0.85, tags: ['milk'], ml: [200, 300], alt: 'Café con leche, made with espresso in Spain',
+      layers: [['coffee', 0.5, 'strong brewed coffee'], ['milk', 0.5, 'as much hot milk']],
+      desc: 'Brewed coffee and hot milk, half and half. In France, breakfast from a wide bowl, croissant optional.' },
+    { name: 'Mocha', vessel: 'mug', fill: 1, tags: ['milk', 'treat'], ml: [240, 350], alt: 'Caffè mocha',
+      layers: [['chocolate', 0.14, 'chocolate sauce or cocoa'], ['espresso', 0.24, '1–2 shots'], ['milk', 0.62, 'to fill']],
+      dome: ['cream', 'if you like'],
+      desc: 'A latte with chocolate stirred in: half hot chocolate, half coffee.' },
+    { name: 'Vienna coffee', vessel: 'tumbler', fill: 1, tags: ['treat'], ml: [120, 200], alt: 'Einspänner',
+      layers: [['espresso', 0.62, 'a double, or strong coffee'], ['cream', 0.38, 'heaped on, unstirred']], dome: ['cream'],
+      desc: 'Strong black coffee under a heap of cream. Sip the hot coffee through the cold cream.' },
+    { name: 'Café bombón', vessel: 'tumbler', fill: 0.55, tags: ['treat'], ml: [60, 90],
+      layers: [['condensed', 0.45, 'a layer at the bottom'], ['espresso', 0.55, 'poured on top']],
+      desc: 'Served in a glass to show off the layers, then stirred. Very sweet. From Valencia.' },
+    { name: 'Affogato', vessel: 'coupe', fill: 0.55, tags: ['treat', 'cold'], alt: 'Affogato al caffè',
+      layers: [['espresso', 0.6, 'a hot shot poured over'], ['icecream', 0.4, 'melting into it']], scoop: ['icecream', 'a scoop of vanilla gelato'],
+      desc: '“Drowned”: a scoop of ice cream with hot espresso poured over it. Dessert and coffee in one.' },
+    { name: 'Irish coffee', vessel: 'stemmed', fill: 1, tags: ['treat'], ml: [180, 240],
+      layers: [['whiskey', 0.2, '40 ml'], ['coffee', 0.5, 'hot, with brown sugar stirred in'], ['lightcream', 0.3, 'floated on top']],
+      desc: 'Stir the sugar into the coffee and whiskey, then pour the cream over the back of a spoon. Drink it through the cream; don’t stir.' },
+    { name: 'Iced latte', vessel: 'glass', fill: 0.9, ice: true, tags: ['cold', 'milk'], ml: [300, 450],
+      layers: [['coldmilk', 0.7, 'over ice'], ['espresso', 0.3, '1–2 shots on top']],
+      desc: 'Milk and ice first, espresso last, so it cascades down. Stir before drinking.' },
+    { name: 'Cold brew', vessel: 'glass', fill: 0.86, ice: true, tags: ['cold', 'black'], ml: [250, 400],
+      layers: [['coldbrew', 1, 'diluted to taste, over ice']],
+      desc: 'Coarse coffee steeped in cold water for 12–24 hours, then strained. Smooth, low in acid, and strong.', note: 'steep about 1 : 8' },
+    { name: 'Vietnamese iced coffee', vessel: 'tumbler', fill: 0.9, ice: true, tags: ['cold', 'treat'], ml: [150, 200], alt: 'Cà phê sữa đá',
+      layers: [['condensed', 0.3, '2 tablespoons'], ['coffee', 0.7, 'strong, dripped through a phin']],
+      desc: 'Dark-roast coffee dripped slowly onto condensed milk, stirred, and poured over ice.' },
+    { name: 'Espresso tonic', vessel: 'glass', fill: 0.9, ice: true, tags: ['cold', 'black'], ml: [200, 250],
+      layers: [['tonic', 0.72, '150 ml tonic water over ice'], ['espresso', 0.28, 'a shot, poured slowly']],
+      desc: 'Bitter, fizzy and bright. Pour the espresso gently so it floats, and add a slice of orange if you have one.' },
+];
+
+const TABS = [['all', 'All'], ['black', 'Black'], ['milk', 'With milk'], ['treat', 'Sweet and spirited'], ['cold', 'Cold']];
+
+// ---------------------------------------------------------------------------------------
+
+function drawing(drink, n) {
+    const V = VESSELS[drink.vessel], id = `clip${n}`;
+    const surface = V.bottom - (V.bottom - V.top) * drink.fill;
+    const total = drink.layers.reduce((s, l) => s + l[1], 0);
+    const line = 'stroke="rgb(0 0 0 / 0.16)" stroke-width="0.8"';
+    let liquid = '', y = V.bottom;
+    for (const [ing, share] of drink.layers) {
+        const h = (V.bottom - surface) * share / total;
+        y -= h;
+        liquid += `<rect x="0" y="${y}" width="120" height="${h + 0.4}" fill="${INGREDIENTS[ing][1]}"/>`;
+        if (y > V.top + 0.5) liquid += `<line x1="0" x2="120" y1="${y}" y2="${y}" ${line}/>`;
+    }
+    if (drink.ice) {
+        const cubes = 3, room = V.bottom - surface - 20;
+        for (let i = 0; i < cubes; i++) {
+            const cy = surface + 6 + room * i / (cubes - 1), cx = i % 2 ? 64 : 50;
+            liquid += `<rect x="${cx - 7}" y="${cy}" width="14" height="14" rx="2.5" transform="rotate(${i % 2 ? 12 : -10} ${cx} ${cy + 7})"
+                fill="rgb(255 255 255 / 0.32)" stroke="rgb(255 255 255 / 0.85)" stroke-width="1"/>`;
+        }
+    }
+    let above = '';
+    if (drink.dome) {
+        const rx = V.rim / 2 - 2;
+        above += `<path d="M${60 - rx} ${V.top} Q${60 - rx} ${V.top - 13} 60 ${V.top - 13} Q${60 + rx} ${V.top - 13} ${60 + rx} ${V.top} Z"
+            fill="${INGREDIENTS[drink.dome[0]][1]}" ${line}/>`;
+    }
+    if (drink.scoop) above += `<circle cx="60" cy="${V.top - 6}" r="15" fill="${INGREDIENTS[drink.scoop[0]][1]}" ${line}/>`;
+    const glass = V.glass ? ' stroke-opacity="0.6"' : '';
+    const extras = (V.extras || []).map((d) => `<path d="${d}"/>`).join('');
+    const label = `${drink.name}: ` + drink.layers.map(([ing]) => INGREDIENTS[ing][0].toLowerCase()).join(', ');
+    return `<svg viewBox="0 0 120 104" role="img" aria-label="${label}">
+        <defs><clipPath id="${id}"><path d="${V.inside}"/></clipPath></defs>
+        ${V.glass ? `<path d="${V.inside}" fill="currentColor" fill-opacity="0.05"/>` : ''}
+        <g clip-path="url(#${id})">${liquid}</g>
+        ${above}
+        <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"${glass}>
+            <path d="${V.inside}"/>${extras}
+        </g>
+    </svg>`;
+}
+
+function legend(drink) {
+    const items = drink.layers.map(([ing, , amount]) => [ing, amount]);
+    for (const extra of [drink.dome, drink.scoop]) {
+        if (extra && !items.some(([ing]) => ing === extra[0])) items.push(extra);
+    }
+    if (drink.ice) items.push([null, 'Ice']);
+    const ul = document.createElement('ul');
+    ul.className = 'legend';
+    for (const [ing, amount] of items) {
+        const li = document.createElement('li');
+        const sw = document.createElement('span');
+        sw.className = 'swatch';
+        if (ing) sw.style.background = INGREDIENTS[ing][1];
+        else sw.style.background = 'linear-gradient(135deg, #e8f4fb, #ffffff)';
+        const text = document.createElement('span');
+        text.textContent = ing ? INGREDIENTS[ing][0] : amount;
+        if (ing && amount) {
+            const s = document.createElement('span');
+            s.className = 'small';
+            s.textContent = amount;
+            text.appendChild(s);
+        }
+        li.append(sw, text);
+        ul.appendChild(li);
+    }
+    return ul;
+}
+
+// US fluid ounces, to the nearest half.
+const ounces = (ml) => Math.round(ml / 29.574 * 2) / 2;
+function size([a, b]) {
+    const x = ounces(a), y = ounces(b);
+    return `${a}–${b} ml · ${x === y ? x : `${x}–${y}`} fl oz`;
+}
+
+const host = document.getElementById('drinks');
+DRINKS.forEach((drink, n) => {
+    const card = document.createElement('article');
+    card.className = 'card drink';
+    const art = document.createElement('div');
+    art.className = 'art';
+    art.innerHTML = drawing(drink, n);
+    const h = document.createElement('h3');
+    h.textContent = drink.name;
+    const alt = document.createElement('p');
+    alt.className = 'alt small';
+    alt.textContent = drink.alt || '';
+    const desc = document.createElement('p');
+    desc.className = 'desc';
+    desc.textContent = drink.desc;
+    const meta = document.createElement('p');
+    meta.className = 'meta small';
+    meta.textContent = [drink.ml ? size(drink.ml) : 'one scoop, one shot', drink.note].filter(Boolean).join(' · ');
+    card.append(art, h, alt, legend(drink), desc, meta);
+    card.dataset.tags = drink.tags.join(' ');
+    card.dataset.text = [drink.name, drink.alt, drink.desc, ...drink.layers.map(([ing]) => INGREDIENTS[ing][0]),
+        drink.dome && INGREDIENTS[drink.dome[0]][0], drink.scoop && INGREDIENTS[drink.scoop[0]][0], drink.ice && 'ice iced']
+        .filter(Boolean).join(' ').toLowerCase();
+    host.appendChild(card);
+});
+
+let tab = 'all';
+const tabs = document.getElementById('tabs'), search = document.getElementById('search');
+for (const [key, label] of TABS) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.dataset.tab = key;
+    b.textContent = label;
+    b.onclick = () => { tab = key; filter(); };
+    tabs.appendChild(b);
+}
+function filter() {
+    const words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
+    let shown = 0;
+    for (const card of host.children) {
+        const ok = (tab === 'all' || card.dataset.tags.split(' ').includes(tab)) && words.every((w) => card.dataset.text.includes(w));
+        card.hidden = !ok;
+        if (ok) shown++;
+    }
+    for (const b of tabs.children) b.classList.toggle('active', b.dataset.tab === tab);
+    document.getElementById('none').hidden = shown > 0;
+}
+search.addEventListener('input', filter);
+filter();
+</script>
+</body>
+</html>
