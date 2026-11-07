@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uses · mbolding</title>
+<link rel="stylesheet" href="style.css">
+<script src="theme.js"></script>
+<style>
+dl { margin: 0.4em 0 0; }
+dt { font-weight: 600; margin-top: 0.8em; }
+dd { margin: 0.1em 0 0 1.2em; }
+</style>
+</head>
+<body>
+<header><a href="./">mbolding</a> · <a href="now.html">Now</a></header>
+<h1>Uses</h1>
+<p class="tagline">The tools behind this site and the things on it.</p>
+
+<h2>Computers</h2>
+<dl>
+  <dt>An Apple Silicon Mac</dt>
+  <dd>Where everything gets made, and what the homemade apps below run on.</dd>
+  <dt><a href="https://sdf.org">SDF</a></dt>
+  <dd>The Public Access UNIX System since 1987. It hosts this site, the phlog in gopherspace and the gemlog in Geminispace, and gives me a shell to ssh into.</dd>
+  <dt><a href="https://www.rsync.net">rsync.net</a></dt>
+  <dd>Offsite storage over plain ssh, with ZFS snapshots to go back through.</dd>
+</dl>
+
+<h2>Writing and code</h2>
+<dl>
+  <dt>Vim</dt>
+  <dd>With <a href="cheatsheets/">cheatsheets</a> for the parts I keep forgetting.</dd>
+  <dt><a href="https://claude.com/claude-code">Claude Code</a></dt>
+  <dd>A pair programmer for the apps, the clocks and most of this site.</dd>
+  <dt>git</dt>
+  <dd>For everything, this site included: it's a repository on SDF.</dd>
+</dl>
+
+<h2>This site</h2>
+<p>Hand-written HTML, one stylesheet and a small script for the themes, with no build step. Only the Mermaid page fetches anything from elsewhere, Mermaid itself. Each page stands on its own, and the toys keep your pictures and settings in your browser. The <a href="https://web-clocks.mark-bolding.workers.dev">web clocks</a> are the same idea, served from Cloudflare Workers.</p>
+
+<h2>Homemade Mac apps</h2>
+<p class="small">All in the <a href="https://github.com/mbolding/my_web_clocks/tree/main/desktop_widget">desktop_widget</a> folder, built with <code>swiftc</code> and a shell script, no Xcode project.</p>
+<dl>
+  <dt>For the small internet</dt>
+  <dd>Gopher Browser (gopher, Gemini, Spartan, finger), News Reader (Usenet), Relay Chat (IRC), SDF Post (the blog), Offsite (rsync.net).</dd>
+  <dt>Floating widgets</dt>
+  <dd>An analog clock and a word clock, Month Calendar, Dial Timer, Scratch Pad, Command Bar (a floating shell), Soma Player (SomaFM and tilderadio), and Widget Bar to open them all.</dd>
+  <dt>In the Dock and menu bar</dt>
+  <dd>Dock Clock, Dock Load (CPU and memory as rings), Server List.</dd>
+  <dt>Ordinary windowed apps</dt>
+  <dd>Map Browser, Markdown Editor, Text Extractor, DICOM Viewer, Stipple, Polyhedra.</dd>
+</dl>
+
+<footer>A <a href="https://uses.tech">uses page</a>. · <a href="./">Back home</a></footer>
+</body>
+</html>
