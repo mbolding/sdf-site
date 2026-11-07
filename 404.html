@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Not found · mbolding</title>
+<!-- Served for any missing path, so everything here is linked from the root. -->
+<link rel="stylesheet" href="/style.css">
+<script src="/theme.js"></script>
+<style>
+.big { font: 600 clamp(4em, 18vw, 8em)/1 var(--font-mono); color: var(--rule); margin: 0.2em 0 0; letter-spacing: -0.04em; }
+#guess:empty { display: none; }
+</style>
+</head>
+<body>
+<header><a href="/">mbolding</a></header>
+<p class="big" aria-hidden="true">404</p>
+<h1>Nothing here</h1>
+<p class="tagline">There's no page at <code id="path"></code>. It may have moved, or never been.</p>
+<div class="box" id="guess"></div>
+
+<h2>Try</h2>
+<ul class="links" id="pages"></ul>
+
+<footer><a href="/">Back home</a></footer>
+
+<script>
+// The pages worth suggesting. A missing path is matched against them by name, so
+// /bloch, /Tea or /toys/kspace.htm all find their way.
+const PAGES = [
+    ['/', 'Home'], ['/blog/', 'Blog'], ['/now.html', 'Now'], ['/uses.html', 'Uses'],
+    ['/notes/', 'Notes'], ['/toys/stipple.html', 'Stipple'], ['/toys/minesweeper.html', 'Minesweeper'],
+    ['/toys/bloch.html', 'Bloch'], ['/toys/kspace.html', 'k-space'], ['/toys/nonogram.html', 'Nonogram'],
+    ['/calc/', 'Calc'], ['/mrs-helper/', 'MRS Helper'], ['/coffee.html', 'Coffee guide'], ['/tea.html', 'Tea guide'],
+    ['/roll.html', 'Roll dice'], ['/100doors.html', '100 doors'], ['/cheatsheets/', 'Cheatsheets'], ['/misc/', 'Old experiments'],
+];
+const path = decodeURIComponent(location.pathname);
+document.getElementById('path').textContent = path;
+
+const stem = s => s.toLowerCase().replace(/\/index\.html?$/, '/').replace(/\.html?$/, '').replace(/[^a-z0-9]/g, '');
+function distance(a, b) {
+    const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+    for (let j = 1; j <= b.length; j++) d[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    return d[a.length][b.length];
+}
+// Compare the last part of the path with each page's file name and title.
+const want = stem(path.split('/').filter(Boolean).pop() || '');
+let best = null;
+if (want) for (const [href, title] of PAGES) {
+    const names = [stem(href.split('/').filter(Boolean).pop() || ''), stem(title)];
+    for (const n of names) {
+        if (!n) continue;
+        const score = n.includes(want) || want.includes(n) ? 0 : distance(want, n) / Math.max(want.length, n.length);
+        if (!best || score < best.score) best = { href, title, score };
+    }
+}
+if (best && best.score < 0.45 && best.href !== path) {
+    const g = document.getElementById('guess');
+    g.innerHTML = '<p>Were you looking for <a></a>?</p>';
+    g.querySelector('a').href = best.href;
+    g.querySelector('a').textContent = best.title;
+}
+
+const ul = document.getElementById('pages');
+for (const [href, title] of PAGES.slice(1)) {
+    const li = document.createElement('li'), a = document.createElement('a');
+    a.href = href; a.textContent = title;
+    li.append(a); ul.append(li);
+}
+</script>
+</body>
+</html>
