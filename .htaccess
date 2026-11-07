@@ -1,1 +1,5 @@
 ErrorDocument 404 /404.html
+
+# Old drafts moved into misc/ in November 2026; keep their old addresses working.
+RedirectMatch 301 ^/(trig[2-6]?|100doors2?|e1wrap|countdown)\.html$ /misc/$1.html
+RedirectMatch 301 ^/note\.html$ /notes/note.html
