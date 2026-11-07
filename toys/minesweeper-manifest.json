@@ -1,0 +1,16 @@
+{
+  "name": "Minesweeper",
+  "short_name": "Minesweeper",
+  "description": "Minesweeper in five looks, three sizes or your own, with chording, flags by long-press and best times.",
+  "id": "./minesweeper.html",
+  "start_url": "./minesweeper.html",
+  "scope": "./minesweeper",
+  "display": "standalone",
+  "background_color": "#fdfdfb",
+  "theme_color": "#fdfdfb",
+  "icons": [
+    { "src": "minesweeper-icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "minesweeper-icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "minesweeper-icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

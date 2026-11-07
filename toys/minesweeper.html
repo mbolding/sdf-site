@@ -4,9 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Minesweeper · mbolding</title>
+<link rel="manifest" href="minesweeper-manifest.json">
+<meta name="theme-color" content="#fdfdfb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="Minesweeper">
+<link rel="icon" type="image/png" href="minesweeper-icons/favicon-64.png">
+<link rel="apple-touch-icon" href="minesweeper-icons/apple-touch-icon.png">
 <link rel="stylesheet" href="../style.css">
 <script src="../theme.js"></script>
 <style>
+/* Installed as an app, the links back to the site have nowhere to go. */
+@media (display-mode: standalone) { header, footer { display: none; } }
 /* The page takes the site theme. The board wears one of five looks on top of it: Plain
    and Cute draw in the theme's colours, Classic, Garden and Neon keep their own. */
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 15.5em; gap: 1.4em; align-items: start; }
@@ -561,6 +569,11 @@ new ResizeObserver(() => { if (els) fit(); }).observe(play);
 
 showLevel(); showSkin(); showCustom(); showBest(); showMode();
 newGame();
+
+// Installable, and playable offline once it has been opened.
+if ('serviceWorker' in navigator) {
+    addEventListener('load', () => { navigator.serviceWorker.register('minesweeper-sw.js', { scope: './minesweeper' }).catch(() => {}); });
+}
 </script>
 </body>
 </html>
