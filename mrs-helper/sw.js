@@ -1,5 +1,5 @@
 // MRS Helper service worker: serve from cache first, refresh the cache in the background.
-const CACHE = "mrs-helper-v1";
+const CACHE = "mrs-helper-v2";
 const ASSETS = [
   "./",
   "./index.html",
@@ -16,7 +16,7 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+    caches.keys().then((keys) => Promise.all(keys.filter((k) => k.startsWith("mrs-helper-") && k !== CACHE).map((k) => caches.delete(k))))
   );
   self.clients.claim();
 });

@@ -6,7 +6,15 @@
 <title>Calc · mbolding</title>
 <link rel="stylesheet" href="../style.css">
 <script src="../theme.js"></script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#fdfdfb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="Calc">
+<link rel="icon" type="image/png" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
+/* Installed as an app, the site's header and footer links have nowhere to go. */
+@media (display-mode: standalone) { header, footer { display: none; } }
 .modes { margin: 0.4em 0 1.4em; }
 /* Simple and Scientific */
 .calc-layout { display: grid; grid-template-columns: minmax(0, 24em) minmax(0, 1fr); gap: 2em; align-items: start; }
@@ -1044,6 +1052,11 @@ addEventListener('hashchange', () => { const m = location.hash.slice(1); if (MOD
 
 showPast(); showAngle(); showVars(); preview();
 setMode(mode);
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+    addEventListener('load', () => { navigator.serviceWorker.register('sw.js', { scope: './' }).catch(() => {}); });
+}
 </script>
 </body>
 </html>

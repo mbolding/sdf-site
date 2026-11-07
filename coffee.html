@@ -6,7 +6,15 @@
 <title>Coffee guide · mbolding</title>
 <link rel="stylesheet" href="style.css">
 <script src="theme.js"></script>
+<link rel="manifest" href="apps/coffee/manifest.json">
+<meta name="theme-color" content="#fdfdfb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="Coffee">
+<link rel="icon" type="image/png" href="apps/coffee/favicon-64.png">
+<link rel="apple-touch-icon" href="apps/coffee/apple-touch-icon.png">
 <style>
+/* Installed as an app, the site's header and footer links have nowhere to go. */
+@media (display-mode: standalone) { header, footer { display: none; } }
 /* The cups are drawn in the theme's text colour; what's in them keeps its own colours. */
 .basics ul { margin: 0.3em 0 0; padding-left: 1.2em; font: 15px/1.6 var(--font-ui); }
 .filters { display: flex; flex-wrap: wrap; gap: 0.6em; align-items: center; margin: 1.4em 0 1em; }
@@ -310,6 +318,11 @@ function filter() {
 }
 search.addEventListener('input', filter);
 filter();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+    addEventListener('load', () => { navigator.serviceWorker.register('coffee-sw.js', { scope: './coffee' }).catch(() => {}); });
+}
 </script>
 </body>
 </html>

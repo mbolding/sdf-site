@@ -6,7 +6,15 @@
 <title>Tea guide · mbolding</title>
 <link rel="stylesheet" href="style.css">
 <script src="theme.js"></script>
+<link rel="manifest" href="apps/tea/manifest.json">
+<meta name="theme-color" content="#fdfdfb" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181d" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-title" content="Tea">
+<link rel="icon" type="image/png" href="apps/tea/favicon-64.png">
+<link rel="apple-touch-icon" href="apps/tea/apple-touch-icon.png">
 <style>
+/* Installed as an app, the site's header and footer links have nowhere to go. */
+@media (display-mode: standalone) { header, footer { display: none; } }
 /* The cups are drawn in the theme's text colour; the tea in them keeps its own colour. */
 .basics ul { margin: 0.3em 0 0; padding-left: 1.2em; font: 15px/1.6 var(--font-ui); }
 .settings, .filters { display: flex; flex-wrap: wrap; gap: 0.6em 1.2em; align-items: center; margin: 1.2em 0 0.6em; }
@@ -518,6 +526,11 @@ addEventListener('keydown', (e) => {
 });
 
 render();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+    addEventListener('load', () => { navigator.serviceWorker.register('tea-sw.js', { scope: './tea' }).catch(() => {}); });
+}
 </script>
 </body>
 </html>
