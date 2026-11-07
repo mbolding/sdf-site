@@ -6,10 +6,38 @@
 <title>mbolding</title>
 <link rel="stylesheet" href="style.css">
 <script src="theme.js"></script>
+<style>
+/* The clock by the name is drawn in the theme's colours and links to the clock gallery. */
+.masthead { display: flex; align-items: center; justify-content: space-between; gap: 1em; }
+.masthead h1 { margin: 0; }
+.clock { flex: none; display: block; width: 3.4em; height: 3.4em; color: var(--text); }
+.clock svg { display: block; width: 100%; height: 100%; }
+.clock .face { fill: var(--surface); stroke: var(--rule); stroke-width: 2; }
+.clock .tick { stroke: var(--muted); stroke-width: 2; stroke-linecap: round; }
+.clock .hand { stroke: var(--text); stroke-linecap: round; }
+.clock .sec { stroke: var(--link); stroke-width: 1.5; stroke-linecap: round; }
+.clock .pin { fill: var(--link); }
+.pages { margin-top: 0.2em; }
+</style>
 </head>
 <body>
-<h1>mbolding</h1>
-<p class="tagline">I &#128151; SDF</p>
+<div class="masthead">
+  <div>
+    <h1>mbolding</h1>
+    <p class="tagline">I &#128151; SDF</p>
+  </div>
+  <a class="clock" id="clock" href="https://web-clocks.mark-bolding.workers.dev" aria-label="The time; more clocks in the gallery">
+    <svg viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="face" cx="50" cy="50" r="46"/>
+      <g id="ticks"></g>
+      <line class="hand" id="hour" x1="50" y1="50" x2="50" y2="27" stroke-width="5"/>
+      <line class="hand" id="min" x1="50" y1="50" x2="50" y2="14" stroke-width="3.5"/>
+      <line class="sec" id="sec" x1="50" y1="58" x2="50" y2="10"/>
+      <circle class="pin" cx="50" cy="50" r="3"/>
+    </svg>
+  </a>
+</div>
+<p class="small pages"><a href="now.html">Now</a> · <a href="uses.html">Uses</a></p>
 
 <div class="box">
   <p class="title"><a href="blog/">Blog</a></p>
@@ -21,7 +49,10 @@
   <li><a href="notes/">Notes</a> <span class="small">a notepad, a mind map, Mermaid diagrams</span></li>
   <li><a href="toys/stipple.html">Stipple</a> <span class="small">a picture in dots, or one long line</span></li>
   <li><a href="toys/minesweeper.html">Minesweeper</a> <span class="small">five looks, three sizes or your own</span></li>
+  <li><a href="toys/nonogram.html">Nonogram</a> <span class="small">a new picture puzzle every day</span></li>
   <li><a href="calc/">Calc</a> <span class="small">a calculator, plus units, dates, stats, NMR and MRI</span></li>
+  <li><a href="toys/bloch.html">Bloch</a> <span class="small">spins tipping, fanning out and echoing</span></li>
+  <li><a href="toys/kspace.html">k-space</a> <span class="small">spoil a picture's frequencies and see what breaks</span></li>
   <li><a href="mrs-helper/">MRS Helper</a> <span class="small">frequencies, shift offsets and flip angles for <sup>129</sup>Xe and <sup>13</sup>C MRS</span></li>
   <li><a href="coffee.html">Coffee guide</a> <span class="small">what goes into each cup</span></li>
   <li><a href="tea.html">Tea guide</a> <span class="small">steeping temperatures and times, with a timer</span></li>
@@ -62,6 +93,31 @@ function mark() {
 }
 window.addEventListener('themechange', mark);
 mark();
+
+// The clock: hands set from the local time, the second hand stepping once a second.
+const ticks = document.getElementById('ticks');
+for (let i = 0; i < 12; i++) {
+    const l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    l.setAttribute('class', 'tick');
+    l.setAttribute('x1', 50); l.setAttribute('x2', 50);
+    l.setAttribute('y1', i % 3 ? 9 : 7); l.setAttribute('y2', i % 3 ? 13 : 15);
+    l.setAttribute('transform', `rotate(${i * 30} 50 50)`);
+    ticks.appendChild(l);
+}
+const WORDS = ['twelve', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven'];
+function tickClock() {
+    const d = new Date(), h = d.getHours() % 12, m = d.getMinutes(), s = d.getSeconds();
+    const turn = (id, deg) => document.getElementById(id).setAttribute('transform', `rotate(${deg} 50 50)`);
+    turn('hour', (h + m / 60) * 30); turn('min', (m + s / 60) * 6); turn('sec', s * 6);
+    // Its label reads the time the way you'd say it, to the nearest five minutes.
+    const five = Math.round(m / 5) * 5, past = five <= 30;
+    const hour = WORDS[(past ? h : h + 1) % 12];
+    const mins = { 0: '', 5: 'five', 10: 'ten', 15: 'quarter', 20: 'twenty', 25: 'twenty-five', 30: 'half' }[past ? five : 60 - five];
+    const said = five === 0 || five === 60 ? `about ${hour} o'clock` : `about ${mins} ${past ? 'past' : 'to'} ${hour}`;
+    document.getElementById('clock').title = `It's ${said}. More clocks in the gallery.`;
+    setTimeout(tickClock, 1000 - d.getMilliseconds());
+}
+tickClock();
 </script>
 </body>
 </html>
