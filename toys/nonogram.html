@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nonogram · mbolding</title>
+<link rel="stylesheet" href="../style.css">
+<script src="../theme.js"></script>
+<style>
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 15.5em; gap: 1.4em; align-items: start; }
+@media (max-width: 760px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+.bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.6em; margin-bottom: 0.8em; font: 15px/1.4 var(--font-ui); }
+.day { display: flex; align-items: center; gap: 0.4em; }
+.day button { padding: 0.2em 0.6em; }
+.day b { min-width: 9.5em; text-align: center; }
+.clock { font: bold 18px/1 var(--font-mono); font-variant-numeric: tabular-nums; padding: 0.3em 0.5em; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); }
+.wrap { display: flex; justify-content: center; overflow-x: auto; }
+.board { display: grid; width: max-content; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: none; }
+.clue { display: flex; font: 600 calc(var(--cell) * 0.46)/1 var(--font-ui); color: var(--text); font-variant-numeric: tabular-nums; }
+.clue.col { flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 0.25em; gap: 0.2em; }
+.clue.row { justify-content: flex-end; align-items: center; padding-right: 0.4em; gap: 0.45em; }
+.clue.done { color: var(--muted); opacity: 0.55; }
+.clue.hot { color: var(--link); }
+.cell { width: var(--cell); height: var(--cell); background: var(--surface); border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); position: relative; cursor: pointer; }
+.cell.l { border-left: 2px solid var(--muted); }
+.cell.t { border-top: 2px solid var(--muted); }
+.cell.r5 { border-right: 2px solid var(--muted); }
+.cell.b5 { border-bottom: 2px solid var(--muted); }
+.cell.hot { background: var(--panel); }
+.cell.on { background: var(--text); }
+.cell.x::before, .cell.x::after { content: ''; position: absolute; left: 22%; right: 22%; top: 50%; height: 2px; background: var(--muted); }
+.cell.x::before { transform: rotate(45deg); } .cell.x::after { transform: rotate(-45deg); }
+.cell.wrong { box-shadow: inset 0 0 0 3px var(--bad); }
+.solved .cell { cursor: default; border-color: transparent; }
+.solved .cell.on { background: var(--link); }
+.solved .cell.x::before, .solved .cell.x::after { display: none; }
+.status { text-align: center; font: 15px/1.5 var(--font-ui); color: var(--muted); min-height: 1.5em; margin: 0.8em 0 0; }
+.status.win { color: var(--good); font-weight: 600; }
+.panel h2:first-child { margin-top: 0; }
+.panel .tabs { margin: 0.4em 0 0.8em; }
+.panel .row { margin: 0.4em 0; gap: 0.4em; }
+.panel p { font: 14px/1.5 var(--font-ui); margin: 0.4em 0; }
+.panel ul { font: 14px/1.6 var(--font-ui); padding-left: 1.1em; margin: 0.3em 0; }
+.panel ul .good { font-weight: 600; }
+</style>
+</head>
+<body class="wide">
+<header><a href="../">mbolding</a></header>
+<h1>Nonogram</h1>
+<p class="tagline">A new picture puzzle every day, the same for everyone. The numbers give the runs of filled squares in each row and column, in order; fill them in to find the picture. Every puzzle can be solved a line at a time, without guessing.</p>
+
+<div class="layout">
+  <div>
+    <div class="bar">
+      <div class="day">
+        <button type="button" id="prev" aria-label="The day before">‹</button>
+        <b id="date"></b>
+        <button type="button" id="next" aria-label="The day after">›</button>
+        <button type="button" id="today">Today</button>
+      </div>
+      <span class="clock" id="clock">0:00</span>
+    </div>
+    <div class="wrap"><div class="board" id="board"></div></div>
+    <p class="status" id="status"></p>
+  </div>
+
+  <div class="panel">
+    <h2>Size</h2>
+    <div class="tabs" id="sizes">
+      <button type="button" data-size="5">5 × 5</button>
+      <button type="button" data-size="10">10 × 10</button>
+      <button type="button" data-size="15">15 × 15</button>
+    </div>
+    <h2>Tap to</h2>
+    <div class="tabs" id="tools">
+      <button type="button" data-tool="fill">Fill</button>
+      <button type="button" data-tool="cross">Cross out</button>
+    </div>
+    <p>Drag to do a whole run at once. Right-click, or hold Shift, to cross out whatever's chosen.</p>
+    <div class="row">
+      <button type="button" id="check">Check</button>
+      <button type="button" id="clear">Start over</button>
+    </div>
+    <h2>This week</h2>
+    <ul id="week"></ul>
+  </div>
+</div>
+
+<footer><a href="../">Back home</a></footer>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+
+// ---- Days and seeds ----------------------------------------------------------------------
+const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const pad = n => String(n).padStart(2, '0');
+const key = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (k, n) => { const d = fromKey(k); d.setDate(d.getDate() + n); return key(d); };
+const todayKey = () => key(new Date());
+const FIRST = '2026-11-07';   // the first puzzle
+
+function hash(s) { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed) {
+    return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+
+// ---- Clues and the line solver -----------------------------------------------------------
+function runs(line) {
+    const out = []; let n = 0;
+    for (const v of line) { if (v === 1) n++; else if (n) { out.push(n); n = 0; } }
+    if (n) out.push(n);
+    return out;
+}
+// Given clues and a line of known cells (−1 unknown, 0 empty, 1 filled), work out which
+// cells every arrangement agrees on. Returns the new line, or null if none fits.
+function solveLine(clue, cells) {
+    const n = cells.length, k = clue.length;
+    if (!k) return cells.some(v => v === 1) ? null : cells.map(() => 0);
+    // fwd[j][i]: the first j blocks fit in cells [0, i), with nothing filled left over.
+    const fwd = Array.from({ length: k + 1 }, () => new Uint8Array(n + 1));
+    fwd[0][0] = 1;
+    for (let i = 1; i <= n; i++) fwd[0][i] = fwd[0][i - 1] && cells[i - 1] !== 1 ? 1 : 0;
+    for (let j = 1; j <= k; j++) {
+        const b = clue[j - 1];
+        for (let i = 1; i <= n; i++) {
+            let ok = cells[i - 1] !== 1 && fwd[j][i - 1];
+            const s = i - b;
+            if (!ok && s >= 0) {
+                let fits = true;
+                for (let x = s; x < i; x++) if (cells[x] === 0) { fits = false; break; }
+                if (fits) ok = s === 0 ? j === 1 : cells[s - 1] !== 1 && fwd[j - 1][s - 1];
+            }
+            fwd[j][i] = ok ? 1 : 0;
+        }
+    }
+    // bwd[j][i]: blocks j.. fit in cells [i, n).
+    const bwd = Array.from({ length: k + 2 }, () => new Uint8Array(n + 2));
+    bwd[k][n] = 1;
+    for (let i = n - 1; i >= 0; i--) bwd[k][i] = bwd[k][i + 1] && cells[i] !== 1 ? 1 : 0;
+    for (let j = k - 1; j >= 0; j--) {
+        const b = clue[j];
+        for (let i = n - 1; i >= 0; i--) {
+            let ok = cells[i] !== 1 && bwd[j][i + 1];
+            const e = i + b;
+            if (!ok && e <= n) {
+                let fits = true;
+                for (let x = i; x < e; x++) if (cells[x] === 0) { fits = false; break; }
+                if (fits) ok = e === n ? j === k - 1 : cells[e] !== 1 && bwd[j + 1][e + 1];
+            }
+            bwd[j][i] = ok ? 1 : 0;
+        }
+    }
+    if (!fwd[k][n]) return null;
+    const canEmpty = new Uint8Array(n), fillDiff = new Int32Array(n + 1);
+    for (let x = 0; x < n; x++) {
+        if (cells[x] === 1) continue;
+        for (let j = 0; j <= k; j++) if (fwd[j][x] && bwd[j][x + 1]) { canEmpty[x] = 1; break; }
+    }
+    for (let j = 0; j < k; j++) {
+        const b = clue[j];
+        for (let s = 0; s + b <= n; s++) {
+            let fits = true;
+            for (let x = s; x < s + b; x++) if (cells[x] === 0) { fits = false; break; }
+            if (!fits) continue;
+            const left = s === 0 ? j === 0 : cells[s - 1] !== 1 && fwd[j][s - 1];
+            const right = s + b === n ? j === k - 1 : cells[s + b] !== 1 && bwd[j + 1][s + b + 1];
+            if (left && right) { fillDiff[s]++; fillDiff[s + b]--; }
+        }
+    }
+    const out = cells.slice();
+    let run = 0;
+    for (let x = 0; x < n; x++) {
+        run += fillDiff[x];
+        const f = run > 0, e = !!canEmpty[x];
+        if (!f && !e) return null;
+        out[x] = f && e ? -1 : f ? 1 : 0;
+    }
+    return out;
+}
+// Solve the whole grid a line at a time; true if that settles every cell.
+function lineSolvable(rows, cols) {
+    const h = rows.length, w = cols.length, g = Array.from({ length: h }, () => new Array(w).fill(-1));
+    let changed = true;
+    while (changed) {
+        changed = false;
+        for (let r = 0; r < h; r++) {
+            const out = solveLine(rows[r], g[r]);
+            if (!out) return false;
+            for (let c = 0; c < w; c++) if (out[c] !== g[r][c]) { g[r][c] = out[c]; changed = true; }
+        }
+        for (let c = 0; c < w; c++) {
+            const out = solveLine(cols[c], g.map(row => row[c]));
+            if (!out) return false;
+            for (let r = 0; r < h; r++) if (out[r] !== g[r][c]) { g[r][c] = out[r]; changed = true; }
+        }
+    }
+    return g.every(row => row.every(v => v !== -1));
+}
+
+// ---- Making a puzzle ---------------------------------------------------------------------
+// Noise smoothed into blobs, so the answer looks like a shape rather than static, then
+// kept only if line logic alone can solve it. The seed is the date and size, so everyone
+// gets the same one.
+const cache = {};
+function puzzle(day, size) {
+    const id = day + '|' + size;
+    if (cache[id]) return cache[id];
+    const r = rng(hash(id));
+    for (let attempt = 0; attempt < 4000; attempt++) {
+        const p = 0.45 + r() * 0.15;
+        let g = Array.from({ length: size }, () => Array.from({ length: size }, () => r() < p ? 1 : 0));
+        if (size > 5) {
+            g = g.map((row, y) => row.map((v, x) => {
+                let s = 0;
+                for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) s += (g[y + dy] || [])[x + dx] || 0;
+                return s + (r() < 0.25 ? 1 : 0) >= 5 ? 1 : 0;
+            }));
+        }
+        const filled = g.flat().reduce((a, b) => a + b, 0);
+        if (filled < size * size * 0.35 || filled > size * size * 0.62) continue;
+        const rows = g.map(runs), cols = g[0].map((_, c) => runs(g.map(row => row[c])));
+        // Skip the dull ones, mostly single long runs.
+        const lines = rows.concat(cols), runCount = lines.reduce((a, l) => a + l.length, 0) / lines.length;
+        if (size > 5 && runCount < 1.6) continue;
+        if (lines.filter(l => l.length === 1 && l[0] >= size - 1).length > size * 0.25) continue;
+        if (lineSolvable(rows, cols)) return cache[id] = { size, solution: g, rows, cols };
+    }
+    return null;
+}
+
+// ---- State -------------------------------------------------------------------------------
+let store = {};
+try { store = JSON.parse(localStorage.getItem('nonogram') || '{}'); } catch (e) {}
+store.boards = store.boards || {};
+store.done = store.done || {};
+store.size = store.size || 10;
+store.tool = store.tool || 'fill';
+function save() { try { localStorage.setItem('nonogram', JSON.stringify(store)); } catch (e) {} }
+
+let day = todayKey(), P = null, grid = null, solved = false, started = null, elapsed = 0, tick = null;
+const id = () => day + '|' + store.size;
+
+function load() {
+    P = puzzle(day, store.size);
+    const saved = store.boards[id()];
+    grid = saved ? saved.g.map(row => row.slice()) : Array.from({ length: P.size }, () => new Array(P.size).fill(0));
+    elapsed = saved ? saved.t : 0;
+    solved = !!store.done[id()];
+    if (solved) elapsed = store.done[id()];
+    started = null;
+    build();
+    paint();
+    showDay();
+    week();
+    startClock();
+}
+
+function persist() {
+    store.boards[id()] = { g: grid, t: currentTime() };
+    // Keep the last few weeks of boards, not every one forever.
+    const keys = Object.keys(store.boards).sort();
+    while (keys.length > 60) delete store.boards[keys.shift()];
+    save();
+}
+
+// ---- Board -------------------------------------------------------------------------------
+const board = $('board');
+let cells = [], rowClues = [], colClues = [];
+function build() {
+    const n = P.size;
+    const maxRow = Math.max(1, ...P.rows.map(c => c.length)), maxCol = Math.max(1, ...P.cols.map(c => c.length));
+    // Fit the board to the space: cells plus room for the clues.
+    const avail = Math.min(board.parentElement.clientWidth || 600, 640);
+    const cell = Math.max(18, Math.min(40, Math.floor(avail / (n + maxRow * 0.75 + 0.5))));
+    board.style.setProperty('--cell', cell + 'px');
+    board.style.gridTemplateColumns = `auto repeat(${n}, ${cell}px)`;
+    board.innerHTML = '';
+    board.append(document.createElement('div'));
+    colClues = P.cols.map((c, i) => {
+        const el = document.createElement('div');
+        el.className = 'clue col';
+        el.style.minHeight = (maxCol * cell * 0.62) + 'px';
+        el.innerHTML = (c.length ? c : [0]).map(v => `<span>${v}</span>`).join('');
+        board.append(el);
+        return el;
+    });
+    cells = []; rowClues = [];
+    for (let r = 0; r < n; r++) {
+        const el = document.createElement('div');
+        el.className = 'clue row';
+        el.innerHTML = (P.rows[r].length ? P.rows[r] : [0]).map(v => `<span>${v}</span>`).join('');
+        board.append(el); rowClues.push(el);
+        const row = [];
+        for (let c = 0; c < n; c++) {
+            const d = document.createElement('div');
+            d.className = 'cell';
+            if (c === 0) d.classList.add('l');
+            if (r === 0) d.classList.add('t');
+            if ((c + 1) % 5 === 0) d.classList.add('r5');
+            if ((r + 1) % 5 === 0) d.classList.add('b5');
+            d.dataset.r = r; d.dataset.c = c;
+            board.append(d); row.push(d);
+        }
+        cells.push(row);
+    }
+}
+
+function paint() {
+    const n = P.size;
+    board.classList.toggle('solved', solved);
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+        const el = cells[r][c], v = grid[r][c];
+        el.classList.toggle('on', v === 1);
+        el.classList.toggle('x', v === 2);
+        el.classList.remove('wrong');
+    }
+    const same = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+    for (let r = 0; r < n; r++) rowClues[r].classList.toggle('done', same(runs(grid[r]), P.rows[r]));
+    for (let c = 0; c < n; c++) colClues[c].classList.toggle('done', same(runs(grid.map(row => row[c])), P.cols[c]));
+    const s = $('status');
+    s.classList.toggle('win', solved);
+    s.textContent = solved ? `Solved in ${fmt(elapsed)}.` : '';
+}
+
+function won() {
+    const n = P.size;
+    for (let r = 0; r < n; r++) if (runs(grid[r]).join() !== P.rows[r].join()) return false;
+    for (let c = 0; c < n; c++) if (runs(grid.map(row => row[c])).join() !== P.cols[c].join()) return false;
+    return true;
+}
+
+function set(r, c, v) {
+    if (solved || grid[r][c] === v) return;
+    if (!started && !solved) started = performance.now() - elapsed * 1000;
+    grid[r][c] = v;
+}
+
+function finishMove() {
+    if (won()) {
+        elapsed = currentTime();
+        solved = true;
+        // Clear the crosses so the picture stands alone.
+        grid = grid.map(row => row.map(v => v === 1 ? 1 : 0));
+        store.done[id()] = elapsed;
+        delete store.boards[id()];
+        save(); stopClock(); paint(); week();
+        return;
+    }
+    paint(); persist();
+}
+
+// Tapping or dragging: the first cell decides what happens (fill or empty, cross or
+// clear) and the drag carries it along one row or column.
+let drag = null;
+function cellAt(e) {
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    return el && el.classList.contains('cell') && board.contains(el) ? el : null;
+}
+board.addEventListener('pointerdown', e => {
+    const el = e.target.closest('.cell');
+    if (!el || solved) return;
+    e.preventDefault();
+    const r = +el.dataset.r, c = +el.dataset.c;
+    const cross = e.button === 2 || e.shiftKey || store.tool === 'cross';
+    const want = cross ? 2 : 1;
+    const value = grid[r][c] === want ? 0 : want;
+    drag = { r, c, value, axis: null };
+    set(r, c, value); paint();
+});
+board.addEventListener('pointermove', e => {
+    const el = cellAt(e);
+    highlight(el);
+    if (!drag || !el) return;
+    let r = +el.dataset.r, c = +el.dataset.c;
+    if (!drag.axis && (r !== drag.r || c !== drag.c)) drag.axis = Math.abs(r - drag.r) > Math.abs(c - drag.c) ? 'col' : 'row';
+    if (drag.axis === 'row') r = drag.r; else if (drag.axis === 'col') c = drag.c;
+    const [a, b] = drag.axis === 'row' ? [Math.min(c, drag.c), Math.max(c, drag.c)] : [Math.min(r, drag.r), Math.max(r, drag.r)];
+    for (let k = a; k <= b; k++) {
+        const rr = drag.axis === 'row' ? r : k, cc = drag.axis === 'row' ? k : c;
+        // Filling doesn't overwrite crosses, and crossing doesn't overwrite fills.
+        const cur = grid[rr][cc];
+        if (drag.value === 0 || cur === 0 || cur === drag.value) set(rr, cc, drag.value);
+    }
+    paint();
+});
+const end = () => { if (drag) { drag = null; finishMove(); } };
+addEventListener('pointerup', end);
+addEventListener('pointercancel', end);
+board.addEventListener('contextmenu', e => e.preventDefault());
+board.addEventListener('pointerleave', () => highlight(null));
+
+// Light up the row and column under the pointer, clues included.
+function highlight(el) {
+    for (const x of board.querySelectorAll('.hot')) x.classList.remove('hot');
+    if (!el || solved) return;
+    const r = +el.dataset.r, c = +el.dataset.c;
+    rowClues[r].classList.add('hot'); colClues[c].classList.add('hot');
+    for (let k = 0; k < P.size; k++) { cells[r][k].classList.add('hot'); cells[k][c].classList.add('hot'); }
+}
+
+// ---- Clock -------------------------------------------------------------------------------
+const fmt = s => { s = Math.floor(s); return s >= 3600 ? `${Math.floor(s / 3600)}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}` : `${Math.floor(s / 60)}:${pad(s % 60)}`; };
+const currentTime = () => started ? (performance.now() - started) / 1000 : elapsed;
+function startClock() {
+    stopClock();
+    const show = () => { $('clock').textContent = fmt(currentTime()); };
+    show();
+    if (!solved) tick = setInterval(() => { show(); if (started && Math.floor(currentTime()) % 10 === 0) persist(); }, 1000);
+}
+function stopClock() { clearInterval(tick); tick = null; $('clock').textContent = fmt(elapsed); }
+
+// ---- Days --------------------------------------------------------------------------------
+function showDay() {
+    const d = fromKey(day), t = todayKey();
+    $('date').textContent = day === t ? 'Today' : day === addDays(t, -1) ? 'Yesterday' : `${DAYS[d.getDay()].slice(0, 3)} ${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`;
+    $('date').title = `${DAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+    $('prev').disabled = day <= FIRST;
+    $('next').disabled = day >= t;
+    $('today').hidden = day === t;
+    for (const b of $('sizes').children) b.classList.toggle('active', +b.dataset.size === store.size);
+    for (const b of $('tools').children) b.classList.toggle('active', b.dataset.tool === store.tool);
+}
+function week() {
+    const ul = $('week'), t = todayKey();
+    ul.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+        const k = addDays(t, -i);
+        if (k < FIRST) break;
+        const li = document.createElement('li'), d = fromKey(k);
+        const sizes = [5, 10, 15].filter(s => store.done[k + '|' + s] != null);
+        const a = document.createElement('a');
+        a.href = '#'; a.textContent = i === 0 ? 'Today' : i === 1 ? 'Yesterday' : `${DAYS[d.getDay()]} ${d.getDate()}`;
+        a.onclick = e => { e.preventDefault(); day = k; load(); };
+        li.append(a, ' ');
+        const s = document.createElement('span');
+        s.className = sizes.length ? 'good' : 'small';
+        s.textContent = sizes.length ? sizes.map(n => n + '²').join(' ') + ' ✓' : 'not yet';
+        li.append(s);
+        ul.append(li);
+    }
+}
+
+$('prev').onclick = () => { day = addDays(day, -1); load(); };
+$('next').onclick = () => { day = addDays(day, 1); load(); };
+$('today').onclick = () => { day = todayKey(); load(); };
+$('sizes').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (started && !solved) persist();
+    store.size = +b.dataset.size; save(); load();
+});
+$('tools').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    store.tool = b.dataset.tool; save(); showDay();
+});
+$('check').onclick = () => {
+    if (solved) return;
+    let wrong = 0;
+    for (let r = 0; r < P.size; r++) for (let c = 0; c < P.size; c++) {
+        const v = grid[r][c], s = P.solution[r][c];
+        const bad = (v === 1 && !s) || (v === 2 && s);
+        cells[r][c].classList.toggle('wrong', bad);
+        wrong += bad;
+    }
+    $('status').textContent = wrong ? `${wrong} square${wrong > 1 ? 's' : ''} wrong, outlined in red.` : 'Nothing wrong so far.';
+};
+$('clear').onclick = () => {
+    if (solved && !confirm('Clear this solved puzzle and play it again?')) return;
+    grid = grid.map(row => row.map(() => 0));
+    delete store.done[id()];
+    solved = false; started = null; elapsed = 0;
+    persist(); paint(); startClock(); week();
+};
+// A new day starts while the page is open: offer it, without yanking the board away.
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { showDay(); week(); } });
+addEventListener('resize', () => { if (P) { build(); paint(); } });
+
+load();
+</script>
+</body>
+</html>
