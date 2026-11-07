@@ -1,0 +1,10 @@
+# Mark Bolding
+
+neuroengineering
+
+Welcome to my capsule on SDF. I build small things: web clocks, Mac widgets, and clients for the old internet (gopher, Gemini, Usenet and IRC).
+
+=> gemlog/ Gemlog
+=> gopher://sdf.org/1/users/mbolding/ My gopher hole and phlog
+=> https://github.com/mbolding/my_web_clocks Web clocks on GitHub
+=> gemini://sdf.org/ SDF Gemini capsules
