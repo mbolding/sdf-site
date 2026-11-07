@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MRS Helper</title>
+<meta name="description" content="Larmor frequencies, chemical-shift offsets and flip-angle planning for 129Xe and 13C MRS.">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#F2F4F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1318" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="MRS Helper">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a single-column instrument panel, max 880px, sticky header with tab strip; each view is a stack of panels. */
+:root {
+  --bg: #F2F4F7;
+  --panel: #FFFFFF;
+  --fg: #17212B;
+  --muted: #5B6977;
+  --line: #D6DDE4;
+  --accent: #0B6E78;
+  --accent-soft: #DFEEF0;
+  --xe: #5747C4;
+  --xe-soft: #ECE9FB;
+  --c13: #0B6E78;
+  --c13-soft: #DFEEF0;
+  --tone: var(--accent);
+  --tone-soft: var(--accent-soft);
+  --f-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius: 10px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1318; --panel: #161D24; --fg: #E2E8EE; --muted: #8C99A7; --line: #29333D;
+    --accent: #4DB6C0; --accent-soft: #15343A; --xe: #A196F2; --xe-soft: #252046;
+    --c13: #4DB6C0; --c13-soft: #15343A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1318; --panel: #161D24; --fg: #E2E8EE; --muted: #8C99A7; --line: #29333D;
+  --accent: #4DB6C0; --accent-soft: #15343A; --xe: #A196F2; --xe-soft: #252046;
+  --c13: #4DB6C0; --c13-soft: #15343A; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 15px/1.5 var(--f-body);
+  -webkit-text-size-adjust: 100%;
+}
+[hidden] { display: none !important; }
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--bg);
+}
+
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.wrap {
+  max-width: 880px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.bar .wrap { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 8px 20px; padding-block: 12px 0; }
+.brand { display: flex; flex-direction: column; gap: 0; padding-bottom: 10px; }
+.brand h1 {
+  margin: 0; font: 600 22px/1.1 var(--f-display); letter-spacing: 0.01em;
+}
+.brand .field { font: 400 12.5px/1.4 var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.tabs { display: flex; gap: 4px; }
+.tabs button {
+  appearance: none; border: 0; background: none; color: var(--muted);
+  font: 500 14px/1 var(--f-body); padding: 12px 12px 13px; cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tabs button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+
+main .wrap { display: flex; flex-direction: column; gap: 16px; padding-block: 18px 40px; }
+.view { display: flex; flex-direction: column; gap: 16px; }
+.view[data-tone="xe"] { --tone: var(--xe); --tone-soft: var(--xe-soft); }
+.view[data-tone="c13"] { --tone: var(--c13); --tone-soft: var(--c13-soft); }
+
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0;
+}
+.panel h2 {
+  margin: 0; font: 600 13px/1.2 var(--f-display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+}
+.note { margin: 0; color: var(--muted); font-size: 13px; max-width: 68ch; }
+
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.field-row { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field-row label { font-size: 13px; color: var(--muted); }
+.input {
+  display: flex; align-items: center; border: 1px solid var(--line); border-radius: 8px;
+  background: var(--bg); overflow: hidden;
+}
+.input input, .input select {
+  flex: 1; min-width: 0; border: 0; background: none; color: var(--fg);
+  font: 500 17px/1 var(--f-mono); padding: 11px 12px; font-variant-numeric: tabular-nums;
+}
+.input select { font: 500 15px/1.2 var(--f-body); appearance: none; cursor: pointer; padding-right: 32px;
+  background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
+.input input:focus, .input select:focus { outline: none; }
+.input:focus-within { border-color: var(--accent); }
+.input .unit { padding: 0 12px; color: var(--muted); font: 400 14px/1 var(--f-mono); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips button {
+  appearance: none; border: 1px solid var(--line); background: var(--panel); color: var(--fg);
+  border-radius: 999px; padding: 7px 12px; font: 500 13px/1.2 var(--f-body); cursor: pointer;
+  display: inline-flex; gap: 8px; align-items: baseline;
+}
+.chips button span { font: 400 12px/1 var(--f-mono); color: var(--muted); }
+.chips button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+
+.table-wrap { overflow-x: auto; margin: 0 -16px; padding: 0 16px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 10px 8px; border-top: 1px solid var(--line); vertical-align: middle; }
+thead th { border-top: 0; font: 500 12px/1.2 var(--f-body); color: var(--muted); letter-spacing: 0.04em; padding-top: 0; }
+tbody th { font-weight: 500; }
+td.num, th.num { text-align: right; font-family: var(--f-mono); white-space: nowrap; }
+td.strong { font-weight: 500; }
+.muted { color: var(--muted); }
+.nuc { font: 600 16px/1 var(--f-display); display: inline-block; min-width: 3.2em; }
+.nname { color: var(--muted); font-weight: 400; }
+tr.tone-xe .nuc, tr.tone-xe td.strong { color: var(--xe); }
+tr.tone-c13 .nuc, tr.tone-c13 td.strong { color: var(--c13); }
+
+.meta { margin: 0; font-size: 14px; }
+.meta b { font-weight: 600; font-family: var(--f-mono); }
+
+.spectrum-box { border: 1px solid var(--line); border-radius: 8px; background: var(--bg); padding: 4px 0; overflow: hidden; }
+svg.spectrum, svg.chart { display: block; width: 100%; }
+.sp-axis, .sp-tick { stroke: var(--muted); stroke-width: 1; }
+.sp-tl, .sp-unit, .ch-tl { fill: var(--muted); font: 400 11px var(--f-mono); }
+.sp-peak { cursor: pointer; }
+.sp-peak line { stroke: var(--muted); stroke-width: 1.25; stroke-dasharray: 2 2; }
+.sp-peak text { fill: var(--fg); font: 500 11.5px var(--f-body); }
+.sp-peak.on line { stroke: var(--tone); stroke-width: 2.5; stroke-dasharray: none; }
+.sp-peak.on text { fill: var(--tone); font-weight: 600; }
+.sp-peak:hover text { text-decoration: underline; }
+
+.peakbtn {
+  appearance: none; border: 0; background: none; color: var(--fg); padding: 0; text-align: left;
+  font: 500 15px/1.3 var(--f-body); cursor: pointer;
+}
+tr.on .peakbtn { color: var(--tone); font-weight: 600; }
+tr.on td.strong { color: var(--tone); }
+tr.on { background: var(--tone-soft); }
+.tx { font: 600 10px/1 var(--f-mono); letter-spacing: 0.08em; color: var(--tone); border: 1px solid var(--tone); border-radius: 4px; padding: 2px 4px; margin-left: 6px; vertical-align: 2px; }
+
+.conv { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.conv .out { font: 500 17px/1 var(--f-mono); padding: 12px 2px 4px; font-variant-numeric: tabular-nums; }
+
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; align-self: start; max-width: 100%; }
+.seg button {
+  appearance: none; border: 0; background: var(--panel); color: var(--muted); padding: 9px 14px;
+  font: 500 14px/1 var(--f-body); cursor: pointer; border-left: 1px solid var(--line);
+}
+.seg button:first-child { border-left: 0; }
+.seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--fg); }
+
+.readouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.readout { display: flex; flex-direction: column; gap: 4px; }
+.readout .k { font-size: 12.5px; color: var(--muted); }
+.readout .v { font: 500 22px/1.1 var(--f-mono); font-variant-numeric: tabular-nums; }
+.readout.big .v { font-size: 34px; color: var(--accent); }
+
+.ch-grid { stroke: var(--line); stroke-width: 1; }
+.ch-line { fill: none; stroke: var(--accent); stroke-width: 2; }
+.ch-area { fill: var(--accent-soft); stroke: none; }
+.ch-dot { fill: var(--accent); }
+.caption { margin: 0; font-size: 12.5px; color: var(--muted); }
+
+.btn {
+  appearance: none; border: 1px solid var(--accent); background: var(--accent-soft); color: var(--fg);
+  border-radius: 8px; padding: 9px 14px; font: 500 14px/1 var(--f-body); cursor: pointer; align-self: start;
+}
+.angles { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 4px 12px; max-height: 260px; overflow-y: auto; font: 400 13px/1.6 var(--f-mono); font-variant-numeric: tabular-nums; }
+.angles span b { color: var(--muted); font-weight: 400; display: inline-block; min-width: 3ch; }
+textarea.copybox { width: 100%; min-height: 80px; font: 400 12px var(--f-mono); color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+
+footer.wrap { padding-block: 0 32px; color: var(--muted); font-size: 12px; }
+
+@media (max-width: 520px) {
+  .tabs { width: 100%; }
+  .tabs button { flex: 1; padding-inline: 6px; }
+  .readout.big .v { font-size: 30px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="wrap">
+    <div class="brand">
+      <h1>MRS Helper</h1>
+      <span class="field" id="hdr-field">¹H 123.200 MHz · 2.894 T</span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Sections">
+      <button type="button" role="tab" id="tab-freq" data-view="freq" aria-controls="view-freq" aria-selected="true">Frequencies</button>
+      <button type="button" role="tab" id="tab-shifts" data-view="shifts" aria-controls="view-shifts" aria-selected="false">Shifts</button>
+      <button type="button" role="tab" id="tab-flip" data-view="flip" aria-controls="view-flip" aria-selected="false">Flip angles</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- Frequencies -->
+    <section class="view" id="view-freq" role="tabpanel" aria-labelledby="tab-freq">
+      <div class="panel">
+        <h2>Scanner</h2>
+        <div class="fields">
+          <div class="field-row">
+            <label for="in-proton">¹H center frequency</label>
+            <div class="input"><input id="in-proton" type="text" inputmode="decimal" autocomplete="off" value="123.2"><span class="unit">MHz</span></div>
+          </div>
+          <div class="field-row">
+            <label for="in-tesla">Field strength</label>
+            <div class="input"><input id="in-tesla" type="text" inputmode="decimal" autocomplete="off" value="2.8935"><span class="unit">T</span></div>
+          </div>
+        </div>
+        <div class="chips" id="presets" aria-label="Field presets"></div>
+        <p class="note">Enter the ¹H frequency your scanner reports for the best accuracy. Siemens “3 T” systems run near 2.89 T.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Larmor frequencies</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Nucleus</th><th scope="col" class="num">γ/2π (MHz/T)</th><th scope="col" class="num">Frequency (MHz)</th></tr></thead>
+            <tbody id="nuclei"></tbody>
+          </table>
+        </div>
+        <p class="note">Scaled from the ¹H frequency by γ ratios. Chemical shift spreads each nucleus over several kHz, so treat these as where to start a frequency search.</p>
+      </div>
+    </section>
+
+    <!-- Shifts -->
+    <section class="view" id="view-shifts" role="tabpanel" aria-labelledby="tab-shifts" hidden>
+      <div class="panel">
+        <div class="field-row">
+          <label for="sel-set">Peak set</label>
+          <div class="input"><select id="sel-set"></select></div>
+        </div>
+        <p class="meta" id="shift-meta"></p>
+        <div class="spectrum-box"><svg class="spectrum" id="spectrum" role="img" aria-label="Peak positions on a ppm axis"></svg></div>
+        <p class="caption">Tap a peak to put the transmit frequency on it. Axis runs high to low ppm, as on a spectrum.</p>
+      </div>
+
+      <div class="panel">
+        <h2>Offsets from transmit</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Peak</th><th scope="col" class="num">ppm</th><th scope="col" class="num">Offset</th></tr></thead>
+            <tbody id="peaks"></tbody>
+          </table>
+        </div>
+        <p class="note" id="shift-note"></p>
+      </div>
+
+      <div class="panel">
+        <h2 id="conv-label">Convert</h2>
+        <div class="conv">
+          <div class="field-row">
+            <label for="in-ppm">Δ shift</label>
+            <div class="input"><input id="in-ppm" type="text" inputmode="decimal" autocomplete="off" value="1"><span class="unit">ppm</span></div>
+            <div class="out" id="out-hz">–</div>
+          </div>
+          <div class="field-row">
+            <label for="in-hz">Δ frequency</label>
+            <div class="input"><input id="in-hz" type="text" inputmode="decimal" autocomplete="off" value="100"><span class="unit">Hz</span></div>
+            <div class="out" id="out-ppm">–</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Flip angles -->
+    <section class="view" id="view-flip" role="tabpanel" aria-labelledby="tab-flip" hidden>
+      <div class="seg" role="group" aria-label="Calculation">
+        <button type="button" data-mode="constant" aria-pressed="true">Constant flip</button>
+        <button type="button" data-mode="variable" aria-pressed="false">Variable flip</button>
+        <button type="button" data-mode="ernst" aria-pressed="false">Ernst angle</button>
+      </div>
+
+      <div id="mode-constant" class="view">
+        <div class="panel">
+          <h2>Hyperpolarized acquisition</h2>
+          <div class="fields">
+            <div class="field-row"><label for="c-n">Excitations</label><div class="input"><input id="c-n" type="text" inputmode="numeric" value="64"></div></div>
+            <div class="field-row"><label for="c-flip">Flip angle</label><div class="input"><input id="c-flip" type="text" inputmode="decimal" value="10"><span class="unit">°</span></div></div>
+            <div class="field-row"><label for="c-tr">TR</label><div class="input"><input id="c-tr" type="text" inputmode="decimal" value="20"><span class="unit">ms</span></div></div>
+            <div class="field-row"><label for="c-t1">T1 of polarization</label><div class="input"><input id="c-t1" type="text" inputmode="decimal" value="20"><span class="unit">s</span></div></div>
+          </div>
+          <p class="note">Enter T1 as 0 to ignore relaxation between pulses.</p>
+        </div>
+        <div class="panel">
+          <h2>Signal per excitation</h2>
+          <div class="readouts">
+            <div class="readout"><span class="k">First excitation</span><span class="v" id="c-first">–</span></div>
+            <div class="readout"><span class="k">Last excitation</span><span class="v" id="c-last">–</span></div>
+            <div class="readout"><span class="k">Left after last</span><span class="v" id="c-left">–</span></div>
+          </div>
+          <svg class="chart" id="c-chart" role="img" aria-label="Signal for each excitation"></svg>
+          <p class="caption">Excitation number across, signal as a fraction of the starting polarization up. Signal is sin θ times the remaining longitudinal magnetization.</p>
+        </div>
+      </div>
+
+      <div id="mode-variable" class="view" hidden>
+        <div class="panel">
+          <h2>Hyperpolarized acquisition</h2>
+          <div class="fields">
+            <div class="field-row"><label for="v-n">Excitations</label><div class="input"><input id="v-n" type="text" inputmode="numeric" value="64"></div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <h2>Constant-signal schedule</h2>
+          <div class="readouts">
+            <div class="readout"><span class="k">Signal per excitation</span><span class="v" id="v-signal">–</span></div>
+            <div class="readout"><span class="k">First flip</span><span class="v" id="v-first">–</span></div>
+          </div>
+          <svg class="chart" id="v-chart" role="img" aria-label="Flip angle for each excitation"></svg>
+          <button type="button" class="btn" id="v-copy">Copy angles</button>
+          <textarea class="copybox" id="v-text" hidden readonly aria-label="Angles to copy"></textarea>
+          <div class="angles" id="v-list"></div>
+          <p class="note">θₙ = arctan(1/√(N−n)) uses all the magnetization in N equal-signal excitations and ends at 90°. It ignores T1 decay, which makes later signals smaller.</p>
+        </div>
+      </div>
+
+      <div id="mode-ernst" class="view" hidden>
+        <div class="panel">
+          <h2>Thermally polarized acquisition</h2>
+          <div class="fields">
+            <div class="field-row"><label for="e-tr">TR</label><div class="input"><input id="e-tr" type="text" inputmode="decimal" value="300"><span class="unit">ms</span></div></div>
+            <div class="field-row"><label for="e-t1">T1</label><div class="input"><input id="e-t1" type="text" inputmode="decimal" value="0.3"><span class="unit">s</span></div></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="readouts">
+            <div class="readout big"><span class="k">Ernst angle</span><span class="v" id="e-angle">–</span></div>
+            <div class="readout"><span class="k">Signal vs 90° pulses</span><span class="v" id="e-gain">–</span></div>
+          </div>
+          <p class="note">θ = arccos(e<sup>−TR/T1</sup>) gives the most steady-state signal per unit time, for example natural-abundance ¹³C glycogen. Not for hyperpolarized signals.</p>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+<footer class="wrap">Values marked ≈ are typical literature numbers. Check them against your own spectra and fiducials.</footer>
+
+<script>
+(() => {
+  const GAMMA_H = 42.577478;
+  const NUCLEI = [
+    { id: "1H", label: "¹H", name: "Hydrogen", g: 42.577478 },
+    { id: "2H", label: "²H", name: "Deuterium", g: 6.535902 },
+    { id: "13C", label: "¹³C", name: "Carbon", g: 10.708395, tone: "c13" },
+    { id: "19F", label: "¹⁹F", name: "Fluorine", g: 40.078 },
+    { id: "23Na", label: "²³Na", name: "Sodium", g: 11.262 },
+    { id: "31P", label: "³¹P", name: "Phosphorus", g: 17.235 },
+    { id: "129Xe", label: "¹²⁹Xe", name: "Xenon", g: 11.777, neg: true, tone: "xe" }
+  ];
+  const PRESETS = [
+    { label: "0.55 T", mhz: 23.418 },
+    { label: "1.5 T", mhz: 63.866 },
+    { label: "Siemens 3 T", mhz: 123.2 },
+    { label: "3 T nominal", mhz: 127.732 },
+    { label: "7 T", mhz: 298.042 },
+    { label: "9.4 T", mhz: 400.228 }
+  ];
+  const SETS = [
+    { id: "xe-lung", title: "¹²⁹Xe lung (human)", nuc: "129Xe", center: "Gas",
+      peaks: [
+        { name: "Gas", ppm: 0 },
+        { name: "Membrane (tissue/plasma)", ppm: 197, approx: true },
+        { name: "Red blood cells", ppm: 218, approx: true }
+      ],
+      note: "Typical human values near 3 T. The RBC shift moves with blood oxygenation and differs between species. ¹²⁹Xe has a negative γ, so some scanners flip the sign of the frequency offset; confirm against your gas and dissolved peaks." },
+    { id: "c13-glycogen", title: "¹³C liver glycogen", nuc: "13C", center: "Glycogen C1",
+      peaks: [
+        { name: "Lipid CH₂", ppm: 30.0, approx: true },
+        { name: "Glucose C1α", ppm: 92.9 },
+        { name: "Glucose C1β", ppm: 96.8 },
+        { name: "Glycogen C1", ppm: 100.5 },
+        { name: "Lipid olefinic", ppm: 130.0, approx: true },
+        { name: "Urea (fiducial)", ppm: 163.5, approx: true },
+        { name: "Lipid carbonyl", ppm: 172.5, approx: true }
+      ],
+      note: "Natural-abundance shifts referenced to TMS. Values marked ≈ vary with tissue and referencing, so check them against your phantom or fiducial." },
+    { id: "c13-pyruvate", title: "Hyperpolarized [1-¹³C]pyruvate", nuc: "13C", center: "Pyruvate C1",
+      peaks: [
+        { name: "CO₂", ppm: 125.0, approx: true },
+        { name: "Bicarbonate", ppm: 160.9 },
+        { name: "Pyruvate C1", ppm: 170.9 },
+        { name: "Alanine C1", ppm: 176.5 },
+        { name: "Pyruvate hydrate", ppm: 179.3 },
+        { name: "Lactate C1", ppm: 183.2 }
+      ],
+      note: "C1 resonances seen after a [1-¹³C]pyruvate injection." },
+    { id: "c13-brain", title: "¹³C brain tracers", nuc: "13C", center: "Glu C4",
+      peaks: [
+        { name: "Lac C3", ppm: 20.9 },
+        { name: "Gln C3", ppm: 27.1 },
+        { name: "Glu C3", ppm: 27.7 },
+        { name: "Gln C4", ppm: 31.7 },
+        { name: "Glu C4", ppm: 34.2 },
+        { name: "GABA C2", ppm: 35.2 },
+        { name: "Asp C3", ppm: 37.3 },
+        { name: "Gln C2", ppm: 55.0 },
+        { name: "Glu C2", ppm: 55.5 },
+        { name: "Bicarbonate", ppm: 161.0 },
+        { name: "Gln C5", ppm: 178.5 },
+        { name: "Glu C5", ppm: 182.0 }
+      ],
+      note: "Common labeling targets in ¹³C glucose or acetate infusion studies." }
+  ];
+
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("mrs." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem("mrs." + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } }
+  };
+  const fmt = (x, d) => Number.isFinite(x)
+    ? x.toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }) : "–";
+  const num = (el) => { const v = parseFloat(String(el.value).trim()); return Number.isFinite(v) ? v : NaN; };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const pct = (x) => Number.isFinite(x) ? fmt(x * 100, 1) + "%" : "–";
+  const signedHz = (hz) => Math.abs(hz) < 0.5 ? "0 Hz" : (hz > 0 ? "+" : "−") + fmt(Math.abs(hz), 0) + " Hz";
+
+  let proton = Number(store.get("proton", 123.2));
+  if (!(proton > 0)) proton = 123.2;
+  const freqOf = (n) => proton * n.g / GAMMA_H;
+
+  /* ---------- Tabs ---------- */
+  function showView(name) {
+    $$(".tabs button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.view === name)));
+    ["freq", "shifts", "flip"].forEach((v) => { $("#view-" + v).hidden = v !== name; });
+    store.set("tab", name);
+    requestAnimationFrame(redrawGraphics);
+  }
+  $$(".tabs button").forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
+
+  /* ---------- Frequencies ---------- */
+  $("#presets").innerHTML = PRESETS.map((p) =>
+    `<button type="button" data-mhz="${p.mhz}" aria-pressed="false">${esc(p.label)} <span>${fmt(p.mhz, 1)}</span></button>`).join("");
+  $("#presets").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-mhz]");
+    if (!b) return;
+    proton = Number(b.dataset.mhz);
+    commitProton();
+  });
+
+  function commitProton(skip) {
+    store.set("proton", proton);
+    if (skip !== "proton") $("#in-proton").value = String(+proton.toFixed(4));
+    if (skip !== "tesla") $("#in-tesla").value = String(+(proton / GAMMA_H).toFixed(4));
+    renderFreq();
+    renderShifts();
+  }
+
+  function renderFreq() {
+    $("#hdr-field").textContent = `¹H ${fmt(proton, 3)} MHz · ${fmt(proton / GAMMA_H, 3)} T`;
+    $("#nuclei").innerHTML = NUCLEI.map((n) => `
+      <tr class="${n.tone ? "tone-" + n.tone : ""}">
+        <th scope="row"><span class="nuc">${n.label}</span> <span class="nname">${n.name}</span></th>
+        <td class="num muted">${n.neg ? "−" : ""}${fmt(n.g, 3)}</td>
+        <td class="num strong">${fmt(freqOf(n), 4)}</td>
+      </tr>`).join("");
+    $$("#presets button").forEach((b) => b.setAttribute("aria-pressed", String(Math.abs(Number(b.dataset.mhz) - proton) < 0.0005)));
+  }
+
+  $("#in-proton").addEventListener("input", (e) => {
+    const v = num(e.target);
+    if (v > 0) { proton = v; commitProton("proton"); }
+  });
+  $("#in-tesla").addEventListener("input", (e) => {
+    const v = num(e.target);
+    if (v > 0) { proton = v * GAMMA_H; commitProton("tesla"); }
+  });
+
+  /* ---------- Shifts ---------- */
+  let setId = store.get("set", "xe-lung");
+  if (!SETS.some((s) => s.id === setId)) setId = SETS[0].id;
+  const centers = store.get("centers", {}) || {};
+
+  $("#sel-set").innerHTML = SETS.map((s) => `<option value="${s.id}">${esc(s.title)}</option>`).join("");
+  $("#sel-set").value = setId;
+  $("#sel-set").addEventListener("change", (e) => { setId = e.target.value; store.set("set", setId); renderShifts(); });
+
+  const currentSet = () => SETS.find((s) => s.id === setId);
+  const nucOf = (set) => NUCLEI.find((n) => n.id === set.nuc);
+  const centerOf = (set) => set.peaks.find((p) => p.name === (centers[set.id] || set.center)) || set.peaks[0];
+
+  function setCenter(name) {
+    const set = currentSet();
+    if (!set.peaks.some((p) => p.name === name)) return;
+    centers[set.id] = name;
+    store.set("centers", centers);
+    renderShifts();
+  }
+  $("#peaks").addEventListener("click", (e) => { const b = e.target.closest("[data-peak]"); if (b) setCenter(b.dataset.peak); });
+  $("#spectrum").addEventListener("click", (e) => { const g = e.target.closest("[data-peak]"); if (g) setCenter(g.dataset.peak); });
+
+  function renderShifts() {
+    const set = currentSet(), nuc = nucOf(set), f = freqOf(nuc), c = centerOf(set);
+    $("#view-shifts").dataset.tone = nuc.tone || "";
+    $("#shift-meta").innerHTML = `${nuc.label} at <b>${fmt(f, 4)} MHz</b>, transmit on <b>${esc(c.name)}</b> (${fmt(c.ppm, 1)} ppm)`;
+    $("#peaks").innerHTML = set.peaks.map((p) => {
+      const on = p.name === c.name;
+      return `<tr class="${on ? "on" : ""}">
+        <th scope="row"><button type="button" class="peakbtn" data-peak="${esc(p.name)}" aria-pressed="${on}">${esc(p.name)}</button>${on ? '<span class="tx">TX</span>' : ""}</th>
+        <td class="num">${p.approx ? "≈ " : ""}${fmt(p.ppm, 1)}</td>
+        <td class="num strong">${signedHz((p.ppm - c.ppm) * f)}</td>
+      </tr>`;
+    }).join("");
+    $("#shift-note").textContent = set.note;
+    $("#conv-label").textContent = `Convert at ${nuc.label}`;
+    renderConv();
+    drawSpectrum();
+  }
+
+  function renderConv() {
+    const f = freqOf(nucOf(currentSet()));
+    const p = num($("#in-ppm")), h = num($("#in-hz"));
+    $("#out-hz").textContent = Number.isFinite(p) ? `= ${fmt(p * f, 1)} Hz` : "–";
+    $("#out-ppm").textContent = Number.isFinite(h) ? `= ${fmt(h / f, 3)} ppm` : "–";
+  }
+  $("#in-ppm").addEventListener("input", renderConv);
+  $("#in-hz").addEventListener("input", renderConv);
+
+  function drawSpectrum() {
+    const svg = $("#spectrum");
+    if ($("#view-shifts").hidden) return;
+    const set = currentSet(), c = centerOf(set);
+    const W = Math.max(280, Math.round(svg.parentElement.clientWidth));
+    const padX = 20;
+    const ppms = set.peaks.map((p) => p.ppm);
+    let lo = Math.min(...ppms), hi = Math.max(...ppms);
+    const m = Math.max((hi - lo) * 0.07, 4);
+    lo -= m; hi += m;
+    const x = (v) => padX + (hi - v) / (hi - lo) * (W - 2 * padX);
+
+    const items = set.peaks.map((p) => {
+      const px = x(p.ppm), w = p.name.length * 6.6 + 6;
+      const end = px + 4 + w > W - 4;
+      return { p, px, end, s: end ? px - 4 - w : px, e: end ? px : px + 4 + w };
+    }).sort((a, b) => a.s - b.s);
+    const rowEnds = [];
+    items.forEach((it) => {
+      let r = rowEnds.findIndex((e) => e + 6 < it.s);
+      if (r === -1) { r = rowEnds.length; rowEnds.push(0); }
+      rowEnds[r] = it.e;
+      it.row = r;
+    });
+
+    const rowH = 17, top = 16, rows = Math.max(1, rowEnds.length);
+    const base = top + rows * rowH + 16;
+    const H = base + 36;
+    const span = hi - lo, target = W < 480 ? 4 : 7;
+    const step = [1, 2, 5, 10, 20, 25, 50, 100].find((s) => span / s <= target) || 100;
+
+    let out = `<line class="sp-axis" x1="${padX}" x2="${W - padX}" y1="${base}" y2="${base}"/>`;
+    for (let t = Math.ceil(lo / step) * step; t <= hi + 1e-9; t += step) {
+      const tx = x(t).toFixed(1);
+      out += `<line class="sp-tick" x1="${tx}" x2="${tx}" y1="${base}" y2="${base + 5}"/>`;
+      out += `<text class="sp-tl" x="${tx}" y="${base + 18}" text-anchor="middle">${+t.toFixed(1)}</text>`;
+    }
+    out += `<text class="sp-unit" x="${W - padX}" y="${base + 32}" text-anchor="end">ppm</text>`;
+    items.forEach((it) => {
+      const on = it.p.name === c.name;
+      const ly = top + it.row * rowH;
+      const tx = it.end ? it.px - 4 : it.px + 4;
+      out += `<g class="sp-peak${on ? " on" : ""}" data-peak="${esc(it.p.name)}">
+        <line x1="${it.px.toFixed(1)}" x2="${it.px.toFixed(1)}" y1="${ly - 9}" y2="${base}"/>
+        <text x="${tx.toFixed(1)}" y="${ly}" text-anchor="${it.end ? "end" : "start"}">${esc(it.p.name)}</text>
+      </g>`;
+    });
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.setAttribute("height", H);
+    svg.innerHTML = out;
+  }
+
+  /* ---------- Flip angles ---------- */
+  let mode = store.get("mode", "constant");
+  if (!["constant", "variable", "ernst"].includes(mode)) mode = "constant";
+  function showMode(m) {
+    mode = m;
+    store.set("mode", m);
+    $$(".seg button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.mode === m)));
+    ["constant", "variable", "ernst"].forEach((k) => { $("#mode-" + k).hidden = k !== m; });
+    renderFlip();
+  }
+  $$(".seg button").forEach((b) => b.addEventListener("click", () => showMode(b.dataset.mode)));
+
+  const clampN = (v) => Math.max(1, Math.min(2048, Math.round(Number.isFinite(v) ? v : 1)));
+
+  function chart(svg, values, yMax, yTicks, yFmt) {
+    const W = Math.max(280, Math.round(svg.parentElement.clientWidth - 32));
+    const H = 210, L = 48, R = 14, T = 12, B = 26;
+    const n = values.length;
+    const xs = (i) => L + (n <= 1 ? 0.5 : i / (n - 1)) * (W - L - R);
+    const ys = (v) => T + (1 - v / yMax) * (H - T - B);
+    let out = "";
+    yTicks.forEach((v) => {
+      out += `<line class="ch-grid" x1="${L}" x2="${W - R}" y1="${ys(v).toFixed(1)}" y2="${ys(v).toFixed(1)}"/>`;
+      out += `<text class="ch-tl" x="${L - 8}" y="${(ys(v) + 4).toFixed(1)}" text-anchor="end">${yFmt(v)}</text>`;
+    });
+    const xt = [...new Set(n <= 1 ? [1] : [1, Math.round((n + 1) / 2), n])];
+    xt.forEach((k) => {
+      const anchor = k === 1 ? "start" : (k === n ? "end" : "middle");
+      out += `<text class="ch-tl" x="${xs(k - 1).toFixed(1)}" y="${H - 6}" text-anchor="${anchor}">${k}</text>`;
+    });
+    const pts = values.map((v, i) => `${xs(i).toFixed(1)},${ys(Math.min(v, yMax)).toFixed(1)}`);
+    const line = "M" + pts.join("L");
+    const area = `${line}L${xs(n - 1).toFixed(1)},${ys(0).toFixed(1)}L${xs(0).toFixed(1)},${ys(0).toFixed(1)}Z`;
+    out += `<path class="ch-area" d="${area}"/><path class="ch-line" d="${line}"/>`;
+    out += `<circle class="ch-dot" cx="${xs(n - 1).toFixed(1)}" cy="${ys(Math.min(values[n - 1], yMax)).toFixed(1)}" r="3.5"/>`;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    svg.setAttribute("height", H);
+    svg.innerHTML = out;
+  }
+  const niceMax = (v) => [0.02, 0.05, 0.1, 0.2, 0.25, 0.5, 0.75, 1].find((s) => v <= s) || 1;
+
+  let lastAngles = [];
+
+  function renderFlip() {
+    if (mode === "constant") {
+      const N = clampN(num($("#c-n")));
+      const theta = (num($("#c-flip")) || 0) * Math.PI / 180;
+      const tr = (num($("#c-tr")) || 0) / 1000, t1 = num($("#c-t1"));
+      const decay = t1 > 0 ? Math.exp(-tr / t1) : 1;
+      const sig = [];
+      let mz = 1;
+      for (let i = 0; i < N; i++) { sig.push(mz * Math.sin(theta)); mz *= Math.cos(theta) * decay; }
+      const left = Math.pow(Math.cos(theta), N) * Math.pow(decay, N - 1);
+      $("#c-first").textContent = pct(sig[0]);
+      $("#c-last").textContent = pct(sig[N - 1]);
+      $("#c-left").textContent = pct(left);
+      if (!$("#view-flip").hidden) {
+        const yMax = niceMax(Math.max(...sig, 0.001));
+        chart($("#c-chart"), sig, yMax, [0, yMax / 2, yMax], (v) => fmt(v * 100, yMax < 0.1 ? 1 : 0) + "%");
+      }
+    } else if (mode === "variable") {
+      const N = clampN(num($("#v-n")));
+      lastAngles = [];
+      for (let n = 1; n <= N; n++) {
+        const rem = N - n;
+        lastAngles.push(rem > 0 ? Math.atan(1 / Math.sqrt(rem)) * 180 / Math.PI : 90);
+      }
+      $("#v-signal").textContent = pct(1 / Math.sqrt(N));
+      $("#v-first").textContent = fmt(lastAngles[0], 2) + "°";
+      $("#v-list").innerHTML = lastAngles.map((a, i) => `<span><b>${i + 1}</b> ${fmt(a, 2)}°</span>`).join("");
+      $("#v-text").hidden = true;
+      $("#v-copy").textContent = "Copy angles";
+      if (!$("#view-flip").hidden) chart($("#v-chart"), lastAngles, 90, [0, 30, 60, 90], (v) => v + "°");
+    } else {
+      const tr = (num($("#e-tr")) || 0) / 1000, t1 = num($("#e-t1"));
+      if (t1 > 0 && tr > 0) {
+        const E = Math.exp(-tr / t1);
+        const th = Math.acos(E);
+        const s = (a) => Math.sin(a) * (1 - E) / (1 - E * Math.cos(a));
+        $("#e-angle").textContent = fmt(th * 180 / Math.PI, 1) + "°";
+        $("#e-gain").textContent = "×" + fmt(s(th) / s(Math.PI / 2), 2);
+      } else {
+        $("#e-angle").textContent = "–";
+        $("#e-gain").textContent = "–";
+      }
+    }
+  }
+  ["#c-n", "#c-flip", "#c-tr", "#c-t1", "#v-n", "#e-tr", "#e-t1"].forEach((id) => $(id).addEventListener("input", renderFlip));
+
+  $("#v-copy").addEventListener("click", async () => {
+    const text = lastAngles.map((a) => a.toFixed(2)).join(", ");
+    try {
+      await navigator.clipboard.writeText(text);
+      $("#v-copy").textContent = "Copied";
+    } catch (e) {
+      const ta = $("#v-text");
+      ta.hidden = false;
+      ta.value = text;
+      ta.focus();
+      ta.select();
+      $("#v-copy").textContent = "Selected, copy with ⌘C";
+    }
+  });
+
+  /* ---------- Redraw on resize ---------- */
+  function redrawGraphics() { drawSpectrum(); renderFlip(); }
+  let rt;
+  window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(redrawGraphics, 120); });
+
+  /* ---------- Start ---------- */
+  commitProton();
+  showMode(mode);
+  showView(["freq", "shifts", "flip"].includes(store.get("tab", "freq")) ? store.get("tab", "freq") : "freq");
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+  }
+})();
+</script>
+</body>
+</html>
