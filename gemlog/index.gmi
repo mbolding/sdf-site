@@ -1,5 +1,8 @@
 # mbolding's gemlog
 
+=> 2026-11-08-evening-on-the-tsour-vai.gmi 2026-11-08 Evening on the Tsour-Vai
+=> 2026-11-08-the-salt-road-part-two.gmi 2026-11-08 The Salt Road, Part Two
+=> 2026-11-08-the-salt-road.gmi 2026-11-08 The Salt Road
 => 2026-10-31-auto-biology.gmi 2026-10-31 Auto Biology
 => 2026-10-31-this-is-the-first-line.gmi 2026-10-31 this is the first line
 => 2026-10-31-test-30-oct-2026.gmi 2026-10-31 test 30 oct 2026
